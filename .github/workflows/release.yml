@@ -155,19 +155,3 @@ jobs:
           generate_release_notes: true
           files: artifacts/*
           fail_on_unmatched_files: true
-          body: |
-            Download the archive for your platform, unpack it, and open the
-            translator. Its window guides you through preparing the local
-            workspace and building a translated image. Nothing here contains
-            game data: the first run reads your own disc image to build what
-            it needs.
-
-            The command line remains available for automation:
-
-                ValkyrieProfile2-Translator generate <your-image.iso>
-                ValkyrieProfile2-Translator build <your-image.iso>
-
-            The patched image is written to the directory you run it from.
-            Pass the Japanese disc to `generate` as well, in any order, to
-            get the original script beside the English in the reference
-            tables.
