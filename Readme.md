@@ -1,6 +1,6 @@
-# Valkyrie Profile 2 Translation Tools
+# Valkyrie Profile 2 Translations and Tools
 
-Translate _Valkyrie Profile 2: Silmeria_ (PlayStation 2) into any language. [Showcase](https://trulio2.github.io/Valkyrie-Profile-2-Tools/)
+_Valkyrie Profile 2: Silmeria_ (PlayStation 2) Tools [Showcase](https://trulio2.github.io/Valkyrie-Profile-2-Tools/)
 
 ## Requirements
 
