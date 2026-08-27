@@ -1,8 +1,8 @@
-# Main-story translation groups
+## Valkyrie Profile 2 Tools
 
 [Showcase](https://trulio2.github.io/Valkyrie-Profile-2-Tools/)
 
-## Main-story cutscenes
+### Main-story cutscenes
 
 ```text
 container-0010.csv
@@ -13,7 +13,7 @@ scene-{1295,1297,1299,1301,1303,1305,1307,1309,1311,1313,1315,1317}.csv
 scene-{1321,1323,1325,1335,1337,1351,1353,1357,1389}.csv
 ```
 
-## Main-story NPC and system dialogue
+### Main-story NPC and system dialogue
 
 ```text
 scene-{0029,0031,0033,0035,0057,0061,0079,0081,0089,0091,0099,0109}.csv
@@ -23,14 +23,14 @@ scene-{0373,0383,0389,0399,0401,0417,0419,0437,0449,0605,1015,1167}.csv
 scene-1169.csv
 ```
 
-## Einherjar weapon scenes
+### Einherjar weapon scenes
 
 ```text
 scene-{0167,0173,0189,0233,0243,0253,0255,0273,0283,0313,0319,0339}.csv
 scene-{0361,0371,0565,0579,0599,1155,1179,1191}.csv
 ```
 
-## Einherjar release dialogue
+### Einherjar release dialogue
 
 ```text
 scene-{0039,0047,0049,0083,0087,0101,0103,0111,0113,0135,0139,0197}.csv
