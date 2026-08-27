@@ -13,6 +13,22 @@ About 12 GB of free space: the source image, the patched one, and roughly
 
 ## Use
 
+Download the archive for your platform, unpack it, and open
+`ValkyrieProfile2-Translator`. The window guides you through both required
+steps: choose your clean USA disc image, prepare the local workspace once,
+then choose a language and build the translated ISO. A Japanese image is
+optional and adds the original script to the generated reference tables.
+
+The same operations remain available from a terminal for automation and
+development:
+
+```bash
+# Open the same UI directly from a source checkout.
+python vp2_translate.py
+```
+
+Or run each step explicitly:
+
 ```bash
 # Read your disc. Do this once; it takes a couple of minutes.
 python vp2_translate.py generate <usa-image.iso>
@@ -50,6 +66,40 @@ python vp2_translate.py build <usa-image.iso> --pack translations/sv-SE
 
 Every path option defaults to a location inside the installation, so the
 commands work from any directory.
+
+## Build release artifacts locally
+
+The Linux archive is built by the same `Dockerfile` used by the release
+workflow. From this directory, run:
+
+```bash
+docker build --target artifact --build-arg VERSION=dev-local --output type=local,dest=release .
+```
+
+This produces `release/ValkyrieProfile2-Translator-dev-local-linux-x64.tar.gz`
+after running the regression suite, language-pack checks, the frozen-binary
+self-check, and an archive unpack/self-check round trip. The container fixes
+Ubuntu 24.04, the setup-python 3.11.16 toolcache build, and PyInstaller 6.22.2.
+
+A Windows executable must be built on Windows; PyInstaller does not
+cross-compile it from Linux. Use official 64-bit Python 3.11.9 with Tk and the
+same pinned packager:
+
+```powershell
+python -m pip install --disable-pip-version-check "pyinstaller==6.22.2"
+python -m unittest discover -s tests -q
+python -m PyInstaller data/vp2_release.spec --workpath workspace/internal/build --clean --noconfirm
+.\dist\ValkyrieProfile2-Translator.exe --self-check
+```
+
+Those versions and commands are pinned in `.github/workflows/release.yml` as
+well. Match the workflow's archive naming and run a final unpack/self-check
+when preparing a file for publication.
+
+Local packaging scratch belongs under `workspace/internal/build/`:
+`local-release/` for an optional native tool environment and `vp2_release/`
+for PyInstaller's generated analysis and package files. Neither belongs under
+the top-level `build/`, which remains available for completed local outputs.
 
 ## Translating
 

@@ -20,6 +20,11 @@ PAYLOAD_TREES = (
 )
 
 PAYLOAD_EXCLUDED: frozenset[str] = frozenset()
+RELEASE_ARTWORK = (
+    "images/vp2_release.ico",
+    "images/vp2_release.png",
+    "images/vp2_release_bg.png",
+)
 
 
 def payload_members(root: str | os.PathLike[str] | None = None):
@@ -84,6 +89,26 @@ def self_check(stream=None) -> int:
     notes.append("language packs    : " + (", ".join(packs) or "none"))
     if not packs:
         problems.append("no language pack is bundled")
+
+    artwork = [name for name in RELEASE_ARTWORK
+               if (PROJECT_ROOT / name).is_file()]
+    notes.append("release artwork   : " + (", ".join(artwork) or "none"))
+    missing_artwork = sorted(set(RELEASE_ARTWORK) - set(artwork))
+    if missing_artwork:
+        problems.append("missing release artwork: " +
+                        ", ".join(missing_artwork))
+
+    try:
+        import tkinter
+        interpreter = tkinter.Tcl()
+        notes.append(
+            f"window runtime    : Tcl {interpreter.eval('info patchlevel')}")
+        if FROZEN:
+            for relative in ("_tcl_data/init.tcl", "_tk_data/tk.tcl"):
+                if not (PROJECT_ROOT / relative).is_file():
+                    problems.append(f"missing window runtime file: {relative}")
+    except Exception as exc:                     # pragma: no cover - packaging
+        problems.append(f"the Tk window runtime does not initialize: {exc!r}")
 
     try:
         from . import vp2_cutscene_subtitles as subtitles

@@ -19,13 +19,13 @@ concurrency:
 jobs:
   test:
     name: Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.16'
       - name: Regression suite
         run: python -m unittest discover -s tests -q
       - name: Language packs are well formed
@@ -42,31 +42,29 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          - os: windows-2025
             name: Windows
             binary: ValkyrieProfile2-Translator.exe
             suffix: windows-x64
-          - os: ubuntu-latest
+            extension: .zip
+          - os: ubuntu-24.04
             name: Linux
             binary: ValkyrieProfile2-Translator
             suffix: linux-x64
+            extension: .tar.gz
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
+        if: runner.os == 'Windows'
         with:
-          python-version: '3.11'
+          python-version: '3.11.9'
       - name: Install PyInstaller
-        run: python -m pip install --disable-pip-version-check "pyinstaller==6.*"
+        if: runner.os == 'Windows'
+        run: python -m pip install --disable-pip-version-check "pyinstaller==6.22.2"
 
-      - name: Build
-        run: pyinstaller vp2_release.spec --clean --noconfirm
-      - name: Self-check the built binary
-        shell: bash
-        run: ./dist/${{ matrix.binary }} --self-check
-
-      - name: Package
+      - name: Resolve package name
         id: package
         shell: bash
         run: |
@@ -75,35 +73,58 @@ jobs:
             version="dev-${GITHUB_SHA::7}"
           fi
           name="ValkyrieProfile2-Translator-${version}-${{ matrix.suffix }}"
+          {
+            echo "version=$version"
+            echo "name=$name"
+            echo "archive=${name}${{ matrix.extension }}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        run: >-
+          python -m PyInstaller data/vp2_release.spec
+          --workpath workspace/internal/build
+          --clean --noconfirm
+      - name: Self-check the Windows binary
+        if: runner.os == 'Windows'
+        shell: bash
+        run: ./dist/${{ matrix.binary }} --self-check
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
           cd dist
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            mv "${{ matrix.binary }}" "${name}.exe"
-            7z a -tzip "../${name}.zip" "${name}.exe" > /dev/null
-            archive="${name}.zip"
-          else
-            mv "${{ matrix.binary }}" "$name"
-            # tar rather than zip: zip does not carry the executable bit,
-            # and a downloaded binary that will not run is a support
-            # question nobody should have to ask.
-            chmod +x "$name"
-            tar -czf "../${name}.tar.gz" "$name"
-            archive="${name}.tar.gz"
-          fi
-          cd ..
-          echo "archive=$archive" >> "$GITHUB_OUTPUT"
-          ls -l "$archive"
+          mv "${{ matrix.binary }}" "${{ steps.package.outputs.name }}.exe"
+          7z a -tzip "../${{ steps.package.outputs.archive }}" \
+            "${{ steps.package.outputs.name }}.exe" > /dev/null
+
+      - name: Build and package Linux through the release container
+        if: runner.os == 'Linux'
+        run: |
+          docker build \
+            --target artifact \
+            --build-arg VERSION="${{ steps.package.outputs.version }}" \
+            --output type=local,dest=. \
+            .
+
+      - name: Show package
+        shell: bash
+        run: ls -l "${{ steps.package.outputs.archive }}"
+
       - name: Unpack what will be published
         shell: bash
         run: |
           mkdir -p roundtrip && cd roundtrip
           if [ "${{ runner.os }}" = "Windows" ]; then
             7z x "../${{ steps.package.outputs.archive }}" > /dev/null
-            ./*.exe --self-check
+            binaries=(./*.exe)
           else
             tar -xzf "../${{ steps.package.outputs.archive }}"
-            test -x ./ValkyrieProfile2-Translator-*
-            ./ValkyrieProfile2-Translator-* --self-check
+            binaries=(./ValkyrieProfile2-Translator-*)
+            test -x "${binaries[0]}"
           fi
+          test "${#binaries[@]}" -eq 1
+          "${binaries[0]}" --self-check
 
       - uses: actions/upload-artifact@v4
         with:
@@ -116,7 +137,7 @@ jobs:
     name: Publish
     needs: [test, build]
     if: github.ref_type == 'tag'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/download-artifact@v4
@@ -135,10 +156,13 @@ jobs:
           files: artifacts/*
           fail_on_unmatched_files: true
           body: |
-            Download the archive for your platform, unpack it, and run it
-            against your own copy of the game. Nothing here contains game
-            data: the first run reads your disc image to build what it
-            needs.
+            Download the archive for your platform, unpack it, and open the
+            translator. Its window guides you through preparing the local
+            workspace and building a translated image. Nothing here contains
+            game data: the first run reads your own disc image to build what
+            it needs.
+
+            The command line remains available for automation:
 
                 ValkyrieProfile2-Translator generate <your-image.iso>
                 ValkyrieProfile2-Translator build <your-image.iso>

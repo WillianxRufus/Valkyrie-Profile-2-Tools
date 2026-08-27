@@ -10,6 +10,7 @@ node_modules/
 workspace/
 build/
 dist/
+release/
 resources/
 .research*/
 

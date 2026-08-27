@@ -13,8 +13,9 @@ FROZEN = bool(getattr(sys, "frozen", False))
 SCRIPTS_DIR = Path(__file__).resolve().parent
 
 if FROZEN:
-    # The launcher unpacks the bundled payload archive once and names the
-    # result here; without it the bundle root is the only payload there is.
+    # The public bundle carries its small, source-free payload as loose files
+    # under the PyInstaller extraction root. VP2_PAYLOAD_ROOT remains a useful
+    # compatibility override for callers that prepare a different payload.
     _prepared = os.environ.get("VP2_PAYLOAD_ROOT")
     PROJECT_ROOT = Path(
         _prepared or getattr(sys, "_MEIPASS", SCRIPTS_DIR.parent)).resolve()
@@ -87,4 +88,3 @@ def _cache_root() -> Path:
 
 
 CACHE_ROOT = _cache_root()
-

@@ -355,19 +355,34 @@ def build_iso(
     destination.parent.mkdir(parents=True, exist_ok=True)
     print(f"writing to {destination}", flush=True)
 
-    command = [
-        sys.executable, "-m", "tools.scripts.vp2_build", os.fspath(source),
+    runtime_args = [
+        os.fspath(source),
         "--manifest", os.fspath(compiled["manifest"]),
         "--scenes-dir", os.fspath(compiled["sheets"]),
         "--output", os.fspath(destination),
         "--reference-iso", os.fspath(source),
     ]
     if no_verify:
-        command.append("--no-verify")
+        runtime_args.append("--no-verify")
+    command = runtime_command(runtime_args)
     environment = os.environ.copy()
     environment["VP2_STATE_ROOT"] = os.fspath(BUILD_DIR)
     environment["VP2_GLYPH_POOL"] = os.fspath(glyph_pool)
-    result = subprocess.run(command, cwd=PROJECT_ROOT, env=environment)
-    if result.returncode:
-        raise PackError(f"ISO build failed with exit code {result.returncode}")
+    process = subprocess.Popen(
+        command, cwd=PROJECT_ROOT, env=environment,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        text=True, encoding="utf-8", errors="replace", bufsize=1)
+    assert process.stdout is not None
+    for line in process.stdout:
+        print(line, end="", flush=True)
+    returncode = process.wait()
+    if returncode:
+        raise PackError(f"ISO build failed with exit code {returncode}")
     return destination
+
+
+def runtime_command(arguments: list[str]) -> list[str]:
+    """Command that runs the low-level builder in source and frozen apps"""
+    if getattr(sys, "frozen", False):
+        return [sys.executable, "_runtime-build", *arguments]
+    return [sys.executable, "-m", "tools.scripts.vp2_build", *arguments]
