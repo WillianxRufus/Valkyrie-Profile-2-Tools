@@ -7,9 +7,9 @@
 
 # Source text, fonts, caches, and other data generated from a user's image
 node_modules/
-/workspace/
-/build/
-/dist/
+workspace/
+build/
+dist/
 resources/
 .research*/
 
