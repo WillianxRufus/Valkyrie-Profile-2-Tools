@@ -72,14 +72,15 @@ class ReleaseSpecTests(unittest.TestCase):
 
     def test_spec_and_pyinstaller_work_tree_use_internal_build_storage(self):
         self.assertTrue(self.spec_path.is_file())
-        self.assertFalse((ROOT / "vp2_release.spec").exists())
-        expected = "--workpath workspace/internal/build"
+        expected_spec = "data/vp2_release.spec"
+        expected_workpath = "--workpath workspace/internal/build"
         for path in (
                 ROOT / "Dockerfile",
                 ROOT / ".github" / "workflows" / "release.yml",
                 ROOT / "Readme.md"):
             source = path.read_text(encoding="utf-8")
-            self.assertIn(expected, source, path)
+            self.assertIn(expected_spec, source, path)
+            self.assertIn(expected_workpath, source, path)
             self.assertNotIn(
                 "--workpath workspace/internal/build/vp2_release", source,
                 path)
