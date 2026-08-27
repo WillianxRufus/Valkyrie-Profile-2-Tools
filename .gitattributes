@@ -1,2 +1,5 @@
-*.csv -text
 * text=auto eol=lf
+
+# CSV records use CRLF while quoted fields may contain semantic LF. Preserve
+# their bytes so checkout conversion cannot insert carriage returns in text.
+*.csv -text

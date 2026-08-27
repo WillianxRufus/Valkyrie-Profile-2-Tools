@@ -1,4 +1,32 @@
+# User-provided game images and derived build products
+*.iso
+*.iso.partial
+*.bin
+*.img
+*.p2s
+
+# Source text, fonts, caches, and other data generated from a user's image
 node_modules/
-build/
-dist/
+/workspace/
+/build/
+/dist/
 resources/
+.research*/
+
+# Python and test state
+__pycache__/
+*.py[cod]
+.coverage
+.pytest_cache/
+
+# Local environments and editor state
+.venv/
+.idea/
+.vscode/
+*.swp
+*~
+
+# PyInstaller
+/dist/
+/build/
+*.spec.bak

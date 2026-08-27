@@ -1,0 +1,149 @@
+# SPDX-FileCopyrightText: 2026 Valkyrie Profile 2 Translation Tools contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Regression suite
+        run: python -m unittest discover -s tests -q
+      - name: Language packs are well formed
+        run: |
+          for pack in translations/*/; do
+            python vp2_translate.py check-pack "$pack"
+          done
+
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows
+            binary: ValkyrieProfile2-Translator.exe
+            suffix: windows-x64
+          - os: ubuntu-latest
+            name: Linux
+            binary: ValkyrieProfile2-Translator
+            suffix: linux-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install PyInstaller
+        run: python -m pip install --disable-pip-version-check "pyinstaller==6.*"
+
+      - name: Build
+        run: pyinstaller vp2_release.spec --clean --noconfirm
+      - name: Self-check the built binary
+        shell: bash
+        run: ./dist/${{ matrix.binary }} --self-check
+
+      - name: Package
+        id: package
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [ "$GITHUB_REF_TYPE" != "tag" ]; then
+            version="dev-${GITHUB_SHA::7}"
+          fi
+          name="ValkyrieProfile2-Translator-${version}-${{ matrix.suffix }}"
+          cd dist
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            mv "${{ matrix.binary }}" "${name}.exe"
+            7z a -tzip "../${name}.zip" "${name}.exe" > /dev/null
+            archive="${name}.zip"
+          else
+            mv "${{ matrix.binary }}" "$name"
+            # tar rather than zip: zip does not carry the executable bit,
+            # and a downloaded binary that will not run is a support
+            # question nobody should have to ask.
+            chmod +x "$name"
+            tar -czf "../${name}.tar.gz" "$name"
+            archive="${name}.tar.gz"
+          fi
+          cd ..
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+          ls -l "$archive"
+      - name: Unpack what will be published
+        shell: bash
+        run: |
+          mkdir -p roundtrip && cd roundtrip
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z x "../${{ steps.package.outputs.archive }}" > /dev/null
+            ./*.exe --self-check
+          else
+            tar -xzf "../${{ steps.package.outputs.archive }}"
+            test -x ./ValkyrieProfile2-Translator-*
+            ./ValkyrieProfile2-Translator-* --self-check
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: translator-${{ matrix.suffix }}
+          path: ${{ steps.package.outputs.archive }}
+          if-no-files-found: error
+          compression-level: 0
+
+  release:
+    name: Publish
+    needs: [test, build]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Show what is being published
+        run: ls -l artifacts/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: artifacts/*
+          fail_on_unmatched_files: true
+          body: |
+            Download the archive for your platform, unpack it, and run it
+            against your own copy of the game. Nothing here contains game
+            data: the first run reads your disc image to build what it
+            needs.
+
+                ValkyrieProfile2-Translator generate <your-image.iso>
+                ValkyrieProfile2-Translator build <your-image.iso>
+
+            The patched image is written to the directory you run it from.
+            Pass the Japanese disc to `generate` as well, in any order, to
+            get the original script beside the English in the reference
+            tables.
