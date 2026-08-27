@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/Valkyrie-Profile-2-Translation/',
+  base: '/Valkyrie-Profile-2-Tools/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
