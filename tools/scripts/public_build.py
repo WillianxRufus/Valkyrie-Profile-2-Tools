@@ -5,20 +5,25 @@
 
 from __future__ import annotations
 
-import csv
 import base64
+import contextlib
+import csv
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import tomllib
 from pathlib import Path
 
 from .paths import BUILD_DIR, PROJECT_ROOT, WORKSPACE_DIR, output_root
+from .workspace_extract import generate_workspace
 from .translation_pack import (
+    PACK_PROFILE,
     PackError,
     _expanded_targets,
     _menu_units,
@@ -26,10 +31,80 @@ from .translation_pack import (
 )
 
 
-PROFILE = PROJECT_ROOT / "data" / "build-profile.csv"
+SHEET_NAME_RE = re.compile(
+    r"^(?:resource-[0-9]+-scenes|container-[0-9]+)\.csv$")
 MENU_LAYOUT = PROJECT_ROOT / "data" / "menu-layout.csv"
 WORKSPACE = WORKSPACE_DIR
 TRANSLATIONS = PROJECT_ROOT / "translations"
+
+
+def installed_locales() -> list[str]:
+    if not TRANSLATIONS.is_dir():
+        return []
+    return sorted(entry.name for entry in TRANSLATIONS.iterdir()
+                  if (entry / "pack.toml").is_file())
+
+
+def workspace_is_ready(workspace: str | os.PathLike[str]) -> bool:
+    """Whether a build can read this workspace instead of making one."""
+    internal = Path(workspace).expanduser().resolve() / "internal"
+    return (internal / "generation.json").is_file() and (
+        internal / "records").is_dir()
+
+
+def resolve_pack(language: str | os.PathLike[str]) -> Path:
+    """A locale name, or a path to a pack anywhere on disk."""
+    value = os.fspath(language)
+    bare = not any(separator in value for separator in "/\\")
+    if bare and (TRANSLATIONS / value).is_dir():
+        return TRANSLATIONS / value
+    path = Path(value).expanduser()
+    if path.is_dir():
+        return path.resolve()
+    installed = ", ".join(installed_locales())
+    raise PackError(f"no language pack {value!r}"
+                    + (f"; installed: {installed}" if installed else ""))
+
+
+_RUNNING_LOCK = threading.Lock()
+_RUNNING: set[subprocess.Popen] = set()
+
+
+@contextlib.contextmanager
+def _tracked(process: subprocess.Popen):
+    """Make one patcher child stoppable from another thread."""
+    with _RUNNING_LOCK:
+        _RUNNING.add(process)
+    try:
+        yield process
+    finally:
+        with _RUNNING_LOCK:
+            _RUNNING.discard(process)
+
+
+def terminate_active_builds(timeout: float = 5.0) -> int:
+    """Stop every patcher this process started, and say how many there were.
+
+    The window runs a build on a daemon thread, so closing the window ends
+    the thread -- but the patcher is a child process and outlives both the
+    thread and the interpreter that started it. Left alone it goes on
+    writing the ISO after the window it belonged to is gone.
+    """
+    with _RUNNING_LOCK:
+        running = [process for process in _RUNNING if process.poll() is None]
+    for process in running:
+        try:
+            process.terminate()
+        except OSError:                          # pragma: no cover - raced exit
+            pass
+    for process in running:
+        try:
+            process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
+        except OSError:                          # pragma: no cover - raced exit
+            pass
+    return len(running)
 
 
 def _read_csv(path: Path) -> tuple[list[str], list[dict[str, str]]]:
@@ -71,12 +146,43 @@ def _record_key(row: dict[str, str]) -> tuple[str, str, str, str]:
     )
 
 
-def _profile_rows(path: Path = PROFILE) -> list[dict[str, str]]:
+def _profile_rows(path: Path) -> list[dict[str, str]]:
+    if not path.is_file():
+        raise PackError(
+            f"language pack has no {PACK_PROFILE}: {path}. It lists the "
+            f"resources this language's build writes, and how to write them.")
     fields, rows = _read_csv(path)
     required = {"kind", "resource", "sheet", "flags", "verify"}
     if not required.issubset(fields):
         raise PackError(f"{path}: expected columns {', '.join(sorted(required))}")
     return rows
+
+
+def check_pack_profile(pack: str | os.PathLike[str]) -> int:
+    """Validate one pack's build profile on its own, and count its rows."""
+    path = resolve_pack(pack) / PACK_PROFILE
+    rows = _profile_rows(path)
+    seen: set[tuple[str, str]] = set()
+    for line, row in enumerate(rows, 2):
+        where = f"{path}:{line}"
+        kind = (row.get("kind") or "").strip()
+        if kind not in ("scene", "container", "fontless"):
+            raise PackError(f"{where}: unknown kind {kind!r}")
+        try:
+            resource = str(int((row.get("resource") or "").strip(), 0))
+        except ValueError as exc:
+            raise PackError(f"{where}: invalid resource "
+                            f"{row.get('resource')!r}") from exc
+        # Only the shape of the name, because a sheet is a source of text
+        # rather than the resource's own: the menu layout points 25, 868,
+        # 869, 1480, and 1481 at container-0024.csv.
+        name = Path(row.get("sheet") or "").name
+        if not SHEET_NAME_RE.fullmatch(name):
+            raise PackError(f"{where}: {name!r} is not a generated sheet name")
+        if (kind, resource) in seen:
+            raise PackError(f"{where}: duplicate {kind} resource {resource}")
+        seen.add((kind, resource))
+    return len(rows)
 
 
 def _input_sheet(records: Path, row: dict[str, str]) -> Path:
@@ -89,12 +195,14 @@ def compile_build_workspace(
     workspace: str | os.PathLike[str],
     pack: str | os.PathLike[str],
     *,
-    profile: str | os.PathLike[str] = PROFILE,
+    profile: str | os.PathLike[str] | None = None,
     menu_layout: str | os.PathLike[str] = MENU_LAYOUT,
 ) -> dict[str, object]:
     """Join one pack to extracted records and emit patcher-ready sheets."""
     workspace_path = Path(workspace).expanduser().resolve()
-    pack_path = Path(pack).expanduser().resolve()
+    pack_path = resolve_pack(pack)
+    profile_path = (Path(profile).expanduser().resolve() if profile is not None
+                    else pack_path / PACK_PROFILE)
     internal = workspace_path / "internal"
     records = internal / "records"
     generation = internal / "generation.json"
@@ -122,7 +230,7 @@ def compile_build_workspace(
     matched: set[tuple[str, str, str, str]] = set()
     matched_chapters: set[tuple[str, str, str, str]] = set()
     try:
-        profile_rows = _profile_rows(Path(profile))
+        profile_rows = _profile_rows(profile_path)
         profile_sheets = {Path(row["sheet"]).name for row in profile_rows}
 
         for source in sorted((records / "scenes").glob("*.csv")) + sorted(
@@ -150,7 +258,7 @@ def compile_build_workspace(
             source = _input_sheet(records, profile_row)
             if not source.is_file():
                 raise PackError(
-                    f"{Path(profile)}: resource {profile_row['resource']} "
+                    f"{profile_path}: resource {profile_row['resource']} "
                     f"has no extracted sheet {source}")
             resource = str(int(profile_row["resource"], 0))
             chapter_matches = [
@@ -193,7 +301,7 @@ def compile_build_workspace(
                 f"chapter translation(s) are outside the build profile: "
                 f"{missing_chapters[:5]!r}")
         if not manifest_rows:
-            raise PackError("the language pack has no translations in the build profile")
+            raise PackError(f"{profile_path} lists no resources")
 
         manifest_path = staging / "manifest.csv"
         manifest_fields = [
@@ -342,12 +450,26 @@ def build_iso(
     workspace: str | os.PathLike[str] = WORKSPACE,
     output: str | os.PathLike[str] | None = None,
     no_verify: bool = False,
+    images: list[str | os.PathLike[str]] | None = None,
 ) -> Path:
-    """Compile the pack and run the patcher in a clean subprocess."""
+    """Compile the pack and run the patcher in a clean subprocess.
+
+    A build needs records read out of the disc.  Rather than fail and name
+    a second command, it reads them here when they are not there yet, from
+    *images* when the caller has more than the one image it was given.
+    """
     source = Path(source_iso).expanduser().resolve()
     if not source.is_file():
         raise PackError(f"USA image does not exist: {source}")
-    compiled = compile_build_workspace(workspace, pack)
+    if not workspace_is_ready(workspace):
+        print("workspace: not prepared yet; reading the disc first",
+              flush=True)
+        generate_workspace(list(images) if images else [source], workspace)
+        # Said out loud because a build is the only thing watching: the
+        # window has no other way to know the disc has been read until the
+        # whole build ends, which is far too late to stop saying otherwise.
+        print("workspace: prepared", flush=True)
+    compiled = compile_build_workspace(workspace, resolve_pack(pack))
     glyph_pool = ensure_glyph_pool(source, workspace)
     locale = str(compiled["locale"])
     destination = (Path(output).expanduser().resolve() if output else
@@ -373,9 +495,10 @@ def build_iso(
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         text=True, encoding="utf-8", errors="replace", bufsize=1)
     assert process.stdout is not None
-    for line in process.stdout:
-        print(line, end="", flush=True)
-    returncode = process.wait()
+    with _tracked(process):
+        for line in process.stdout:
+            print(line, end="", flush=True)
+        returncode = process.wait()
     if returncode:
         raise PackError(f"ISO build failed with exit code {returncode}")
     return destination

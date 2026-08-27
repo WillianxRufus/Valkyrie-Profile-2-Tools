@@ -22,7 +22,9 @@ from typing import NamedTuple
 
 from tools.scripts.translation_pack import PackError, load_pack
 from tools.scripts.workspace_extract import generate_workspace
-from tools.scripts.public_build import build_iso
+from tools.scripts.public_build import (
+    build_iso, check_pack_profile, resolve_pack, terminate_active_builds,
+)
 from tools.scripts.paths import PROJECT_ROOT, WORKSPACE_DIR
 
 try:
@@ -41,11 +43,11 @@ else:
     TK_IMPORT_ERROR = None
 
 
-__version__ = "0.2.3"
+__version__ = "0.0.1"
 APP_NAME = "Valkyrie Profile 2 Translation Builder"
 SHORT_NAME = "VP2 Translation Builder"
 DEFAULT_WORKSPACE = str(WORKSPACE_DIR)
-DEFAULT_PACK = str(PROJECT_ROOT / "translations" / "pt-BR")
+DEFAULT_LANGUAGE = "pt-BR"
 ICON_ICO = "images/vp2_release.ico"
 ICON_PNG = "images/vp2_release.png"
 BACKDROP_PNG = "images/vp2_release_bg.png"
@@ -85,7 +87,8 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=False)
 
     check = commands.add_parser("check-pack", help="validate one language pack")
-    check.add_argument("pack")
+    check.add_argument("language", metavar="LANGUAGE",
+                       help="a locale under translations/, or a pack path")
 
     generate = commands.add_parser(
         "generate", help="generate the local reference and internal build state")
@@ -99,8 +102,10 @@ def _parser() -> argparse.ArgumentParser:
     build = commands.add_parser(
         "build", help="build a translated ISO from a generated workspace")
     build.add_argument("usa_image")
-    build.add_argument("--pack", default=DEFAULT_PACK,
-                       help="language pack to build (default: %(default)s)")
+    build.add_argument("language", nargs="?", default=DEFAULT_LANGUAGE,
+                       metavar="LANGUAGE",
+                       help="a locale under translations/, or a pack path "
+                            "(default: %(default)s)")
     build.add_argument("--workspace", default=DEFAULT_WORKSPACE,
                        help="the workspace `generate` made (default: %(default)s)")
     build.add_argument("--output")
@@ -159,7 +164,8 @@ def workspace_summary(workspace: Path = WORKSPACE_DIR) -> tuple[bool, str]:
     try:
         details = json.loads(stamp.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return False, "Workspace not prepared yet. Run Prepare workspace first."
+        return False, ("Workspace not prepared · the first build reads "
+                       "your disc, which takes a few minutes")
     rows = details.get("reference_rows")
     if not isinstance(rows, int):
         rows = sum(int(details.get(name, 0)) for name in
@@ -442,17 +448,17 @@ class App:
         self.jp_var = StringVar()
         self.pack_var = StringVar(value=self.packs[0].label)
         self.output_var = StringVar(value=str(real_exe_dir()))
-        self.verify_var = BooleanVar(value=True)
+        self.verify_var = BooleanVar(value=False)
         self.log_shown = BooleanVar(value=False)
         ready, note = workspace_summary()
         self.workspace_ready = ready
         self.workspace_var = StringVar(value=note)
-        self.status_var = StringVar(
-            value="Choose the USA disc image, then prepare the workspace."
-                  if not ready else "Choose the USA disc image to build.")
+        self.status_var = StringVar(value="Choose the USA disc image to build.")
         self.detail_var = StringVar()
         self.started_at = None
         self.last_output = None
+
+        self.locked = []
 
         root.title(f"{SHORT_NAME} {__version__}")
         self.scale = apply_dpi_scaling(root)
@@ -468,6 +474,7 @@ class App:
         apply_window_icon(root)
         self._build_ui()
         self.runner = TaskRunner(root, self._on_line, self._on_done)
+        root.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _px(self, value):
         return int(value * self.scale)
@@ -490,14 +497,12 @@ class App:
 
         self.discs_card = self._build_discs_card()
         self.build_card = self._build_settings_card()
-        self.prepare_btn = ttk.Button(
-            self.canvas, text="Prepare workspace", command=self._start_generate)
-        self.build_btn = ttk.Button(
+        self.build_btn = self._lockable(ttk.Button(
             self.canvas, text="Build translated ISO", style="Accent.TButton",
-            command=self._start_build)
-        self.verify_chk = ttk.Checkbutton(
-            self.canvas, text="Thorough verification", style="Chip.TCheckbutton",
-            variable=self.verify_var)
+            command=self._start_build))
+        self.verify_chk = self._lockable(ttk.Checkbutton(
+            self.canvas, text="Thorough verification",
+            style="Chip.TCheckbutton", variable=self.verify_var))
         self.log_btn = ttk.Button(
             self.canvas, text="Show details", command=self._toggle_log)
         self.progress = ttk.Progressbar(
@@ -527,7 +532,7 @@ class App:
 
         widgets = (
             ("discs", self.discs_card), ("settings", self.build_card),
-            ("prepare", self.prepare_btn), ("build", self.build_btn),
+            ("build", self.build_btn),
             ("verify", self.verify_chk), ("log_btn", self.log_btn),
             ("progress", self.progress), ("log", self.log_frame),
         )
@@ -549,19 +554,23 @@ class App:
         card = self._card("DISC IMAGES")
         ttk.Label(card, text="USA", style="Card.TLabel").grid(
             row=1, column=0, sticky="w", padx=(0, 10))
-        ttk.Entry(card, textvariable=self.usa_var).grid(
+        self._lockable(ttk.Entry(card, textvariable=self.usa_var)).grid(
             row=1, column=1, sticky="ew", padx=(0, 10))
-        ttk.Button(card, text="Browse…", command=lambda: self._pick_disc("usa")).grid(
-            row=1, column=2, sticky="e")
+        self._lockable(ttk.Button(
+            card, text="Browse…",
+            command=lambda: self._pick_disc("usa"))).grid(row=1, column=2,
+                                                          sticky="e")
         ttk.Label(card, text="Required · clean USA image used for every build",
                   style="CardMuted.TLabel").grid(
             row=2, column=1, columnspan=2, sticky="w", pady=(5, 10))
         ttk.Label(card, text="Japanese", style="Card.TLabel").grid(
             row=3, column=0, sticky="w", padx=(0, 10))
-        ttk.Entry(card, textvariable=self.jp_var).grid(
+        self._lockable(ttk.Entry(card, textvariable=self.jp_var)).grid(
             row=3, column=1, sticky="ew", padx=(0, 10))
-        ttk.Button(card, text="Browse…", command=lambda: self._pick_disc("japan")).grid(
-            row=3, column=2, sticky="e")
+        self._lockable(ttk.Button(
+            card, text="Browse…",
+            command=lambda: self._pick_disc("japan"))).grid(row=3, column=2,
+                                                            sticky="e")
         ttk.Label(card, text="Optional · adds the original script to reference tables",
                   style="CardMuted.TLabel").grid(
             row=4, column=1, columnspan=2, sticky="w", pady=(5, 0))
@@ -571,16 +580,17 @@ class App:
         card = self._card("BUILD SETTINGS")
         ttk.Label(card, text="Language", style="Card.TLabel").grid(
             row=1, column=0, sticky="w", padx=(0, 10))
-        self.language_combo = ttk.Combobox(
+        self.language_combo = self._lockable(ttk.Combobox(
             card, textvariable=self.pack_var,
-            values=[pack.label for pack in self.packs], state="readonly")
+            values=[pack.label for pack in self.packs], state="readonly"))
         self.language_combo.grid(
             row=1, column=1, columnspan=2, sticky="ew")
         ttk.Label(card, text="Output", style="Card.TLabel").grid(
             row=2, column=0, sticky="w", padx=(0, 10), pady=(10, 0))
-        ttk.Entry(card, textvariable=self.output_var).grid(
+        self._lockable(ttk.Entry(card, textvariable=self.output_var)).grid(
             row=2, column=1, sticky="ew", padx=(0, 10), pady=(10, 0))
-        ttk.Button(card, text="Change…", command=self._pick_output).grid(
+        self._lockable(ttk.Button(
+            card, text="Change…", command=self._pick_output)).grid(
             row=2, column=2, sticky="e", pady=(10, 0))
         self.workspace_label = ttk.Label(
             card, textvariable=self.workspace_var,
@@ -612,15 +622,12 @@ class App:
             self.canvas.coords(self.items[name], pad, y)
             self.canvas.itemconfigure(self.items[name], width=inner)
             y += card.winfo_reqheight() + gap
-        row = (self.prepare_btn, self.build_btn, self.verify_chk, self.log_btn)
+        row = (self.build_btn, self.verify_chk, self.log_btn)
         row_height = max(widget.winfo_reqheight() for widget in row)
         positions = (
-            ("prepare", self.prepare_btn, pad),
-            ("build", self.build_btn,
-             pad + self.prepare_btn.winfo_reqwidth() + self._px(10)),
+            ("build", self.build_btn, pad),
             ("verify", self.verify_chk,
-             pad + self.prepare_btn.winfo_reqwidth()
-             + self.build_btn.winfo_reqwidth() + self._px(20)),
+             pad + self.build_btn.winfo_reqwidth() + self._px(10)),
             ("log_btn", self.log_btn,
              width - pad - self.log_btn.winfo_reqwidth()),
         )
@@ -686,12 +693,13 @@ class App:
             return None
         return path
 
-    def _start_generate(self):
-        if self.runner.busy:
-            return
-        usa = self._validated_usa()
-        if usa is None:
-            return
+    def _images(self, usa):
+        """The discs to read, if this build has to read them.
+
+        The Japanese image is optional and only adds the original script to
+        the reference tables, so a bad one is worth saying out loud rather
+        than quietly building without it.
+        """
         images = [usa]
         jp = self.jp_var.get().strip()
         if jp:
@@ -699,17 +707,9 @@ class App:
             level, note = describe_disc(japanese, "japan")
             if level != "ok":
                 messagebox.showerror("Unusable image", note)
-                return
+                return None
             images.append(japanese)
-        self.started_at = time.time()
-        self._set_busy(True)
-        self.progress.configure(mode="indeterminate", value=0)
-        self.progress.start(12)
-        self.status_var.set("Scanning source disc…")
-        self.detail_var.set("This first-time step can take a few minutes.")
-        self._append_log("\n=== workspace preparation ===\n")
-        self.runner.start("generate", generate_workspace, images,
-                          DEFAULT_WORKSPACE)
+        return images
 
     def _start_build(self):
         if self.runner.busy:
@@ -717,9 +717,8 @@ class App:
         usa = self._validated_usa()
         if usa is None:
             return
-        ready, note = workspace_summary()
-        if not ready:
-            messagebox.showinfo("Prepare workspace", note)
+        images = self._images(usa)
+        if images is None:
             return
         pack = self.pack_by_label[self.pack_var.get()]
         folder = Path(self.output_var.get().strip() or real_exe_dir())
@@ -735,26 +734,59 @@ class App:
         self.last_output = output
         self.started_at = time.time()
         self._set_busy(True)
-        self.progress.stop()
-        self.progress.configure(mode="determinate", value=0)
-        self.status_var.set("Preparing the translation build…")
+        ready, _note = workspace_summary()
+        if ready:
+            self.progress.stop()
+            self.progress.configure(mode="determinate", value=0)
+            self.status_var.set("Preparing the translation build…")
+        else:
+            # No step count to count against until the disc has been read,
+            # and a bar sitting at zero for minutes reads as a hung window.
+            self.progress.configure(mode="indeterminate", value=0)
+            self.progress.start(12)
+            self.status_var.set("Reading your disc for the first time…")
         self.detail_var.set(pack.label)
         self._append_log(f"\n=== build: {usa.name} -> {output.name} ===\n")
         self.runner.start("build", build_iso, usa, pack.path,
                           workspace=DEFAULT_WORKSPACE, output=output,
-                          no_verify=not self.verify_var.get())
+                          no_verify=not self.verify_var.get(), images=images)
+
+    def _lockable(self, widget):
+        """Register a control that a running job takes away.
+
+        Its state before the first job is the state it comes back to, so a
+        combobox returns to `readonly` rather than becoming typable.
+        """
+        self.locked.append((widget, str(widget.cget("state")) or NORMAL))
+        return widget
 
     def _set_busy(self, busy):
-        state = DISABLED if busy else NORMAL
-        self.prepare_btn.configure(state=state)
-        self.build_btn.configure(state=state)
+        """Nothing a job read at its start may be changed while it runs.
+
+        Every one of these is settled before the thread starts, so editing
+        one mid-run cannot reach the job -- it only tells the user something
+        untrue about what is being built. Browsing for a disc is worse than
+        untrue: its handler writes over the live progress line.
+        """
+        for widget, idle in self.locked:
+            widget.configure(state=DISABLED if busy else idle)
 
     def _on_line(self, text):
         self._append_log(text)
         for line in text.splitlines():
             self._track_progress(line.strip())
 
+    def _measured(self, value):
+        """First real percentage ends the sweep the unread disc started."""
+        if str(self.progress.cget("mode")) != "determinate":
+            self.progress.stop()
+            self.progress.configure(mode="determinate")
+        self.progress.configure(value=value)
+
     def _track_progress(self, line):
+        if line.startswith("workspace: prepared"):
+            self._refresh_workspace()
+            return
         phases = {
             "inventory:": "Scanning disc inventory…",
             "glyphs:": "Indexing font glyphs…",
@@ -769,13 +801,13 @@ class App:
         copied = COPY_LINE.match(line)
         if copied:
             percent = int(copied.group(1))
-            self.progress.configure(value=percent * 0.2)
+            self._measured(percent * 0.2)
             self.status_var.set(f"Copying the source image… {percent}%")
             return
         step = STEP_LINE.match(line)
         if step:
             index, total = int(step.group(1)), int(step.group(2))
-            self.progress.configure(value=20 + index * 80 / total)
+            self._measured(20 + index * 80 / total)
             self.status_var.set(f"Patching resource {index} of {total}")
             self.detail_var.set(
                 f"{step.group(3)} {step.group(4)} · {self._elapsed()} elapsed")
@@ -787,6 +819,13 @@ class App:
     def _elapsed(self):
         seconds = int(time.time() - (self.started_at or time.time()))
         return f"{seconds}s" if seconds < 60 else f"{seconds // 60}m {seconds % 60:02d}s"
+
+    def _refresh_workspace(self):
+        """A build may have generated it, so the line has to be re-read."""
+        self.workspace_ready, note = workspace_summary()
+        self.workspace_var.set(note)
+        self.workspace_label.configure(
+            style="Ok.TLabel" if self.workspace_ready else "Warn.TLabel")
 
     def _on_done(self, kind, result, error):
         self.progress.stop()
@@ -800,14 +839,11 @@ class App:
                 self._toggle_log()
             messagebox.showerror(f"{kind.capitalize()} failed", str(error))
             return
+        self._refresh_workspace()
         if kind == "generate":
-            self.workspace_ready, note = workspace_summary()
-            self.workspace_var.set(note)
-            self.workspace_label.configure(
-                style="Ok.TLabel" if self.workspace_ready else "Warn.TLabel")
             self.progress.configure(value=100)
             self.status_var.set(f"Workspace ready in {self._elapsed()}.")
-            self.detail_var.set(note)
+            self.detail_var.set(self.workspace_var.get())
             self._append_log("=== workspace ready ===\n")
         else:
             self.progress.configure(value=100)
@@ -837,6 +873,23 @@ class App:
         elif not showing:
             self.root.geometry(f"{width}x{self.compact_height}")
         self._reflow()
+
+    def _on_close(self):
+        """Closing the window has to stop the work, not just hide it.
+
+        The worker is a daemon thread and dies with the interpreter, but a
+        build's real work happens in a child process that does not. Closing
+        used to leave it writing the ISO with nothing on screen.
+        """
+        if self.runner.busy:
+            if not messagebox.askyesno(
+                    "Still working",
+                    "A job is still running. Closing now stops it, and the "
+                    "unfinished file it was writing stays on disk.\n\n"
+                    "Close anyway?"):
+                return
+            terminate_active_builds()
+        self.root.destroy()
 
     def _open_output_folder(self, path):
         try:
@@ -941,12 +994,15 @@ def main(argv: list[str] | None = None) -> int:
                   f"{details['scene_lines'] + details['container_lines'] + details['chapter_lines']} row(s)")
         elif args.command == "build":
             output = build_iso(
-                args.usa_image, args.pack, workspace=args.workspace,
+                args.usa_image, args.language, workspace=args.workspace,
                 output=args.output, no_verify=args.no_verify)
             print(f"built {output}")
         elif args.command == "check-pack":
-            rows = load_pack(args.pack)
-            print(f"pack ok: {len(rows)} translated record(s)")
+            pack = resolve_pack(args.language)
+            rows = load_pack(pack)
+            profile = check_pack_profile(pack)
+            print(f"pack ok: {len(rows)} translated record(s), "
+                  f"{profile} resource(s) in the build profile")
     except PackError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

@@ -67,5 +67,158 @@ class CacheLocationTests(unittest.TestCase):
         self.assertEqual([], offenders)
 
 
+
+class PackProfileTests(unittest.TestCase):
+    """The build profile belongs to a language, not to the installation.
+
+    It names the resources a build writes and the flags each one needs,
+    including the shared-font containers that carry no text of their own.
+    Two languages do not have to want the same set, so each pack owns its
+    own copy and a build reads the one beside the pack it was given.
+    """
+
+    def _packs(self):
+        directory = ROOT / "translations"
+        return sorted(path for path in directory.iterdir()
+                      if (path / "pack.toml").is_file())
+
+    def test_every_installed_pack_carries_a_valid_profile(self):
+        from tools.scripts.public_build import check_pack_profile
+        packs = self._packs()
+        self.assertTrue(packs)
+        for pack in packs:
+            with self.subTest(pack=pack.name):
+                self.assertTrue((pack / "build-profile.csv").is_file())
+                self.assertGreater(check_pack_profile(pack), 0)
+
+    def test_a_profile_is_not_read_as_a_translation_sheet(self):
+        """It sits at the pack root, where load_pack walks for CSVs."""
+        from tools.scripts.translation_pack import load_pack
+        load_pack(ROOT / "translations" / "sv-SE")
+
+    def test_a_pack_without_a_profile_says_so(self):
+        import shutil
+        import tempfile
+        from tools.scripts.public_build import check_pack_profile
+        from tools.scripts.translation_pack import PackError
+        with tempfile.TemporaryDirectory() as elsewhere:
+            pack = Path(elsewhere) / "xx-XX"
+            pack.mkdir()
+            shutil.copy(ROOT / "translations" / "sv-SE" / "pack.toml", pack)
+            with self.assertRaises(PackError) as raised:
+                check_pack_profile(pack)
+            self.assertIn("build-profile.csv", str(raised.exception))
+
+    def test_a_language_that_is_not_installed_lists_the_ones_that_are(self):
+        from tools.scripts.public_build import resolve_pack
+        from tools.scripts.translation_pack import PackError
+        with self.assertRaises(PackError) as raised:
+            resolve_pack("xx-XX")
+        self.assertIn("pt-BR", str(raised.exception))
+
+
+class ChildProcessTests(unittest.TestCase):
+    """Closing the window has to stop the patcher, not orphan it.
+
+    A build runs the low-level patcher as a child process. The window's
+    worker is a daemon thread and dies with the interpreter; the child does
+    not, and goes on writing a 4 GB ISO with nothing left on screen to say
+    so.
+    """
+
+    def _sleeper(self):
+        import subprocess
+        process = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(120)"])
+        self.addCleanup(process.kill)
+        return process
+
+    def test_a_tracked_child_is_stopped_and_waited_for(self):
+        from tools.scripts.public_build import _tracked, terminate_active_builds
+        process = self._sleeper()
+        with _tracked(process):
+            self.assertIsNone(process.poll())
+            self.assertEqual(1, terminate_active_builds())
+        self.assertIsNotNone(process.poll())
+
+    def test_a_finished_build_leaves_nothing_to_stop(self):
+        from tools.scripts.public_build import _tracked, terminate_active_builds
+        process = self._sleeper()
+        with _tracked(process):
+            pass
+        self.assertEqual(0, terminate_active_builds())
+        process.kill()
+
+    def test_the_window_stops_the_child_before_it_closes(self):
+        """The close handler must call it, not merely ask about it."""
+        import inspect
+        import vp2_translate as launcher
+        source = inspect.getsource(launcher.App._on_close)
+        self.assertIn("terminate_active_builds()", source)
+        self.assertIn("self.root.destroy()", source)
+
+
+class AutomaticWorkspaceTests(unittest.TestCase):
+    """A build reads the disc itself rather than naming a second command.
+
+    The records a build needs come out of the user's image. Requiring a
+    separate `generate` first made the common path two steps and turned a
+    forgotten one into an error message instead of a wait.
+    """
+
+    def _build(self, workspace, source):
+        import tempfile
+        from unittest import mock
+        from tools.scripts import public_build
+        generated = []
+        with mock.patch.object(
+                public_build, "generate_workspace",
+                side_effect=lambda images, where: generated.append(
+                    ([Path(image) for image in images], Path(where)))), \
+                mock.patch.object(public_build, "compile_build_workspace",
+                                  side_effect=RuntimeError("far enough")):
+            with self.assertRaises(RuntimeError):
+                public_build.build_iso(source, "pt-BR", workspace=workspace)
+        return generated
+
+    def test_an_unprepared_workspace_is_generated_from_the_given_image(self):
+        import tempfile
+        from tools.scripts.public_build import workspace_is_ready
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / "disc.iso"
+            source.write_bytes(b"not really an iso")
+            workspace = Path(folder) / "workspace"
+            self.assertFalse(workspace_is_ready(workspace))
+            generated = self._build(workspace, source)
+        self.assertEqual(1, len(generated))
+        images, where = generated[0]
+        self.assertEqual([source], images)
+        self.assertEqual(workspace, where)
+
+    def test_a_prepared_workspace_is_left_alone(self):
+        import tempfile
+        from tools.scripts.public_build import workspace_is_ready
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / "disc.iso"
+            source.write_bytes(b"not really an iso")
+            workspace = Path(folder) / "workspace"
+            internal = workspace / "internal"
+            (internal / "records").mkdir(parents=True)
+            (internal / "generation.json").write_text("{}", encoding="utf-8")
+            self.assertTrue(workspace_is_ready(workspace))
+            self.assertEqual([], self._build(workspace, source))
+
+    def test_readiness_needs_both_the_stamp_and_the_records(self):
+        import tempfile
+        from tools.scripts.public_build import workspace_is_ready
+        with tempfile.TemporaryDirectory() as folder:
+            internal = Path(folder) / "internal"
+            internal.mkdir()
+            (internal / "generation.json").write_text("{}", encoding="utf-8")
+            self.assertFalse(workspace_is_ready(folder))
+            (internal / "records").mkdir()
+            self.assertTrue(workspace_is_ready(folder))
+
+
 if __name__ == "__main__":
     unittest.main()

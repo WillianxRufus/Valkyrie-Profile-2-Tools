@@ -32,6 +32,9 @@ SCENE_PATH_RE = re.compile(r"^dialogue/scene-([0-9]+)\.csv$")
 CONTAINER_PATH_RE = re.compile(r"^dialogue/container-([0-9]+)\.csv$")
 MENU_PATH_RE = re.compile(r"^menu/menu-([1-5])\.csv$")
 PACK_FORMAT = 2
+# A pack's own build profile: which resources its build writes, and how.
+# It sits beside the translation CSVs and is not one of them.
+PACK_PROFILE = "build-profile.csv"
 
 
 class PackError(ValueError):
@@ -185,7 +188,8 @@ def load_pack(directory: str | os.PathLike[str]) -> dict[tuple[str, ...], dict[s
     base = Path(directory)
     if not base.is_dir():
         raise PackError(f"language pack directory does not exist: {base}")
-    files = _csv_files(base)
+    files = [path for path in _csv_files(base)
+             if path.relative_to(base).as_posix() != PACK_PROFILE]
     legacy = base / "translations.csv"
     if legacy in files:
         if files != [legacy]:

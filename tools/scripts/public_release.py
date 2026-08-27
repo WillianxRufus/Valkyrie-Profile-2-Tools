@@ -66,18 +66,6 @@ def self_check(stream=None) -> int:
     notes.append(f"working state     : {BUILD_DIR}")
     notes.append(f"iso written to    : {output_root()}")
 
-    profile = DATA_DIR / "build-profile.csv"
-    if profile.is_file():
-        import csv
-        import io
-        with io.open(profile, newline="", encoding="utf-8-sig") as handle:
-            rows = list(csv.DictReader(handle))
-        notes.append(f"build profile     : {len(rows)} row(s)")
-        if not rows:
-            problems.append("the build profile is empty")
-    else:
-        problems.append(f"no build profile at {profile}")
-
     tables = sorted(p.name for p in DATA_DIR.glob("*.csv")) if DATA_DIR.is_dir() else []
     notes.append(f"structural tables : {len(tables)}")
     for required in ("menu-layout.csv", "record-limits.csv",
@@ -86,9 +74,23 @@ def self_check(stream=None) -> int:
             problems.append(f"missing structural table: {required}")
 
     packs = _packs(PROJECT_ROOT)
-    notes.append("language packs    : " + (", ".join(packs) or "none"))
     if not packs:
         problems.append("no language pack is bundled")
+    try:
+        from .public_build import check_pack_profile
+    except Exception as exc:                     # pragma: no cover - packaging
+        check_pack_profile = None
+        problems.append(f"the pack loader does not import: {exc!r}")
+    for name in packs:
+        if check_pack_profile is None:
+            break
+        try:
+            resources = check_pack_profile(PROJECT_ROOT / "translations" / name)
+        except Exception as exc:
+            problems.append(f"language pack {name}: {exc}")
+        else:
+            notes.append(
+                f"language pack     : {name}, {resources} resource(s)")
 
     artwork = [name for name in RELEASE_ARTWORK
                if (PROJECT_ROOT / name).is_file()]

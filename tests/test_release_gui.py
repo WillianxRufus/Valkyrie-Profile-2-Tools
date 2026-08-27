@@ -146,5 +146,143 @@ class WindowSmokeTests(unittest.TestCase):
             root.destroy()
 
 
+
+def _window():
+    """A real window, or the reason there cannot be one.
+
+    The release container has Tk but no display, so these skip there and
+    run on a developer's machine, which is where the window is used.
+    """
+    if launcher.TK_IMPORT_ERROR is not None:
+        raise unittest.SkipTest(f"no Tk: {launcher.TK_IMPORT_ERROR}")
+    try:
+        root = launcher.Tk()
+    except Exception as exc:                     # pragma: no cover - headless
+        raise unittest.SkipTest(f"no display: {exc!r}")
+    root.withdraw()
+    return root
+
+
+class WindowTests(unittest.TestCase):
+
+    def setUp(self):
+        self.root = _window()
+        self.addCleanup(self.root.destroy)
+        self.app = launcher.App(self.root)
+
+    def _label_for(self, locale):
+        for pack in self.app.packs:
+            if pack.locale == locale:
+                return pack.label
+        self.fail(f"{locale} is not installed")
+
+    def test_the_dropdown_chooses_which_pack_is_built(self):
+        """The build must use the language on screen, not the default."""
+        import tempfile
+        from unittest import mock
+
+        started = []
+        with tempfile.TemporaryDirectory() as folder:
+            self.app.output_var.set(folder)
+            self.app.pack_var.set(self._label_for("sv-SE"))
+            image = Path(folder) / "disc.iso"
+            with mock.patch.object(launcher.App, "_validated_usa",
+                                   return_value=image), \
+                    mock.patch.object(launcher, "workspace_summary",
+                                      return_value=(True, "ready")), \
+                    mock.patch.object(self.app.runner, "start",
+                                      side_effect=lambda *a, **k:
+                                          started.append((a, k))):
+                self.app._start_build()
+
+        self.assertEqual(1, len(started))
+        (kind, function, usa, pack), keywords = started[0]
+        self.assertEqual("build", kind)
+        self.assertIs(launcher.build_iso, function)
+        self.assertEqual(ROOT / "translations" / "sv-SE", pack)
+        self.assertEqual("disc.sv-SE.iso", Path(keywords["output"]).name)
+
+    def test_a_running_job_takes_every_control_away(self):
+        self.assertTrue(self.app.locked)
+        for widget, _idle in self.app.locked:
+            self.assertNotEqual("disabled", str(widget.cget("state")))
+
+        self.app._set_busy(True)
+        for widget, _idle in self.app.locked:
+            with self.subTest(widget=str(widget)):
+                self.assertEqual("disabled", str(widget.cget("state")))
+
+        self.app._set_busy(False)
+        for widget, idle in self.app.locked:
+            with self.subTest(widget=str(widget)):
+                self.assertEqual(idle, str(widget.cget("state")))
+
+    def test_the_language_dropdown_never_becomes_typable(self):
+        """Re-enabling must restore readonly, not normal."""
+        self.app._set_busy(True)
+        self.app._set_busy(False)
+        self.assertEqual("readonly",
+                         str(self.app.language_combo.cget("state")))
+
+    def test_the_controls_a_job_reads_are_all_locked(self):
+        locked = {str(widget) for widget, _idle in self.app.locked}
+        for name, widget in (("language", self.app.language_combo),
+                             ("build", self.app.build_btn),
+                             ("verify", self.app.verify_chk)):
+            with self.subTest(control=name):
+                self.assertIn(str(widget), locked)
+        self.assertEqual(9, len(self.app.locked))
+
+    def test_verification_is_off_until_asked_for(self):
+        """The slow read-back pass is opt-in, so a build finishes sooner."""
+        self.assertFalse(self.app.verify_var.get())
+
+    def test_there_is_one_action_and_it_is_the_build(self):
+        """Preparing is part of building, so it is not a button any more."""
+        self.assertFalse(hasattr(self.app, "prepare_btn"))
+        self.assertNotIn("prepare", self.app.items)
+        self.assertIn("build", self.app.items)
+
+    def test_the_workspace_line_survives_the_button(self):
+        self.app._refresh_workspace()
+        self.assertTrue(self.app.workspace_var.get())
+        self.assertIn(str(self.app.workspace_label.cget("style")),
+                      ("Ok.TLabel", "Warn.TLabel"))
+
+    def test_a_real_percentage_ends_the_indeterminate_sweep(self):
+        """An unread disc has no step count, so the bar sweeps until it does."""
+        self.app.progress.configure(mode="indeterminate")
+        self.app.progress.start(12)
+        self.app._track_progress("copy:  40%")
+        self.assertEqual("determinate", str(self.app.progress.cget("mode")))
+        self.assertAlmostEqual(8, float(self.app.progress["value"]))
+
+    def test_the_workspace_line_updates_as_soon_as_the_disc_is_read(self):
+        """Not at the end of the build, which is minutes too late.
+
+        A build that has to read the disc first leaves the window saying
+        the workspace is not prepared for the whole run, which is untrue
+        from the moment reading finishes.
+        """
+        from unittest import mock
+        self.app.workspace_var.set("Workspace not prepared")
+        self.app.workspace_ready = False
+        with mock.patch.object(launcher, "workspace_summary",
+                               return_value=(True, "Workspace ready · 9 rows")):
+            self.app._track_progress("workspace: prepared")
+        self.assertTrue(self.app.workspace_ready)
+        self.assertEqual("Workspace ready · 9 rows",
+                         self.app.workspace_var.get())
+        self.assertEqual("Ok.TLabel",
+                         str(self.app.workspace_label.cget("style")))
+
+    def test_the_runtime_announces_that_it_prepared_one(self):
+        """The window can only react to a line the build actually prints."""
+        import inspect
+        from tools.scripts import public_build
+        source = inspect.getsource(public_build.build_iso)
+        self.assertIn('"workspace: prepared"', source)
+
+
 if __name__ == "__main__":
     unittest.main()

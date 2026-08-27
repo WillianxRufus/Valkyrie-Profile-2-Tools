@@ -59,8 +59,8 @@ class CliDefaultsTests(unittest.TestCase):
                 ["generate", "image.iso"]).workspace,
             "build --workspace": self._from_elsewhere(
                 ["build", "image.iso"]).workspace,
-            "build --pack": self._from_elsewhere(
-                ["build", "image.iso"]).pack,
+            "build LANGUAGE": self.cli.resolve_pack(
+                self._from_elsewhere(["build", "image.iso"]).language),
         }
         for name, value in cases.items():
             with self.subTest(argument=name):
@@ -68,12 +68,24 @@ class CliDefaultsTests(unittest.TestCase):
 
     def test_defaults_sit_inside_the_installation(self):
         for argv, attribute in ((["generate", "i.iso"], "workspace"),
-                                (["build", "i.iso"], "workspace"),
-                                (["build", "i.iso"], "pack")):
+                                (["build", "i.iso"], "workspace")):
             value = Path(getattr(self._from_elsewhere(argv), attribute))
             with self.subTest(argv=argv, attribute=attribute):
                 self.assertEqual(
                     ROOT, Path(os.path.commonpath([ROOT, value])))
+
+    def test_a_language_names_a_pack_inside_the_installation(self):
+        """`build image.iso sv-SE` must not depend on the caller's directory."""
+        parsed = self._from_elsewhere(["build", "image.iso", "sv-SE"])
+        self.assertEqual("sv-SE", parsed.language)
+        pack = self.cli.resolve_pack(parsed.language)
+        self.assertEqual(ROOT / "translations" / "sv-SE", pack)
+
+    def test_a_language_may_still_be_a_pack_path(self):
+        """A pack outside translations/ is still reachable by path."""
+        given = ROOT / "translations" / "pt-BR"
+        parsed = self._from_elsewhere(["build", "image.iso", os.fspath(given)])
+        self.assertEqual(given, self.cli.resolve_pack(parsed.language))
 
     def test_an_explicit_relative_path_is_still_the_caller_s(self):
         """Anchoring the default must not seize an argument the user gave."""

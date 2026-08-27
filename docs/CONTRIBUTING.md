@@ -11,7 +11,7 @@ each contributor.
 
 ```bash
 python -m unittest discover -s tests -q
-python vp2_translate.py check-pack translations/<locale>
+python vp2_translate.py check-pack <locale>
 ```
 
 ## What must not be committed
@@ -42,8 +42,9 @@ A pack row is a record identity and your text. Keep the identity columns as
 generated; `check-pack` verifies them.
 
 Adding a language: copy an existing pack, change `pack.toml`, clear the
-`translated` column. Format details are in
-[translation-format.md](translation-format.md).
+`translated` column, and reduce `build-profile.csv` to the resources you mean
+to translate — a build writes what that file names and nothing else. Format
+details are in [translation-format.md](translation-format.md).
 
 A translation may be your own expression while still being based on a
 third-party work — you license only the rights you hold, and no license here

@@ -6,6 +6,7 @@ publishing the game's source script.
 ```text
 translations/<locale>/
   pack.toml
+  build-profile.csv
   chapter.csv
   dialogue/
     scene-XXXX.csv
@@ -31,10 +32,35 @@ resource,message_id,translated,notes
 - `notes` contains only contributor-authored information safe to publish.
 
 The path supplies the record family, so `kind` is not repeated in every row.
-No source text, source hash, extraction detail, or patcher flag belongs in a
-language pack. Complete blank rows are intentional: they make each language
-tree line up with the local reference and expose untranslated coverage without
-copying source text.
+No source text, source hash, or extraction detail belongs in a translation
+CSV, and neither does a patcher flag: those live in `build-profile.csv`.
+Complete blank rows are intentional: they make each language tree line up with
+the local reference and expose untranslated coverage without copying source
+text.
+
+## Build profile
+
+`build-profile.csv` is the one file in a pack that is not translation. It
+lists the resources this language's build writes, one row each:
+
+```csv
+kind,resource,sheet,flags,verify
+```
+
+- `kind` is `scene`, `container`, or `fontless`.
+- `resource` is the resource the build patches.
+- `sheet` is the generated record sheet its text comes from. Several
+  resources may name one sheet: the menu layout points 25, 868, 869, 1480,
+  and 1481 at `container-0024.csv`.
+- `flags` asks for font work — `full-font` re-cuts a scene's own face,
+  `shared-font-glyphs` adds characters to a shared one.
+- `verify` reads the resource back out of the finished image.
+
+A build only touches what this file names, so a pack translating one menu
+lists one resource and finishes in seconds. Rows carrying no translation are
+still meaningful: the shared-font containers hold the face that other
+resources draw with, and dropping them leaves accented characters blank
+everywhere.
 
 ## Local reference
 
