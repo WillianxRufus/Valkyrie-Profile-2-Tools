@@ -30,7 +30,7 @@ export default class HomeService implements IHomeService {
   }
 
   public getDubVideo(): string {
-    return 'https://github.com/user-attachments/assets/e3ffbda2-0f37-4fec-a5cf-d1db6875e984'
+    return 'https://github.com/user-attachments/assets/95875f89-b953-42f8-b083-fad7d9d1d7c8'
   }
 
   public increment(): void {
