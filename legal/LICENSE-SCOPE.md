@@ -25,6 +25,13 @@ Listing them claims nothing: the disclaimer above applies to every one, and
 they remain their holders'. They are names rather than script, and no entry
 is long enough to be expression by itself.
 
+The cheat patches name machine addresses, the original instruction word at
+each, and the word to write instead. That is what a PCSX2 `.pnach` publishes,
+and these were ported from one the author wrote and published. The original
+words are there so the patcher can refuse a disc that does not match, and
+they are quoted rather than authored: the disclaimer above applies to them,
+and to the game code they belong to.
+
 Merely processing material with GPL-covered tools does not relicense that
 material. Users are responsible for obtaining any rights required to possess,
 modify, or distribute their inputs and generated outputs.

@@ -39,17 +39,23 @@ RUN python -m unittest discover -s tests -q \
     && pyinstaller data/vp2_release.spec \
     --workpath workspace/internal/build \
     --clean --noconfirm \
-    && ./dist/ValkyrieProfile2-Translator --self-check
+    && ./dist/ValkyrieProfile2-Translator --self-check \
+    && pyinstaller data/vp2_cheats.spec \
+    --workpath workspace/internal/build \
+    --clean --noconfirm \
+    && ./dist/ValkyrieProfile2-CheatPatcher --self-check
 
 RUN set -eux; \
-    name="ValkyrieProfile2-Translator-${VERSION}-linux-x64"; \
-    mv dist/ValkyrieProfile2-Translator "dist/${name}"; \
+    mkdir roundtrip; \
+    for binary in ValkyrieProfile2-Translator ValkyrieProfile2-CheatPatcher; do \
+    name="${binary}-${VERSION}-linux-x64"; \
+    mv "dist/${binary}" "dist/${name}"; \
     chmod +x "dist/${name}"; \
     tar -czf "${name}.tar.gz" -C dist "${name}"; \
-    mkdir roundtrip; \
     tar -xzf "${name}.tar.gz" -C roundtrip; \
     test -x "roundtrip/${name}"; \
-    "roundtrip/${name}" --self-check
+    "roundtrip/${name}" --self-check; \
+    done
 
 FROM scratch AS artifact
-COPY --from=build /src/ValkyrieProfile2-Translator-*.tar.gz /
+COPY --from=build /src/ValkyrieProfile2-*.tar.gz /

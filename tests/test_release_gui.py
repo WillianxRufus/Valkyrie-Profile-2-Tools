@@ -71,15 +71,17 @@ class ReleaseSpecTests(unittest.TestCase):
         self.spec = self.spec_path.read_text(encoding="utf-8")
 
     def test_spec_and_pyinstaller_work_tree_use_internal_build_storage(self):
+        """Both tools ship, and neither scratches outside the workspace."""
         self.assertTrue(self.spec_path.is_file())
-        expected_spec = "data/vp2_release.spec"
+        self.assertTrue((ROOT / "data" / "vp2_cheats.spec").is_file())
         expected_workpath = "--workpath workspace/internal/build"
         for path in (
                 ROOT / "Dockerfile",
                 ROOT / ".github" / "workflows" / "release.yml",
                 ROOT / "Readme.md"):
             source = path.read_text(encoding="utf-8")
-            self.assertIn(expected_spec, source, path)
+            for spec in ("data/vp2_release.spec", "data/vp2_cheats.spec"):
+                self.assertIn(spec, source, "%s: %s" % (path, spec))
             self.assertIn(expected_workpath, source, path)
             self.assertNotIn(
                 "--workpath workspace/internal/build/vp2_release", source,

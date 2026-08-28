@@ -44,12 +44,10 @@ jobs:
         include:
           - os: windows-2025
             name: Windows
-            binary: ValkyrieProfile2-Translator.exe
             suffix: windows-x64
             extension: .zip
           - os: ubuntu-24.04
             name: Linux
-            binary: ValkyrieProfile2-Translator
             suffix: linux-x64
             extension: .tar.gz
 
@@ -64,7 +62,7 @@ jobs:
         if: runner.os == 'Windows'
         run: python -m pip install --disable-pip-version-check "pyinstaller==6.22.2"
 
-      - name: Resolve package name
+      - name: Resolve version
         id: package
         shell: bash
         run: |
@@ -72,31 +70,27 @@ jobs:
           if [ "$GITHUB_REF_TYPE" != "tag" ]; then
             version="dev-${GITHUB_SHA::7}"
           fi
-          name="ValkyrieProfile2-Translator-${version}-${{ matrix.suffix }}"
-          {
-            echo "version=$version"
-            echo "name=$name"
-            echo "archive=${name}${{ matrix.extension }}"
-          } >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Build Windows
         if: runner.os == 'Windows'
-        run: >-
-          python -m PyInstaller data/vp2_release.spec
-          --workpath workspace/internal/build
-          --clean --noconfirm
-      - name: Self-check the Windows binary
-        if: runner.os == 'Windows'
         shell: bash
-        run: ./dist/${{ matrix.binary }} --self-check
+        run: |
+          python -m PyInstaller data/vp2_release.spec \
+            --workpath workspace/internal/build --clean --noconfirm
+          python -m PyInstaller data/vp2_cheats.spec \
+            --workpath workspace/internal/build --clean --noconfirm
+
       - name: Package Windows
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          cd dist
-          mv "${{ matrix.binary }}" "${{ steps.package.outputs.name }}.exe"
-          7z a -tzip "../${{ steps.package.outputs.archive }}" \
-            "${{ steps.package.outputs.name }}.exe" > /dev/null
+          for binary in ValkyrieProfile2-Translator ValkyrieProfile2-CheatPatcher; do
+            ./dist/"${binary}.exe" --self-check
+            name="${binary}-${{ steps.package.outputs.version }}-${{ matrix.suffix }}"
+            mv "dist/${binary}.exe" "dist/${name}.exe"
+            7z a -tzip "${name}.zip" "./dist/${name}.exe" > /dev/null
+          done
 
       - name: Build and package Linux through the release container
         if: runner.os == 'Linux'
@@ -107,29 +101,28 @@ jobs:
             --output type=local,dest=. \
             .
 
-      - name: Show package
+      - name: Show packages
         shell: bash
-        run: ls -l "${{ steps.package.outputs.archive }}"
+        run: ls -l ValkyrieProfile2-*${{ matrix.extension }}
 
       - name: Unpack what will be published
+        if: runner.os == 'Windows'
         shell: bash
         run: |
           mkdir -p roundtrip && cd roundtrip
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            7z x "../${{ steps.package.outputs.archive }}" > /dev/null
-            binaries=(./*.exe)
-          else
-            tar -xzf "../${{ steps.package.outputs.archive }}"
-            binaries=(./ValkyrieProfile2-Translator-*)
-            test -x "${binaries[0]}"
-          fi
-          test "${#binaries[@]}" -eq 1
-          "${binaries[0]}" --self-check
+          for archive in ../ValkyrieProfile2-*.zip; do
+            7z x "$archive" > /dev/null
+          done
+          binaries=(./*.exe)
+          test "${#binaries[@]}" -eq 2
+          for binary in "${binaries[@]}"; do
+            "$binary" --self-check
+          done
 
       - uses: actions/upload-artifact@v4
         with:
-          name: translator-${{ matrix.suffix }}
-          path: ${{ steps.package.outputs.archive }}
+          name: vp2-tools-${{ matrix.suffix }}
+          path: ValkyrieProfile2-*${{ matrix.extension }}
           if-no-files-found: error
           compression-level: 0
 
