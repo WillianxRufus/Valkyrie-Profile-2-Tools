@@ -115,6 +115,12 @@ CHEATS = (
         True,
     ),
     Cheat(
+        "hold-circle-float",
+        "(!) Hold Circle To Float",
+        "Lets the field character float after jumping while Circle is held.",
+        True,
+    ),
+    Cheat(
         "equip-everything",
         "Let Everyone Equip Everything",
         "Allows every armor and weapon to be equipped by every character.",
@@ -135,13 +141,15 @@ CHEATS = (
     Cheat(
         "restore-all-sealstones",
         "Restore A Sealstone To Unlock All",
-        "Unlocks every sealstone when any one sealstone is restored.",
+        "Unlocks every sealstone when any one is restored. Known issue: the "
+        "sealstone menu may show flickering colours at the top.",
         False,
     ),
     Cheat(
         "no-limit-sealstone-withdrawals",
         "No Limit For Sealstone Withdrawals",
-        "Removes the switching limit; the displayed number may go negative.",
+        "Removes the switching limit; the number may go negative. Known "
+        "issue: the sealstone menu may show flickering colours at the top.",
         False,
     ),
     Cheat(

@@ -9,10 +9,10 @@ The release windows/linux builds have no way around that at the moment.
 
 Some glyphs are missing, and existing authored glyphs could get some polishing.
 
-### Scene 1213
-
-Scene 1213 cannot be added to the translation right now, or it will break the build.
-
 ### Title Screen
 
 The texts in the title screen (New Game, Load Game and Settings) seems to be art.
+
+### Sealstone Menu
+
+The menu will break and have weird colors flickering at the top if any changes are made to the 866 container.

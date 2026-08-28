@@ -27,6 +27,7 @@ from pathlib import Path
 
 from .build import PATCHERS, build_iso, default_output_path
 from .catalog import ANTI_CHEAT, CHEATS, required_with
+from ..scripts import disc_identity
 
 try:
     from tkinter import (
@@ -48,6 +49,7 @@ __version__ = "0.0.2"
 APP_NAME = "Valkyrie Profile 2 Cheat Patcher"
 SHORT_NAME = "VP2 Cheat Patcher"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SUPPORTED_BOOT = "SLUS_214.52"
 ICON_ICO = "images/vp2_release.ico"
 ICON_PNG = "images/vp2_release.png"
 BACKDROP_PNG = "images/vp2_release_bg.png"
@@ -77,6 +79,24 @@ def asset_path(name):
 
 def output_path_for(source, directory):
     return Path(directory) / default_output_path(source).name
+
+
+def describe_disc(path):
+    """Recognise the one game release whose addresses this patcher owns."""
+    path = Path(path)
+    if not path.is_file():
+        return "error", "File does not exist."
+    try:
+        boot, region = disc_identity.identify(path)
+    except disc_identity.DiscError as exc:
+        return "error", str(exc)
+    if boot == SUPPORTED_BOOT:
+        return "ok", "USA source recognised (%s)." % boot
+    return (
+        "error",
+        "This is %s (%s), not the supported USA image (%s)."
+        % (boot, region, SUPPORTED_BOOT),
+    )
 
 
 class _QueueStream:
@@ -685,9 +705,12 @@ class App:
             filetypes=[("Disc images", "*.iso"), ("All files", "*.*")])
         if path:
             self.source_var.set(path)
+            level, note = describe_disc(Path(path))
             size = Path(path).stat().st_size / (1 << 30)
-            self.status_var.set("Ready to patch.")
+            self.status_var.set(note)
             self.detail_var.set(f"{size:.2f} GB")
+            if level == "error":
+                messagebox.showerror("Unexpected disc image", note)
 
     def _pick_output(self):
         path = filedialog.askdirectory(title="Where should the ISO be written?")
@@ -698,17 +721,23 @@ class App:
         return required_with(
             [name for name, var in self.cheat_vars.items() if var.get()])
 
-    def _start_patch(self):
-        if self.runner.busy:
-            return
+    def _validated_source(self):
         raw = self.source_var.get().strip()
         if not raw:
             messagebox.showinfo("Pick an ISO", "Choose the USA ISO first.")
-            return
+            return None
         source = Path(raw)
-        if not source.is_file():
-            messagebox.showerror("Unusable image",
-                                 "That file does not exist:\n%s" % source)
+        level, note = describe_disc(source)
+        if level != "ok":
+            messagebox.showerror("Unusable image", note)
+            return None
+        return source
+
+    def _start_patch(self):
+        if self.runner.busy:
+            return
+        source = self._validated_source()
+        if source is None:
             return
         selected = self.selected_cheats()
         if not selected:

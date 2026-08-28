@@ -53,6 +53,12 @@ from tools.cheat_patcher.cheats.heavenly_punishment_15_ap import (
     BATTLE_PATCHES as HEAVENLY_BATTLE_PATCHES,
     RESOURCE3_PATCHES as HEAVENLY_RESOURCE3_PATCHES,
 )
+from tools.cheat_patcher.cheats.hold_circle_float import (
+    GUARDS as FLOAT_GUARDS,
+    HOOK_PATCHES as FLOAT_HOOK_PATCHES,
+    INJECT_ADDRESS as FLOAT_INJECT_ADDRESS,
+    INJECT_WORDS as FLOAT_INJECT_WORDS,
+)
 from tools.cheat_patcher.cheats.negate_encounters import (
     PATCHES as NEGATE_ENCOUNTER_PATCHES,
 )
@@ -146,8 +152,11 @@ def make_main_resource():
     for address, original, _ in MITHRA_PATCHES:
         struct.pack_into("<I", output, address - 0x0035EC80, original)
     for address, original, _ in (CHARACTER_LIMIT_PATCHES +
-                                 NEGATE_ENCOUNTER_PATCHES):
+                                 NEGATE_ENCOUNTER_PATCHES +
+                                 FLOAT_HOOK_PATCHES):
         struct.pack_into("<I", output, address - 0x0035EC80, original)
+    for address, expected in FLOAT_GUARDS:
+        struct.pack_into("<I", output, address - 0x0035EC80, expected)
     return sle.conceal(slz12.compress(output, 2)) + b"\0" * 0x800
 
 
@@ -401,7 +410,7 @@ class DisableAntiCheatTests(unittest.TestCase):
 
 
 class CompleteBuildTests(unittest.TestCase):
-    def test_all_twenty_patches_compose_in_one_iso(self):
+    def test_all_twenty_one_patches_compose_in_one_iso(self):
         save_resource, _, _ = make_save_resource()
         battle_resource, _, _ = make_battle_resource()
         executable, executable_target = make_executable()
@@ -436,7 +445,7 @@ class CompleteBuildTests(unittest.TestCase):
                  "battle-anti-freeze", "battle-menu-always",
                  "36-character-limit", "infinite-ap-attacks",
                  "dupe-attacks", "100-percent-drop-rate",
-                 "negate-encounters",
+                 "negate-encounters", "hold-circle-float",
                  "disable-anti-cheat", "stop-removing-characters",
                  "join-all-unlocked", "mithra-swap", "join-level-1",
                  "ether-set-effects", "heavenly-punishment-15-ap",
@@ -469,6 +478,12 @@ class CompleteBuildTests(unittest.TestCase):
             self.assertEqual(HOOK_PATCHED, struct.unpack_from(
                 "<2I", main_output, HOOK_ADDRESS - 0x0035EC80
             ))
+            self.assertEqual(
+                tuple(replacement for _, _, replacement in FLOAT_HOOK_PATCHES),
+                tuple(struct.unpack_from(
+                    "<I", main_output, address - 0x0035EC80
+                )[0] for address, _, _ in FLOAT_HOOK_PATCHES),
+            )
 
             skill_output = menu_overlay.read(
                 skill, 646, SKILL_LABEL, SKILL_MODE
@@ -504,6 +519,17 @@ class CompleteBuildTests(unittest.TestCase):
             self.assertEqual(
                 INJECTED_CODE,
                 patched_executable[injected_at:injected_at + len(INJECTED_CODE)]
+            )
+            float_at = elf.file_offset_for_address(
+                patched_executable, FLOAT_INJECT_ADDRESS,
+                len(FLOAT_INJECT_WORDS) * 4,
+            )
+            self.assertEqual(
+                FLOAT_INJECT_WORDS,
+                struct.unpack_from(
+                    "<%dI" % len(FLOAT_INJECT_WORDS),
+                    patched_executable, float_at,
+                ),
             )
             self.assertEqual(0x13E00, len(patched_executable))
 

@@ -91,7 +91,9 @@ the commands work from any directory.
 `ValkyrieProfile2-CheatPatcher` is the second tool in this repository. It
 writes chosen cheats into a copy of your disc, so they need no emulator cheat
 engine to run. Open it, choose your ISO, tick the cheats, and patch; the
-source image is only ever read.
+source image is only ever read. Before starting, the window verifies that the
+disc boots as the supported USA release, `SLUS_214.52`, and rejects other
+games and regions.
 
 ```bash
 python vp2_cheats.py                     # the same window
@@ -109,6 +111,7 @@ python vp2_cheats.py <usa-image.iso> --patch angel-slayer
 | `dupe-attacks`                   | permits duplicate attacks in the attack slots       |
 | `100-percent-drop-rate`          | guarantees broken-part and boss drops               |
 | `negate-encounters`              | applies the Elusive Air Law effect permanently      |
+| `hold-circle-float`              | hold Circle after jumping to float                  |
 | `heavenly-punishment-15-ap`      | lowers Heavenly Punishment's AP cost to 15          |
 | `stop-removing-characters`       | keeps protected characters in the active roster     |
 | `join-all-unlocked`              | recruited characters arrive with all abilities      |
@@ -127,11 +130,16 @@ own code after cutscenes, battles, map changes and saves, and freezes on a
 mismatch. Both the window and `--patch` add it for you rather than let a
 frozen ISO be built.
 
+The two sealstone patches work, but currently reproduce the translation
+project's resource-866 issue: flickering incorrect colours appear at the top
+of the sealstone menu. They remain selectable with that known visual defect;
+see [docs/container-map.md](../docs/container-map.md).
+
 Nothing is written until the patcher has checked the disc it was given: the
 tri-Ace resource index, the module holding each address, the exact original
 instruction at it, and that every recompressed stream still fits its original
 allocation. The patched copy is then read back and verified before it takes
-its final name. See [docs/cheat-patches.md](docs/cheat-patches.md).
+its final name. See [docs/cheat-patches.md](../docs/cheat-patches.md).
 
 ## Build release artifacts locally
 

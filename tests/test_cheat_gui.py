@@ -3,6 +3,7 @@
 """The window, and the promises it makes about what will be patched."""
 
 import sys
+import tempfile
 import unittest
 from unittest import mock
 from pathlib import Path
@@ -35,6 +36,10 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(
             ("disable-anti-cheat", "heavenly-punishment-15-ap"),
             catalog.required_with(["heavenly-punishment-15-ap"])
+        )
+        self.assertEqual(
+            ("hold-circle-float",),
+            catalog.required_with(["hold-circle-float"])
         )
         self.assertEqual(
             ("disable-anti-cheat", "stop-removing-characters"),
@@ -74,6 +79,62 @@ class CatalogTests(unittest.TestCase):
             ("disable-anti-cheat", "stop-removing-characters"),
             build.call_args.kwargs["selected"]
         )
+
+
+class DiscGuardTests(unittest.TestCase):
+    @staticmethod
+    def _disc(folder, boot):
+        path = Path(folder) / (boot + ".iso")
+        path.write_bytes(b"BOOT2 = cdrom0:\\\\" + boot.encode("ascii"))
+        return path
+
+    def test_only_the_exact_usa_game_is_accepted(self):
+        with tempfile.TemporaryDirectory() as folder:
+            usa = self._disc(folder, "SLUS_214.52")
+            europe = self._disc(folder, "SLES_546.44")
+            other_usa = self._disc(folder, "SLUS_999.99")
+
+            self.assertEqual(
+                ("ok", "USA source recognised (SLUS_214.52)."),
+                gui.describe_disc(usa),
+            )
+            for image, boot in ((europe, "SLES_546.44"),
+                                (other_usa, "SLUS_999.99")):
+                with self.subTest(boot=boot):
+                    level, note = gui.describe_disc(image)
+                    self.assertEqual("error", level)
+                    self.assertIn(boot, note)
+                    self.assertIn("SLUS_214.52", note)
+
+    def test_start_does_not_reach_the_runner_for_a_wrong_region(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = self._disc(folder, "SLES_546.44")
+            app = object.__new__(gui.App)
+            app.source_var = SimpleNamespace(get=lambda: str(source))
+            app.runner = SimpleNamespace(busy=False, start=mock.Mock())
+            with mock.patch.object(gui.messagebox, "showerror") as error:
+                app._start_patch()
+
+        app.runner.start.assert_not_called()
+        error.assert_called_once()
+        self.assertEqual("Unusable image", error.call_args.args[0])
+        self.assertIn("SLES_546.44", error.call_args.args[1])
+
+    def test_picker_reports_a_wrong_region_immediately(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = self._disc(folder, "SLES_546.44")
+            app = object.__new__(gui.App)
+            app.source_var = mock.Mock()
+            app.status_var = mock.Mock()
+            app.detail_var = mock.Mock()
+            with (mock.patch.object(
+                    gui.filedialog, "askopenfilename", return_value=str(source)),
+                  mock.patch.object(gui.messagebox, "showerror") as error):
+                app._pick_source()
+
+        app.source_var.set.assert_called_once_with(str(source))
+        error.assert_called_once()
+        self.assertEqual("Unexpected disc image", error.call_args.args[0])
 
 
 def _window():
