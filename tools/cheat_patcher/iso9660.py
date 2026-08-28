@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Valkyrie Profile 2 Translation Tools contributors
 # SPDX-License-Identifier: GPL-3.0-only
-"""Minimal read-only ISO9660 file locator."""
+"""Minimal ISO9660 file locator and in-place length editor."""
 
 from dataclasses import dataclass
 import struct
@@ -14,6 +14,8 @@ class FileExtent:
     path: str
     offset: int
     size: int
+    allocation_size: int
+    record_offset: int
 
 
 def _primary_volume_descriptor(handle):
@@ -29,7 +31,7 @@ def _primary_volume_descriptor(handle):
     raise ValueError("ISO9660 primary volume descriptor was not found")
 
 
-def _directory_entries(data):
+def _directory_entries(data, base_offset):
     entries = []
     position = 0
     while position < len(data):
@@ -53,11 +55,18 @@ def _directory_entries(data):
             is_directory = bool(record[25] & 2)
             if name.endswith(".") and not is_directory:
                 name = name[:-1]
+            sector_le = struct.unpack_from("<I", record, 2)[0]
+            sector_be = struct.unpack_from(">I", record, 6)[0]
+            size_le = struct.unpack_from("<I", record, 10)[0]
+            size_be = struct.unpack_from(">I", record, 14)[0]
+            if sector_le != sector_be or size_le != size_be:
+                raise ValueError("ISO9660 directory record byte orders disagree")
             entries.append((
                 name,
-                struct.unpack_from("<I", record, 2)[0],
-                struct.unpack_from("<I", record, 10)[0],
+                sector_le,
+                size_le,
                 is_directory,
+                base_offset + position,
             ))
         position += length
     return entries
@@ -68,7 +77,7 @@ def _read_directory(handle, sector, size):
     data = handle.read(size)
     if len(data) != size:
         raise ValueError("truncated ISO9660 directory")
-    return _directory_entries(data)
+    return _directory_entries(data, sector * SECTOR_SIZE)
 
 
 def locate_file(handle, path):
@@ -89,13 +98,30 @@ def locate_file(handle, path):
                 "ISO9660 path /%s has %d matches"
                 % ("/".join(components[:number + 1]), len(matches))
             )
-        name, sector, size, is_directory = matches[0]
+        name, sector, size, is_directory, record_offset = matches[0]
         current_path += "/" + name
         is_last = number == len(components) - 1
         if is_last:
             if is_directory:
                 raise ValueError("ISO9660 path is a directory: %s" % current_path)
-            return FileExtent(current_path, sector * SECTOR_SIZE, size)
+            allocation_size = (size + SECTOR_SIZE - 1) // SECTOR_SIZE * SECTOR_SIZE
+            return FileExtent(
+                current_path, sector * SECTOR_SIZE, size,
+                allocation_size, record_offset
+            )
         if not is_directory:
             raise ValueError("ISO9660 path component is not a directory: %s" % current_path)
     raise AssertionError("unreachable empty ISO9660 path")
+
+
+def write_file_size(handle, extent, size):
+    """Update both-endian lengths without relocating a file's extent."""
+    if not extent.size <= size <= extent.allocation_size:
+        raise ValueError(
+            "ISO9660 file length %d exceeds its fixed %d-byte allocation"
+            % (size, extent.allocation_size)
+        )
+    handle.seek(extent.record_offset + 10)
+    handle.write(struct.pack("<I", size))
+    handle.seek(extent.record_offset + 14)
+    handle.write(struct.pack(">I", size))

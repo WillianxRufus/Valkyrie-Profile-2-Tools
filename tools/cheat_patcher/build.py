@@ -7,21 +7,52 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from . import (
+from . import iso9660, triace
+from .cheats import (
+    all_items_99,
     angel_slayer,
     battle_anti_freeze,
+    battle_menu_always,
+    character_limit_36,
     disable_anti_cheat,
+    drop_rate_100,
+    dupe_attacks,
     equip_everything,
-    iso9660,
-    triace,
+    ether_set_effects,
+    infinite_ap_attacks,
+    heavenly_punishment_15_ap,
+    join_all_unlocked,
+    join_level_1,
+    mithra_swap,
+    negate_encounters,
+    no_limit_sealstone_withdrawals,
+    restore_all_sealstones,
+    skill_points_99,
+    stop_removing_characters,
 )
 
 
 PATCHERS = {
     "angel-slayer": angel_slayer,
     "equip-everything": equip_everything,
+    "99-skill-points": skill_points_99,
     "battle-anti-freeze": battle_anti_freeze,
+    "battle-menu-always": battle_menu_always,
+    "36-character-limit": character_limit_36,
+    "infinite-ap-attacks": infinite_ap_attacks,
+    "dupe-attacks": dupe_attacks,
+    "100-percent-drop-rate": drop_rate_100,
+    "negate-encounters": negate_encounters,
     "disable-anti-cheat": disable_anti_cheat,
+    "stop-removing-characters": stop_removing_characters,
+    "join-all-unlocked": join_all_unlocked,
+    "mithra-swap": mithra_swap,
+    "join-level-1": join_level_1,
+    "ether-set-effects": ether_set_effects,
+    "heavenly-punishment-15-ap": heavenly_punishment_15_ap,
+    "restore-all-sealstones": restore_all_sealstones,
+    "no-limit-sealstone-withdrawals": no_limit_sealstone_withdrawals,
+    "all-items-99": all_items_99,
 }
 
 
@@ -159,6 +190,16 @@ def build_iso(source, output=None, selected=None, progress=None):
                 key = path.upper()
                 if key not in file_states:
                     extent, original = _read_iso_file(source_handle, path)
+                    source_handle.seek(extent.offset + extent.size)
+                    slack = source_handle.read(
+                        extent.allocation_size - extent.size
+                    )
+                    if (len(slack) != extent.allocation_size - extent.size or
+                            any(slack)):
+                        raise ValueError(
+                            "ISO9660 file has nonzero or truncated allocation "
+                            "slack: %s" % path
+                        )
                     file_states[key] = {
                         "path": path,
                         "extent": extent,
@@ -167,10 +208,11 @@ def build_iso(source, output=None, selected=None, progress=None):
                     }
                 state = file_states[key]
                 details = patch_file(state["current"])
-                if (details.allocation_size != state["extent"].size or
-                        len(details.data) != state["extent"].size):
+                if (details.allocation_size != len(details.data) or
+                        not len(state["current"]) <= len(details.data)
+                        <= state["extent"].allocation_size):
                     raise ValueError(
-                        "ISO9660 file size changed unexpectedly: %s" % path
+                        "ISO9660 file exceeded its fixed allocation: %s" % path
                     )
                 state["current"] = details.data
                 file_details.append(details)
@@ -200,6 +242,11 @@ def build_iso(source, output=None, selected=None, progress=None):
             for state in file_states.values():
                 candidate_handle.seek(state["extent"].offset)
                 candidate_handle.write(state["current"])
+                if len(state["current"]) != state["extent"].size:
+                    iso9660.write_file_size(
+                        candidate_handle, state["extent"],
+                        len(state["current"])
+                    )
             candidate_handle.flush()
             os.fsync(candidate_handle.fileno())
 
@@ -221,7 +268,12 @@ def build_iso(source, output=None, selected=None, progress=None):
                 extent, candidate = _read_iso_file(
                     candidate_handle, state["path"]
                 )
-                if extent != state["extent"]:
+                original_extent = state["extent"]
+                if (extent.path != original_extent.path or
+                        extent.offset != original_extent.offset or
+                        extent.allocation_size != original_extent.allocation_size or
+                        extent.record_offset != original_extent.record_offset or
+                        extent.size != len(state["current"])):
                     raise ValueError(
                         "ISO9660 file extent changed: %s" % state["path"]
                     )

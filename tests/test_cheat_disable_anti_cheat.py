@@ -5,19 +5,65 @@ import struct
 import tempfile
 import unittest
 
-from tools.cheat_patcher import battle_overlay, elf, sle, slz3, slz12, triace
-from tools.cheat_patcher.angel_slayer import (
+from tools.cheat_patcher import (
+    battle_overlay, direct_overlay, elf, iso9660, menu_overlay, sle, slz3,
+    slz12, triace
+)
+from tools.cheat_patcher.cheats.all_items_99 import (
+    GUARDS as ALL_ITEMS_GUARDS,
+    MODE as ITEM_MODE,
+    OWNER as ITEM_OWNER,
+    PATCHES as ALL_ITEMS_PATCHES,
+)
+from tools.cheat_patcher.cheats.angel_slayer import (
     ORIGINAL_WORD as ANGEL_ORIGINAL,
     PATCHED_WORD as ANGEL_PATCHED,
     TARGET_ADDRESS as ANGEL_ADDRESS,
 )
-from tools.cheat_patcher.battle_anti_freeze import (
+from tools.cheat_patcher.cheats.battle_anti_freeze import (
     ORIGINAL_INSTRUCTION as ANTI_FREEZE_ORIGINAL,
     PATCHED_INSTRUCTION as ANTI_FREEZE_PATCHED,
     TARGET_ADDRESS as ANTI_FREEZE_ADDRESS,
 )
+from tools.cheat_patcher.cheats.battle_menu_always import (
+    GUARD_ADDRESS as BATTLE_MENU_GUARD,
+    GUARD_INSTRUCTION as BATTLE_MENU_GUARD_WORD,
+    PATCHES as BATTLE_MENU_PATCHES,
+)
+from tools.cheat_patcher.cheats.character_limit_36 import (
+    PATCHES as CHARACTER_LIMIT_PATCHES,
+)
+from tools.cheat_patcher.cheats.drop_rate_100 import (
+    PATCHES as DROP_RATE_PATCHES,
+)
+from tools.cheat_patcher.cheats.dupe_attacks import (
+    MODE as ATTACK_MODE,
+    OWNER as ATTACK_OWNER,
+    PATCHES as DUPE_ATTACK_PATCHES,
+    RESOURCE as ATTACK_RESOURCE,
+)
+from tools.cheat_patcher.cheats.ether_set_effects import (
+    BYTE_PATCHES as ETHER_BYTE_PATCHES,
+)
+from tools.cheat_patcher.cheats.infinite_ap_attacks import (
+    GUARDS as INFINITE_AP_GUARDS,
+    PATCHES as INFINITE_AP_PATCHES,
+)
+from tools.cheat_patcher.cheats.heavenly_punishment_15_ap import (
+    BATTLE_PATCHES as HEAVENLY_BATTLE_PATCHES,
+    RESOURCE3_PATCHES as HEAVENLY_RESOURCE3_PATCHES,
+)
+from tools.cheat_patcher.cheats.negate_encounters import (
+    PATCHES as NEGATE_ENCOUNTER_PATCHES,
+)
+from tools.cheat_patcher.cheats.no_limit_sealstone_withdrawals import (
+    PATCHES as WITHDRAWAL_PATCHES,
+)
+from tools.cheat_patcher.cheats.restore_all_sealstones import (
+    PATCHES as RESTORE_SEALSTONE_PATCHES,
+)
 from tools.cheat_patcher.build import build_iso
-from tools.cheat_patcher.disable_anti_cheat import (
+from tools.cheat_patcher.cheats.disable_anti_cheat import (
     ALL_BATTLE_PATCHES,
     CRC_COMPENSATION_OFFSET,
     EXECUTABLE_ADDRESS,
@@ -32,8 +78,31 @@ from tools.cheat_patcher.disable_anti_cheat import (
     patch_memory_card_resource,
     patch_save_resource,
 )
+from tools.cheat_patcher.cheats.stop_removing_characters import (
+    HOOK_ADDRESS,
+    HOOK_ORIGINALS,
+    HOOK_PATCHED,
+    INJECT_ADDRESS,
+    INJECTED_CODE,
+)
+from tools.cheat_patcher.cheats.skill_points_99 import (
+    LABEL as SKILL_LABEL,
+    MODE as SKILL_MODE,
+    PATCHES as SKILL_PATCHES,
+    TARGET_OFFSETS as SKILL_TARGET_OFFSETS,
+)
+from tools.cheat_patcher.cheats.join_all_unlocked import (
+    PATCHES as ALL_UNLOCKED_PATCHES,
+)
+from tools.cheat_patcher.cheats.join_level_1 import (
+    PATCHES as LEVEL_1_PATCHES,
+)
+from tools.cheat_patcher.cheats.mithra_swap import (
+    PATCHES as MITHRA_PATCHES,
+)
 from tests.test_cheat_angel_slayer import write_synthetic_iso
 from tests.test_cheat_equip_everything import make_equip_resource
+from tests.test_cheat_skill_points_99 import make_skill_resource
 
 
 def _plant(output, base, patches):
@@ -50,10 +119,19 @@ def make_resource_3():
         slz12.compress(first_output, 1, next_offset=len(first_unlinked))
     )
 
-    base = ANGEL_ADDRESS - 0x40
-    second_output = bytearray(0x200)
+    base = 0x001E7E00
+    highest = max(ANGEL_ADDRESS,
+                  max(address for address, _, _ in HEAVENLY_RESOURCE3_PATCHES),
+                  max(address for address, _, _ in ETHER_BYTE_PATCHES))
+    second_output = bytearray(highest - base + 0x100)
     struct.pack_into("<I", second_output, 8, base)
-    struct.pack_into("<I", second_output, 0x40, ANGEL_ORIGINAL)
+    struct.pack_into("<I", second_output, ANGEL_ADDRESS - base, ANGEL_ORIGINAL)
+    for address, original, _ in ALL_UNLOCKED_PATCHES + LEVEL_1_PATCHES:
+        struct.pack_into("<I", second_output, address - base, original)
+    for address, original, _ in HEAVENLY_RESOURCE3_PATCHES:
+        struct.pack_into("<I", second_output, address - base, original)
+    # This Ether record has unrelated flags in the other three bytes.
+    struct.pack_into("<I", second_output, 0x003170F4 - base, 0x00001400)
     second = sle.conceal(slz3.compress(bytes(second_output)))
     return first + second + b"\0" * 0x800
 
@@ -62,6 +140,14 @@ def make_main_resource():
     output = bytearray(0xC4D00)
     struct.pack_into("<I", output, 8, 0x0035EC80)
     _plant(output, 0x0035EC80, MAIN_PATCHES)
+    struct.pack_into(
+        "<2I", output, HOOK_ADDRESS - 0x0035EC80, *HOOK_ORIGINALS
+    )
+    for address, original, _ in MITHRA_PATCHES:
+        struct.pack_into("<I", output, address - 0x0035EC80, original)
+    for address, original, _ in (CHARACTER_LIMIT_PATCHES +
+                                 NEGATE_ENCOUNTER_PATCHES):
+        struct.pack_into("<I", output, address - 0x0035EC80, original)
     return sle.conceal(slz12.compress(output, 2)) + b"\0" * 0x800
 
 
@@ -80,9 +166,75 @@ def make_save_resource():
     return bytes(resource), suffix, span
 
 
+def make_attack_resource():
+    base = 0x00495500
+    highest = max(
+        max(address for address, _, _ in DUPE_ATTACK_PATCHES),
+        0x00499AF4,
+    )
+    output = bytearray(highest - base + 0x100)
+    struct.pack_into("<I", output, 8, base)
+    for address, original, _ in DUPE_ATTACK_PATCHES:
+        struct.pack_into("<I", output, address - base, original)
+    struct.pack_into("<I", output, 0x00499AF4 - base, 0x1460FFD8)
+    encoded = sle.conceal(slz12.compress(output, ATTACK_MODE))
+    inner_size = (len(encoded) + 3) & ~3
+    span = (0x10 + inner_size + 0x7F) & ~0x7F
+    resource = bytearray(span + 0x100)
+    struct.pack_into("<4sIII", resource, 0, b"ZLS\0", inner_size, 0, span)
+    resource[0x10:0x10 + len(encoded)] = encoded
+    return bytes(resource)
+
+
+def make_item_resource():
+    base = 0x00495500
+    highest = max(
+        max(address for address, _, _ in ALL_ITEMS_PATCHES),
+        max(address for address, _ in ALL_ITEMS_GUARDS),
+    )
+    output = bytearray(highest - base + 0x100)
+    struct.pack_into("<I", output, 8, base)
+    for address, original, _ in ALL_ITEMS_PATCHES:
+        struct.pack_into("<I", output, address - base, original)
+    encoded = sle.conceal(slz3.compress(bytes(output)))
+    inner_size = (len(encoded) + 3) & ~3
+    span = (0x10 + inner_size + 0x7F) & ~0x7F
+    suffix = b"ITEM-SUFFIX" + b"\xA5" * 32
+    resource = bytearray(span + len(suffix) + 0x100)
+    struct.pack_into("<4sIII", resource, 0, b"ZLS\0", inner_size, 0, span)
+    resource[0x10:0x10 + len(encoded)] = encoded
+    resource[span:span + len(suffix)] = suffix
+    return bytes(resource), suffix, span
+
+
+def make_sealstone_resource(resource_number):
+    base = 0x00495500
+    output = bytearray(0xFC00)
+    struct.pack_into("<I", output, 8, base)
+    for address, original, _ in (RESTORE_SEALSTONE_PATCHES +
+                                 WITHDRAWAL_PATCHES):
+        struct.pack_into("<I", output, address - base, original)
+    encoded = slz3.compress(bytes(output))
+    fixed_span = 0x8910
+    if len(encoded) > fixed_span:
+        raise AssertionError("synthetic sealstone overlay exceeds its span")
+    suffix = (b"SEALSTONE-INLINE-BANK" + b"\xA5" * 32
+              if resource_number == 866 else b"")
+    resource = bytearray(fixed_span + len(suffix) + 0x100)
+    resource[:len(encoded)] = encoded
+    resource[fixed_span:fixed_span + len(suffix)] = suffix
+    return bytes(resource), suffix, fixed_span
+
+
 def make_battle_resource():
     base = 0x0036D900
-    highest = max(patch.address for patch in ALL_BATTLE_PATCHES)
+    highest = max(
+        max(patch.address for patch in ALL_BATTLE_PATCHES),
+        max(address for address, _, _ in BATTLE_MENU_PATCHES),
+        max(address for address, _, _ in INFINITE_AP_PATCHES),
+        max(address for address, _, _ in DROP_RATE_PATCHES),
+        max(address for address, _, _ in HEAVENLY_BATTLE_PATCHES),
+    )
     output = bytearray((highest - base + 0x104) & ~1)
     struct.pack_into("<I", output, 8, base)
     struct.pack_into(
@@ -90,6 +242,17 @@ def make_battle_resource():
     )
     struct.pack_into("<I", output, 0x00397CAC - base, 0x0262102A)
     _plant(output, base, ALL_BATTLE_PATCHES)
+    struct.pack_into(
+        "<I", output, BATTLE_MENU_GUARD - base, BATTLE_MENU_GUARD_WORD
+    )
+    for address, original, _ in BATTLE_MENU_PATCHES:
+        struct.pack_into("<I", output, address - base, original)
+    for address, expected in INFINITE_AP_GUARDS:
+        struct.pack_into("<I", output, address - base, expected)
+    for address, original, _ in INFINITE_AP_PATCHES + DROP_RATE_PATCHES:
+        struct.pack_into("<I", output, address - base, original)
+    for address, original, _ in HEAVENLY_BATTLE_PATCHES:
+        struct.pack_into("<I", output, address - base, original)
     stream = slz3.compress(bytes(output))
 
     count = 2
@@ -110,16 +273,22 @@ def make_battle_resource():
 
 
 def make_executable():
-    data = bytearray(0x11000)
+    data = bytearray(0x13A20)
     data[:6] = b"\x7fELF\x01\x01"
     struct.pack_into("<I", data, 28, 52)
-    struct.pack_into("<HH", data, 42, 32, 1)
+    struct.pack_into("<I", data, 32, 0x10000)
+    struct.pack_into("<HH", data, 42, 32, 2)
+    struct.pack_into("<HHH", data, 46, 40, 0x174, 1)
     file_offset = 0x1000
     virtual_address = 0x00100000
-    file_size = len(data) - file_offset
+    file_size = 0xF000
     struct.pack_into(
         "<8I", data, 52, 1, file_offset, virtual_address, 0,
         file_size, file_size, 5, 0x1000
+    )
+    struct.pack_into(
+        "<8I", data, 84, 1, 0x10000, 0x00200000, 0x00200000,
+        0, 0, 6, 0x10
     )
     target = file_offset + EXECUTABLE_ADDRESS - virtual_address
     struct.pack_into("<I", data, target, EXECUTABLE_ORIGINAL)
@@ -131,7 +300,8 @@ def install_iso_file(path, name, data):
     root_sector = 0x100
     file_sector = 0x120
     root_size = 0x800
-    end = file_sector * 0x800 + len(data)
+    allocation = (len(data) + 0x7FF) & ~0x7FF
+    end = file_sector * 0x800 + allocation
     if len(image) < end:
         image.extend(b"\0" * (end - len(image)))
 
@@ -140,7 +310,9 @@ def install_iso_file(path, name, data):
     root = bytearray(34)
     root[0] = 34
     struct.pack_into("<I", root, 2, root_sector)
+    struct.pack_into(">I", root, 6, root_sector)
     struct.pack_into("<I", root, 10, root_size)
+    struct.pack_into(">I", root, 14, root_size)
     root[25] = 2
     root[32:34] = b"\x01\0"
     descriptor[156:190] = root
@@ -151,7 +323,9 @@ def install_iso_file(path, name, data):
     record = bytearray(record_length)
     record[0] = record_length
     struct.pack_into("<I", record, 2, file_sector)
+    struct.pack_into(">I", record, 6, file_sector)
     struct.pack_into("<I", record, 10, len(data))
+    struct.pack_into(">I", record, 14, len(data))
     record[32] = len(encoded_name)
     record[33:33 + len(encoded_name)] = encoded_name
     root_at = root_sector * 0x800
@@ -226,8 +400,8 @@ class DisableAntiCheatTests(unittest.TestCase):
             patch_memory_card_resource(resource)
 
 
-class VersionOneBuildTests(unittest.TestCase):
-    def test_all_four_patches_compose_in_one_iso(self):
+class CompleteBuildTests(unittest.TestCase):
+    def test_all_twenty_patches_compose_in_one_iso(self):
         save_resource, _, _ = make_save_resource()
         battle_resource, _, _ = make_battle_resource()
         executable, executable_target = make_executable()
@@ -236,11 +410,20 @@ class VersionOneBuildTests(unittest.TestCase):
             source = root / "clean.iso"
             output = root / "patched.iso"
             equip_resource, _, _ = make_equip_resource()
+            skill_resource, _, _ = make_skill_resource()
+            item_resource, _, _ = make_item_resource()
+            sealstone_866, _, _ = make_sealstone_resource(866)
+            sealstone_867, _, _ = make_sealstone_resource(867)
             write_synthetic_iso(source, {
                 3: make_resource_3(),
                 22: make_main_resource(),
+                644: item_resource,
                 645: equip_resource,
+                646: skill_resource,
+                647: make_attack_resource(),
                 652: save_resource,
+                866: sealstone_866,
+                867: sealstone_867,
                 1781: battle_resource,
             })
             install_iso_file(source, "SLUS_214.52", executable)
@@ -249,17 +432,28 @@ class VersionOneBuildTests(unittest.TestCase):
             result = build_iso(source, output)
 
             self.assertEqual(
-                ("angel-slayer", "equip-everything", "battle-anti-freeze",
-                 "disable-anti-cheat"),
+                ("angel-slayer", "equip-everything", "99-skill-points",
+                 "battle-anti-freeze", "battle-menu-always",
+                 "36-character-limit", "infinite-ap-attacks",
+                 "dupe-attacks", "100-percent-drop-rate",
+                 "negate-encounters",
+                 "disable-anti-cheat", "stop-removing-characters",
+                 "join-all-unlocked", "mithra-swap", "join-level-1",
+                 "ether-set-effects", "heavenly-punishment-15-ap",
+                 "restore-all-sealstones",
+                 "no-limit-sealstone-withdrawals", "all-items-99"),
                 tuple(item.name for item in result.patches)
             )
             self.assertEqual(source_before, source.read_bytes())
             with output.open("rb") as handle:
                 index = triace.read_index(handle)
                 resource_3 = triace.read_resource(handle, index, 3)
+                main = triace.read_resource(handle, index, 22)
+                skill = triace.read_resource(handle, index, 646)
                 battle = triace.read_resource(handle, index, 1781)
-                handle.seek(0x120 * 0x800)
-                patched_executable = handle.read(len(executable))
+                extent = iso9660.locate_file(handle, "/SLUS_214.52")
+                handle.seek(extent.offset)
+                patched_executable = handle.read(extent.size)
 
             streams = list(sle.iter_streams(resource_3))
             for patch in MEMORY_CARD_PATCHES:
@@ -268,8 +462,22 @@ class VersionOneBuildTests(unittest.TestCase):
                     patch.address - 0x0035EC80
                 )[0])
             self.assertEqual(ANGEL_PATCHED, struct.unpack_from(
-                "<I", streams[1].output, 0x40
+                "<I", streams[1].output, ANGEL_ADDRESS - 0x001E7E00
             )[0])
+
+            main_output = next(sle.iter_streams(main)).output
+            self.assertEqual(HOOK_PATCHED, struct.unpack_from(
+                "<2I", main_output, HOOK_ADDRESS - 0x0035EC80
+            ))
+
+            skill_output = menu_overlay.read(
+                skill, 646, SKILL_LABEL, SKILL_MODE
+            ).output
+            self.assertEqual(
+                tuple(replacement for _, _, replacement in SKILL_PATCHES),
+                tuple(struct.unpack_from("<I", skill_output, offset)[0]
+                      for offset in SKILL_TARGET_OFFSETS)
+            )
 
             battle_output = battle_overlay.read(battle).output
             self.assertEqual(ANTI_FREEZE_PATCHED, struct.unpack_from(
@@ -279,6 +487,10 @@ class VersionOneBuildTests(unittest.TestCase):
                 self.assertEqual(patch.patched, struct.unpack_from(
                     "<I", battle_output, patch.address - 0x0036D900
                 )[0])
+            for address, _, replacement in BATTLE_MENU_PATCHES:
+                self.assertEqual(replacement, struct.unpack_from(
+                    "<I", battle_output, address - 0x0036D900
+                )[0])
             self.assertEqual(EXECUTABLE_PATCHED, struct.unpack_from(
                 "<I", patched_executable, executable_target
             )[0])
@@ -286,6 +498,14 @@ class VersionOneBuildTests(unittest.TestCase):
                 elf.pcsx2_crc(executable),
                 elf.pcsx2_crc(patched_executable)
             )
+            injected_at = elf.file_offset_for_address(
+                patched_executable, INJECT_ADDRESS, len(INJECTED_CODE)
+            )
+            self.assertEqual(
+                INJECTED_CODE,
+                patched_executable[injected_at:injected_at + len(INJECTED_CODE)]
+            )
+            self.assertEqual(0x13E00, len(patched_executable))
 
 
 if __name__ == "__main__":

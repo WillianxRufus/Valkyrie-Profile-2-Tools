@@ -45,15 +45,115 @@ CHEATS = (
         True,
     ),
     Cheat(
+        "stop-removing-characters",
+        "(!) Stop The Game From Removing Characters",
+        "Keeps protected party members when the game rebuilds the active "
+        "roster.",
+        True,
+    ),
+    Cheat(
+        "36-character-limit",
+        "(!) 36 Characters Limit",
+        "Raises the permanent roster limit from 33 to 36 characters.",
+        True,
+    ),
+    Cheat(
+        "join-all-unlocked",
+        "(!) Characters Join With All Skills, Spells And Attacks Unlocked",
+        "Recruited characters arrive with every skill, spell and attack "
+        "unlocked.",
+        True,
+    ),
+    Cheat(
+        "mithra-swap",
+        "(!) Mithra Swap",
+        "Replaces Mithra's recruitment event with the PNACH special-character "
+        "roster.",
+        True,
+    ),
+    Cheat(
+        "join-level-1",
+        "(!) Characters Join At Level 1",
+        "Makes the special recruited characters join at level 1; when Mithra "
+        "Swap is also selected, its first nine join levels become 1 too.",
+        True,
+    ),
+    Cheat(
+        "heavenly-punishment-15-ap",
+        "(!) Heavenly Punishment Costs 15 AP",
+        "Reduces Freya's Heavenly Punishment AP cost to 15.",
+        True,
+    ),
+    Cheat(
+        "infinite-ap-attacks",
+        "(!) Infinite AP And Attacks",
+        "Removes AP costs and the attack-chain limit in battle.",
+        True,
+    ),
+    Cheat(
+        "battle-menu-always",
+        "(!) Battle Menu Always Available",
+        "Removes the battle menu cooldown so the menu can always be opened.",
+        True,
+    ),
+    Cheat(
+        "dupe-attacks",
+        "(!) Dupe Attacks",
+        "Allows the same attack to be assigned to multiple attack slots.",
+        True,
+    ),
+    Cheat(
+        "100-percent-drop-rate",
+        "(!) 100% Drop Rate",
+        "Guarantees broken-part and boss drops.",
+        True,
+    ),
+    Cheat(
+        "negate-encounters",
+        "(!) Negate Encounters",
+        "Permanently applies the effect of the Elusive Air Law sealstone.",
+        True,
+    ),
+    Cheat(
+        "equip-everything",
+        "Let Everyone Equip Everything",
+        "Allows every armor and weapon to be equipped by every character.",
+        False,
+    ),
+    Cheat(
+        "ether-set-effects",
+        "Ether Set Effects",
+        "Gives passive effects to the four pieces of the Ether set.",
+        False,
+    ),
+    Cheat(
         "angel-slayer",
         "Angel Slayer",
         "Changes Angel Slayer to allow for 3 attacks.",
         False,
     ),
     Cheat(
-        "equip-everything",
-        "Let Everyone Equip Everything",
-        "Allows every armor and weapon to be equipped by every character.",
+        "restore-all-sealstones",
+        "Restore A Sealstone To Unlock All",
+        "Unlocks every sealstone when any one sealstone is restored.",
+        False,
+    ),
+    Cheat(
+        "no-limit-sealstone-withdrawals",
+        "No Limit For Sealstone Withdrawals",
+        "Removes the switching limit; the displayed number may go negative.",
+        False,
+    ),
+    Cheat(
+        "99-skill-points",
+        "99 Skill Points",
+        "Gives every character 99 skill points in the skill menu.",
+        False,
+    ),
+    Cheat(
+        "all-items-99",
+        "All Items 99",
+        "Sets every ordinary item stack to 99 when the Items menu opens.",
         False,
     ),
 )

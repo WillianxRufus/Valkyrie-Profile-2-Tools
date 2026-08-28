@@ -4,7 +4,7 @@ import struct
 import unittest
 
 from tools.cheat_patcher import slz, slz3
-from tools.cheat_patcher.battle_anti_freeze import (
+from tools.cheat_patcher.cheats.battle_anti_freeze import (
     ORIGINAL_INSTRUCTION,
     OVERLAY_LOAD_ADDRESS,
     PACKAGE_HEADER_XOR,

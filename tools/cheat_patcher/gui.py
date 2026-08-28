@@ -338,7 +338,8 @@ class App:
         self.source_var = StringVar()
         self.output_var = StringVar(value=str(PROJECT_ROOT / "build"))
         self.log_shown = BooleanVar(value=False)
-        self.cheat_vars = {cheat.name: BooleanVar(value=True)
+        self.cheat_vars = {
+            cheat.name: BooleanVar(value=cheat.name == ANTI_CHEAT)
                            for cheat in CHEATS}
         self.cheat_boxes = {}
         self.status_var = StringVar(
@@ -377,7 +378,7 @@ class App:
         frame = ttk.Frame(self.canvas, style="Card.TFrame", padding=(14, 12))
         frame.columnconfigure(1, weight=1)
         ttk.Label(frame, text=title, style="CardMuted.TLabel").grid(
-            row=0, column=0, columnspan=3, sticky="w", pady=(0, 8))
+            row=0, column=0, sticky="w", pady=(0, 8))
         return frame
 
     def _build_ui(self):
@@ -437,7 +438,27 @@ class App:
             0, 0, anchor="nw", window=widget) for name, widget in widgets}
         self.canvas.itemconfigure(self.items["log"], state="hidden")
         self.canvas.bind("<Configure>", self._reflow)
+        self.root.bind("<MouseWheel>", self._scroll_cheats)
+        self.root.bind("<Button-4>", self._scroll_cheats)
+        self.root.bind("<Button-5>", self._scroll_cheats)
         self._append_log(f"{APP_NAME} {__version__}\n")
+
+    def _scroll_cheats(self, event):
+        widget = event.widget
+        while widget is not None and widget is not self.root:
+            if widget is self.cheat_canvas or widget is self.cheat_content:
+                break
+            widget = getattr(widget, "master", None)
+        else:
+            return
+        if getattr(event, "num", None) == 4:
+            units = -3
+        elif getattr(event, "num", None) == 5:
+            units = 3
+        else:
+            units = -int(getattr(event, "delta", 0) / 120) * 3
+        if units:
+            self.cheat_canvas.yview_scroll(units, "units")
 
     def _build_disc_card(self):
         card = self._card("DISC IMAGE")
@@ -468,25 +489,71 @@ class App:
 
     def _build_cheat_card(self):
         card = self._card("CHEATS")
+        card.columnconfigure(0, weight=1)
+        card.rowconfigure(1, weight=1)
+        self.toggle_all_cheats_btn = self._lockable(ttk.Button(
+            card, text="Disable all cheats", command=self._toggle_all_cheats
+        ))
+        self.toggle_all_cheats_btn.grid(
+            row=0, column=2, columnspan=2, sticky="e", pady=(0, 8)
+        )
+        self.cheat_canvas = Canvas(
+            card, highlightthickness=0, bd=0,
+            background=DARK["surface"], takefocus=0
+        )
+        self.cheat_scroll = ttk.Scrollbar(
+            card, orient="vertical", command=self.cheat_canvas.yview
+        )
+        self.cheat_canvas.configure(yscrollcommand=self.cheat_scroll.set)
+        self.cheat_canvas.grid(row=1, column=0, columnspan=3, sticky="nsew")
+        self.cheat_scroll.grid(row=1, column=3, sticky="ns", padx=(8, 0))
+        self.cheat_content = ttk.Frame(
+            self.cheat_canvas, style="Card.TFrame"
+        )
+        self.cheat_content.columnconfigure(0, weight=1)
+        self.cheat_window = self.cheat_canvas.create_window(
+            0, 0, anchor="nw", window=self.cheat_content
+        )
+        self.cheat_summaries = []
         for index, cheat in enumerate(CHEATS):
-            row = 1 + index * 2
+            row = index * 2
             box = self._lockable(ttk.Checkbutton(
-                card, text=cheat.title, style="Cheat.TCheckbutton",
+                self.cheat_content, text=cheat.title,
+                style="Cheat.TCheckbutton",
                 variable=self.cheat_vars[cheat.name]))
-            box.grid(row=row, column=0, columnspan=3, sticky="w")
+            box.grid(row=row, column=0, sticky="w")
             self.cheat_boxes[cheat.name] = box
-            ttk.Label(card, text=cheat.summary, style="CardMuted.TLabel",
-                      wraplength=self._px(760), justify="left").grid(
-                row=row + 1, column=0, columnspan=3, sticky="w",
+            summary = ttk.Label(
+                self.cheat_content, text=cheat.summary,
+                style="CardMuted.TLabel", wraplength=self._px(720),
+                justify="left"
+            )
+            summary.grid(
+                row=row + 1, column=0, sticky="w",
                 padx=(self._px(24), 0),
                 pady=(0, self._px(9) if index < len(CHEATS) - 1 else 0))
+            self.cheat_summaries.append(summary)
         self.dependency_label = ttk.Label(
-            card, text="", style="Warn.TLabel", wraplength=self._px(780),
+            self.cheat_content, text="", style="Warn.TLabel",
+            wraplength=self._px(720),
             justify="left")
-        self.dependency_label.grid(row=1 + len(CHEATS) * 2, column=0,
-                                   columnspan=3, sticky="w",
+        self.dependency_label.grid(row=len(CHEATS) * 2, column=0, sticky="w",
                                    pady=(self._px(10), 0))
+        self.cheat_content.bind("<Configure>", self._sync_cheat_scrollregion)
+        self.cheat_canvas.bind("<Configure>", self._resize_cheat_content)
         return card
+
+    def _sync_cheat_scrollregion(self, _event=None):
+        bounds = self.cheat_canvas.bbox("all")
+        if bounds:
+            self.cheat_canvas.configure(scrollregion=bounds)
+
+    def _resize_cheat_content(self, event):
+        width = max(1, event.width)
+        self.cheat_canvas.itemconfigure(self.cheat_window, width=width)
+        wrap = max(self._px(280), width - self._px(24))
+        for label in (*self.cheat_summaries, self.dependency_label):
+            label.configure(wraplength=wrap)
 
     def _sync_output_name(self, *_args):
         source = self.source_var.get().strip()
@@ -515,8 +582,25 @@ class App:
                      % needed[0].title)
         else:
             self.dependency_label.configure(text="")
+        self.toggle_all_cheats_btn.configure(
+            text=("Disable all cheats"
+                  if any(variable.get() for variable in self.cheat_vars.values())
+                  else "Enable all cheats")
+        )
         if not self.runner.busy if hasattr(self, "runner") else True:
             self._set_anti_cheat_state(DISABLED if needed else NORMAL)
+
+    def _toggle_all_cheats(self):
+        if any(variable.get() for variable in self.cheat_vars.values()):
+            for name, variable in self.cheat_vars.items():
+                if name != ANTI_CHEAT:
+                    variable.set(False)
+            self.cheat_vars[ANTI_CHEAT].set(False)
+        else:
+            self.cheat_vars[ANTI_CHEAT].set(True)
+            for name, variable in self.cheat_vars.items():
+                if name != ANTI_CHEAT:
+                    variable.set(True)
 
     def _set_anti_cheat_state(self, state):
         for widget, _idle in self.locked:
@@ -532,6 +616,19 @@ class App:
         box = self.canvas.bbox(item)
         return box[3] if box else fallback
 
+    def _cheat_panel_height(self, window_height, top, row_height):
+        """Give the middle panel space without displacing fixed controls."""
+        gap = self._px(14)
+        reserved = (
+            gap + row_height + gap + self.progress.winfo_reqheight() +
+            self._px(8) + self.line_heights["body"] + self._px(2) +
+            2 * self.line_heights["small"] + self._px(2) + self._px(16)
+        )
+        if self.log_shown.get():
+            reserved += gap + self._px(90)
+        available = window_height - top - reserved
+        return max(self._px(180), min(self._px(300), available))
+
     def _reflow(self, _event=None):
         width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
         if width <= 1 or height <= 1:
@@ -546,13 +643,17 @@ class App:
         self.canvas.itemconfigure(self.subtitle_item, width=inner)
         self.canvas.coords(self.subtitle_item, pad, y)
         y = self._bottom(self.subtitle_item, y) + gap
-        for name, card in (("disc", self.disc_card),
-                           ("cheats", self.cheat_card)):
-            self.canvas.coords(self.items[name], pad, y)
-            self.canvas.itemconfigure(self.items[name], width=inner)
-            y += card.winfo_reqheight() + gap
+        self.canvas.coords(self.items["disc"], pad, y)
+        self.canvas.itemconfigure(self.items["disc"], width=inner)
+        y += self.disc_card.winfo_reqheight() + gap
         row = (self.patch_btn, self.log_btn)
         row_height = max(widget.winfo_reqheight() for widget in row)
+        cheat_height = self._cheat_panel_height(height, y, row_height)
+        self.canvas.coords(self.items["cheats"], pad, y)
+        self.canvas.itemconfigure(
+            self.items["cheats"], width=inner, height=cheat_height
+        )
+        y += cheat_height + gap
         positions = (
             ("patch", self.patch_btn, pad),
             ("log_btn", self.log_btn, width - pad - self.log_btn.winfo_reqwidth()),
@@ -573,9 +674,10 @@ class App:
         if self.log_shown.get():
             top = y + gap
             self.canvas.coords(self.items["log"], pad, top)
+            log_height = max(self._px(90), height - top - bottom)
             self.canvas.itemconfigure(
                 self.items["log"], width=inner,
-                height=max(self._px(90), height - top - bottom))
+                height=log_height)
 
     def _pick_source(self):
         path = filedialog.askopenfilename(

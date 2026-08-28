@@ -7,7 +7,7 @@ import unittest
 
 from tools.cheat_patcher import sle, slz3, triace
 from tools.cheat_patcher.build import build_iso
-from tools.cheat_patcher.equip_everything import (
+from tools.cheat_patcher.cheats.equip_everything import (
     ORIGINAL_INSTRUCTION,
     PATCHED_INSTRUCTION,
     TARGET_OFFSET,

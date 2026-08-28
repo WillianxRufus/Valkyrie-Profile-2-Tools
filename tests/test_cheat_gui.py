@@ -4,7 +4,9 @@
 
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -12,6 +14,7 @@ if str(ROOT) not in sys.path:
 
 from tools.cheat_patcher import catalog, gui  # noqa: E402
 from tools.cheat_patcher.build import PATCHERS  # noqa: E402
+import vp2_cheats  # noqa: E402
 
 
 class CatalogTests(unittest.TestCase):
@@ -27,10 +30,30 @@ class CatalogTests(unittest.TestCase):
         """Without it the game freezes, so the choice is not left open."""
         self.assertEqual(("disable-anti-cheat", "battle-anti-freeze"),
                          catalog.required_with(["battle-anti-freeze"]))
+        self.assertEqual(("disable-anti-cheat", "battle-menu-always"),
+                         catalog.required_with(["battle-menu-always"]))
+        self.assertEqual(
+            ("disable-anti-cheat", "heavenly-punishment-15-ap"),
+            catalog.required_with(["heavenly-punishment-15-ap"])
+        )
+        self.assertEqual(
+            ("disable-anti-cheat", "stop-removing-characters"),
+            catalog.required_with(["stop-removing-characters"])
+        )
+        self.assertEqual(
+            ("disable-anti-cheat", "mithra-swap", "join-level-1"),
+            catalog.required_with(["join-level-1", "mithra-swap"])
+        )
 
     def test_an_ordinary_cheat_does_not(self):
         self.assertEqual(("angel-slayer",),
                          catalog.required_with(["angel-slayer"]))
+        self.assertEqual(("99-skill-points",),
+                         catalog.required_with(["99-skill-points"]))
+        self.assertEqual(
+            ("restore-all-sealstones",),
+            catalog.required_with(["restore-all-sealstones"])
+        )
 
     def test_selecting_nothing_asks_for_nothing(self):
         self.assertEqual((), catalog.required_with([]))
@@ -39,6 +62,18 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(
             catalog.required_with(["angel-slayer", "disable-anti-cheat"]),
             catalog.required_with(["disable-anti-cheat", "angel-slayer"]))
+
+    def test_cli_adds_anti_cheat_for_the_roster_patch(self):
+        result = SimpleNamespace(patches=(), output=Path("patched.iso"))
+        with mock.patch.object(vp2_cheats, "build_iso", return_value=result) as build:
+            self.assertEqual(0, vp2_cheats.main([
+                "clean.iso", "--output", "patched.iso", "--patch",
+                "stop-removing-characters",
+            ]))
+        self.assertEqual(
+            ("disable-anti-cheat", "stop-removing-characters"),
+            build.call_args.kwargs["selected"]
+        )
 
 
 def _window():
@@ -70,14 +105,73 @@ class WindowTests(unittest.TestCase):
                 with self.subTest(colour=key):
                     self.assertIn(f'"{key}": "{value}"', source)
 
-    def test_every_cheat_has_a_box_and_starts_on(self):
+    def test_every_cheat_has_a_box_and_only_anti_cheat_starts_on(self):
         self.assertEqual(sorted(catalog.BY_NAME),
                          sorted(self.app.cheat_boxes))
-        self.assertEqual(sorted(catalog.BY_NAME),
-                         sorted(self.app.selected_cheats()))
+        self.assertEqual((catalog.ANTI_CHEAT,), self.app.selected_cheats())
+        for name, variable in self.app.cheat_vars.items():
+            self.assertEqual(name == catalog.ANTI_CHEAT, variable.get())
+
+    def test_header_button_toggles_every_cheat_and_tracks_partial_state(self):
+        button = self.app.toggle_all_cheats_btn
+        self.assertIs(button.master, self.app.cheat_card)
+        self.assertEqual(0, int(button.grid_info()["row"]))
+        self.assertEqual("Disable all cheats", button.cget("text"))
+
+        button.invoke()
+        self.assertFalse(any(variable.get()
+                             for variable in self.app.cheat_vars.values()))
+        self.assertEqual("Enable all cheats", button.cget("text"))
+        self.assertEqual("normal", str(
+            self.app.cheat_boxes[catalog.ANTI_CHEAT].cget("state")
+        ))
+
+        button.invoke()
+        self.assertTrue(all(variable.get()
+                            for variable in self.app.cheat_vars.values()))
+        self.assertEqual("Disable all cheats", button.cget("text"))
+        self.assertEqual("disabled", str(
+            self.app.cheat_boxes[catalog.ANTI_CHEAT].cget("state")
+        ))
+
+        self.app.cheat_vars["angel-slayer"].set(False)
+        self.assertEqual("Disable all cheats", button.cget("text"))
+
+    def test_only_the_cheat_list_owns_scrolling(self):
+        self.assertEqual("", self.app.canvas.cget("yscrollcommand"))
+        self.assertTrue(self.app.cheat_canvas.cget("yscrollcommand"))
+        for box in self.app.cheat_boxes.values():
+            self.assertIs(box.master, self.app.cheat_content)
+
+        with (mock.patch.object(self.app.canvas, "winfo_width", return_value=900),
+              mock.patch.object(self.app.canvas, "winfo_height", return_value=684)):
+            self.app._reflow()
+        cheat_height = float(
+            self.app.canvas.itemcget(self.app.items["cheats"], "height")
+        )
+        self.assertGreaterEqual(cheat_height, 180)
+        self.assertLessEqual(cheat_height, 300)
+        patch_y = self.app.canvas.coords(self.app.items["patch"])[1]
+        cheat_y = self.app.canvas.coords(self.app.items["cheats"])[1]
+        self.assertGreater(patch_y, cheat_y + cheat_height)
+
+    def test_mouse_wheel_moves_cheats_but_not_fixed_controls(self):
+        cheat_event = SimpleNamespace(
+            widget=next(iter(self.app.cheat_boxes.values())), num=None,
+            delta=-120,
+        )
+        fixed_event = SimpleNamespace(
+            widget=self.app.patch_btn, num=None, delta=-120,
+        )
+        with mock.patch.object(self.app.cheat_canvas, "yview_scroll") as scroll:
+            self.app._scroll_cheats(cheat_event)
+            scroll.assert_called_once_with(3, "units")
+            self.app._scroll_cheats(fixed_event)
+            scroll.assert_called_once()
 
     def test_unticking_the_anti_cheat_box_does_not_take(self):
         """A (!) cheat is still selected, so it must stay on."""
+        self.app.cheat_vars["battle-anti-freeze"].set(True)
         self.app.cheat_vars[catalog.ANTI_CHEAT].set(False)
         self.assertTrue(self.app.cheat_vars[catalog.ANTI_CHEAT].get())
         self.assertEqual("disabled",

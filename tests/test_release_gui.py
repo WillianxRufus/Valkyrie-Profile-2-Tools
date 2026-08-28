@@ -115,6 +115,16 @@ class ReleaseSpecTests(unittest.TestCase):
         self.assertIn("docker build", workflow)
         self.assertIn('pyinstaller==6.22.2', workflow)
 
+    def test_source_runtime_requirements_are_explicit_and_pip_installable(self):
+        requirements = ROOT / "requirements.txt"
+        lines = requirements.read_text(encoding="utf-8").splitlines()
+        packages = [line.strip() for line in lines
+                    if line.strip() and not line.lstrip().startswith("#")]
+        self.assertEqual([], packages)
+        readme = (ROOT / "Readme.md").read_text(encoding="utf-8")
+        self.assertIn("pip install -r requirements.txt", readme)
+        self.assertIn("import tkinter; tkinter.Tcl()", readme)
+
 
 class WindowSmokeTests(unittest.TestCase):
     def test_window_constructs(self):

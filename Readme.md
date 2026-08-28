@@ -4,12 +4,24 @@ _Valkyrie Profile 2: Silmeria_ (PlayStation 2) Tools [Showcase](https://trulio2.
 
 ## Requirements
 
-- Python 3.11 or newer
+- Python 3.11 or newer, including pip and Tkinter/Tcl-Tk
 - A USA disc image (`SLUS_214.52`)
 - Optionally, the Japanese image (`SLPM_664.19`) for the original script
 
 About 12 GB of free space: the source image, the patched one, and roughly
 10 MB of generated tables.
+
+From a source checkout, install every pip-managed runtime dependency with:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+The applications currently use only the Python standard library, so this is
+an intentionally empty install. Tkinter is part of standard Windows and
+macOS Python installations; on Linux it must be supplied with Python by the
+operating system. You can verify it with
+`python -c "import tkinter; tkinter.Tcl()"`.
 
 ## Use
 
@@ -87,12 +99,28 @@ python vp2_cheats.py <usa-image.iso>     # all patches
 python vp2_cheats.py <usa-image.iso> --patch angel-slayer
 ```
 
-| patch                | what it does                                       |
-| -------------------- | -------------------------------------------------- |
-| `disable-anti-cheat` | stops the self-checksum that freezes a patched game |
-| `battle-anti-freeze` | prevents the early-game late-character freeze       |
-| `angel-slayer`       | Angel Slayer gets three attacks                     |
-| `equip-everything`   | any character may equip any weapon or armour        |
+| patch                            | what it does                                        |
+| -------------------------------- | --------------------------------------------------- |
+| `disable-anti-cheat`             | stops the self-checksum that freezes a patched game |
+| `battle-anti-freeze`             | prevents the early-game late-character freeze       |
+| `battle-menu-always`             | removes the battle menu cooldown                    |
+| `36-character-limit`             | raises the permanent roster limit from 33 to 36     |
+| `infinite-ap-attacks`            | removes AP costs and the battle attack limit        |
+| `dupe-attacks`                   | permits duplicate attacks in the attack slots       |
+| `100-percent-drop-rate`          | guarantees broken-part and boss drops               |
+| `negate-encounters`              | applies the Elusive Air Law effect permanently      |
+| `heavenly-punishment-15-ap`      | lowers Heavenly Punishment's AP cost to 15          |
+| `stop-removing-characters`       | keeps protected characters in the active roster     |
+| `join-all-unlocked`              | recruited characters arrive with all abilities      |
+| `mithra-swap`                    | replaces Mithra's event with the special roster     |
+| `join-level-1`                   | special recruited characters arrive at level 1      |
+| `angel-slayer`                   | Angel Slayer gets three attacks                     |
+| `equip-everything`               | any character may equip any weapon or armour        |
+| `99-skill-points`                | every character receives 99 skill points            |
+| `ether-set-effects`              | gives passive effects to the four Ether-set pieces  |
+| `restore-all-sealstones`         | restoring one sealstone unlocks every sealstone     |
+| `no-limit-sealstone-withdrawals` | removes the sealstone switching limit               |
+| `all-items-99`                   | sets ordinary item stacks to 99 in the Items menu   |
 
 The first is required by any patch marked `(!)`, because the game hashes its
 own code after cutscenes, battles, map changes and saves, and freezes on a

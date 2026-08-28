@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 from tools.cheat_patcher import sle, slz3, triace
-from tools.cheat_patcher.angel_slayer import (
+from tools.cheat_patcher.cheats.angel_slayer import (
     ORIGINAL_WORD,
     PATCHED_WORD,
     TARGET_ADDRESS,
