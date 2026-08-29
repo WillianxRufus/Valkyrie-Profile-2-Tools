@@ -1,0 +1,687 @@
+# SPDX-FileCopyrightText: 2026 Valkyrie Profile 2 Translation Tools contributors
+# SPDX-License-Identifier: GPL-3.0-only
+"""Dark, branded window for voice extraction and fixed-slot patching."""
+
+from __future__ import annotations
+
+import ctypes
+import os
+import queue
+import re
+import sys
+import threading
+import time
+import traceback
+from pathlib import Path
+
+from .build import (
+    default_patch_output, default_voice_root, describe_disc, extract_voices,
+    patch_iso,
+)
+
+try:
+    from tkinter import (
+        BooleanVar, Canvas, DISABLED, END, NORMAL, PhotoImage, StringVar,
+        Text, Tk, filedialog, messagebox,
+    )
+    from tkinter import font as tkfont
+    from tkinter import ttk
+except ImportError as exc:  # pragma: no cover - depends on Python build
+    TK_IMPORT_ERROR = exc
+    BooleanVar = Canvas = PhotoImage = StringVar = Text = Tk = None
+    filedialog = messagebox = tkfont = ttk = None
+    DISABLED = END = NORMAL = None
+else:
+    TK_IMPORT_ERROR = None
+
+
+__version__ = "0.1.0"
+APP_NAME = "Valkyrie Profile 2 Voice Tool"
+SHORT_NAME = "VP2 Voice Tool"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+ICON_ICO = "images/vp2_release.ico"
+ICON_PNG = "images/vp2_release.png"
+BACKDROP_PNG = "images/vp2_release_bg.png"
+COPY_LINE = re.compile(r"^copy:\s+(\d+)%")
+EXTRACT_LINE = re.compile(r"^extract: bank \d+ \((\d+)/(\d+)\)")
+
+DARK = {
+    "bg": "#14161b", "surface": "#1b1e26", "surface_hi": "#232733",
+    "border": "#2f3542", "text": "#e4e8f1", "muted": "#98a2b6",
+    "accent": "#7aa2f7", "accent_hi": "#96b6ff",
+    "accent_dim": "#3c5488", "ok": "#9ece6a", "warn": "#e0af68",
+    "error": "#f7768e",
+}
+
+
+def asset_path(name):
+    path = PROJECT_ROOT / name
+    return path if path.is_file() else None
+
+
+def initial_window_geometry(root, width, height):
+    screen_width = max(1, int(root.winfo_screenwidth()))
+    screen_height = max(1, int(root.winfo_screenheight()))
+    width = min(int(width), screen_width)
+    height = min(int(height), max(1, screen_height - 80))
+    return "%dx%d+%d+%d" % (
+        width, height, max(0, (screen_width - width) // 2),
+        max(0, (screen_height - height) // 2),
+    )
+
+
+def _font_family():
+    if sys.platform == "win32":
+        return "Segoe UI"
+    if sys.platform == "darwin":
+        return "SF Pro Text"
+    return "DejaVu Sans"
+
+
+def _mono_family():
+    if sys.platform == "win32":
+        return "Consolas"
+    if sys.platform == "darwin":
+        return "Menlo"
+    return "DejaVu Sans Mono"
+
+
+def enable_dpi_awareness():
+    if sys.platform != "win32":
+        return
+    try:
+        if ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4)):
+            return
+    except (AttributeError, OSError):
+        pass
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except (AttributeError, OSError):
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+        except (AttributeError, OSError):
+            pass
+
+
+def apply_dpi_scaling(root):
+    try:
+        dpi = float(root.winfo_fpixels("1i"))
+    except Exception:
+        dpi = 96.0
+    root.tk.call("tk", "scaling", max(dpi, 1.0) / 72.0)
+    return max(dpi, 1.0) / 96.0
+
+
+def apply_dark_theme(root):
+    style = ttk.Style(root)
+    style.theme_use("clam")
+    ui = _font_family()
+    fonts = {
+        "title": (ui, 17, "bold"), "body": (ui, 11), "small": (ui, 10),
+        "button": (ui, 11, "bold"), "mono": (_mono_family(), 10),
+    }
+    root.configure(bg=DARK["bg"])
+    style.configure(".", background=DARK["bg"], foreground=DARK["text"],
+                    fieldbackground=DARK["surface"], font=fonts["body"],
+                    borderwidth=0, focuscolor=DARK["accent_dim"])
+    style.configure("Card.TFrame", background=DARK["surface"])
+    style.configure("Card.TLabel", background=DARK["surface"],
+                    foreground=DARK["text"])
+    style.configure("CardMuted.TLabel", background=DARK["surface"],
+                    foreground=DARK["muted"], font=fonts["small"])
+    style.configure("TEntry", fieldbackground=DARK["surface_hi"],
+                    foreground=DARK["text"], insertcolor=DARK["text"],
+                    bordercolor=DARK["border"], padding=6)
+    style.configure("TButton", background=DARK["surface_hi"],
+                    foreground=DARK["text"], padding=(14, 7))
+    style.map("TButton", background=[("active", DARK["border"]),
+                                     ("disabled", DARK["surface"])],
+              foreground=[("disabled", DARK["muted"])])
+    style.configure("Accent.TButton", background=DARK["accent"],
+                    foreground="#0d1017", font=fonts["button"],
+                    padding=(20, 9))
+    style.map("Accent.TButton", background=[("active", DARK["accent_hi"]),
+                                            ("disabled", DARK["surface_hi"])],
+              foreground=[("disabled", DARK["muted"])])
+    style.configure("Horizontal.TProgressbar", background=DARK["accent"],
+                    troughcolor=DARK["surface_hi"], borderwidth=0,
+                    thickness=8)
+    style.configure("Chip.TCheckbutton", background=DARK["surface"],
+                    foreground=DARK["muted"], font=fonts["small"],
+                    indicatorbackground=DARK["surface_hi"],
+                    indicatorforeground=DARK["bg"], padding=(0, 5))
+    style.map("Chip.TCheckbutton",
+              indicatorbackground=[("selected", DARK["accent"]),
+                                   ("active", DARK["border"])],
+              foreground=[("active", DARK["text"]),
+                          ("disabled", DARK["muted"])])
+    style.configure("Vertical.TScrollbar", background=DARK["surface_hi"],
+                    troughcolor=DARK["bg"], borderwidth=0,
+                    arrowcolor=DARK["muted"])
+    return fonts
+
+
+def apply_window_icon(root):
+    ico = asset_path(ICON_ICO)
+    if ico and sys.platform == "win32":
+        try:
+            root.iconbitmap(default=str(ico))
+            return
+        except Exception:
+            pass
+    png = asset_path(ICON_PNG)
+    if png:
+        try:
+            root._voice_icon = PhotoImage(master=root, data=png.read_bytes())
+            root.iconphoto(True, root._voice_icon)
+        except Exception:
+            pass
+
+
+def use_dark_titlebar(root):
+    if sys.platform != "win32":
+        return
+    try:
+        root.update_idletasks()
+        handle = ctypes.windll.user32.GetParent(root.winfo_id()) or root.winfo_id()
+        enabled = ctypes.c_int(1)
+        for attribute in (20, 19):
+            if ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                    handle, attribute, ctypes.byref(enabled),
+                    ctypes.sizeof(enabled)) == 0:
+                break
+    except Exception:
+        pass
+
+
+class _QueueStream:
+    def __init__(self, events):
+        self.events = events
+
+    def write(self, value):
+        if value:
+            self.events.put(("line", value))
+        return len(value or "")
+
+    def flush(self):
+        pass
+
+
+class TaskRunner:
+    def __init__(self, root, on_line, on_done):
+        self.root, self.on_line, self.on_done = root, on_line, on_done
+        self.events = queue.Queue()
+        self.thread = None
+
+    @property
+    def busy(self):
+        return bool(self.thread and self.thread.is_alive())
+
+    def start(self, kind, function, *args, **kwargs):
+        if self.busy:
+            return False
+        self.thread = threading.Thread(
+            target=self._run, args=(kind, function, args, kwargs), daemon=True
+        )
+        self.thread.start()
+        self.root.after(60, self._poll)
+        return True
+
+    def _run(self, kind, function, args, kwargs):
+        saved = sys.stdout, sys.stderr
+        sys.stdout = sys.stderr = _QueueStream(self.events)
+        try:
+            result = function(*args, **kwargs)
+        except BaseException as exc:
+            self.events.put(("line", traceback.format_exc()))
+            self.events.put(("done", kind, None, exc))
+        else:
+            self.events.put(("done", kind, result, None))
+        finally:
+            sys.stdout, sys.stderr = saved
+
+    def _poll(self):
+        try:
+            while True:
+                item = self.events.get_nowait()
+                if item[0] == "line":
+                    self.on_line(item[1])
+                else:
+                    self.on_done(*item[1:])
+        except queue.Empty:
+            pass
+        if self.busy or not self.events.empty():
+            self.root.after(60, self._poll)
+
+
+class App:
+    def __init__(self, root):
+        self.root = root
+        self.source_var = StringVar()
+        self.extract_root_var = StringVar(value=str(default_voice_root()))
+        self.voices_var = StringVar()
+        self.iso_output_var = StringVar(
+            value=str(default_patch_output("Example.iso").parent)
+        )
+        self.status_var = StringVar(
+            value="Choose a USA or Japanese disc image to begin."
+        )
+        self.detail_var = StringVar()
+        self.log_shown = BooleanVar(value=False)
+        self.allow_overlong_var = BooleanVar(value=False)
+        self.locked = []
+        self.started_at = None
+        root.title("%s %s" % (SHORT_NAME, __version__))
+        self.scale = apply_dpi_scaling(root)
+        self.fonts = apply_dark_theme(root)
+        self.compact_height = int(720 * self.scale)
+        self.expanded_height = int(900 * self.scale)
+        width = int(900 * self.scale)
+        root.minsize(int(760 * self.scale), self.compact_height)
+        root.geometry(initial_window_geometry(root, width, self.compact_height))
+        apply_window_icon(root)
+        self._build_ui()
+        self.runner = TaskRunner(root, self._on_line, self._on_done)
+        root.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    def _px(self, value):
+        return int(value * self.scale)
+
+    def _lock(self, widget):
+        self.locked.append((widget, str(widget.cget("state")) or NORMAL))
+        return widget
+
+    def _card(self, title):
+        card = ttk.Frame(self.canvas, style="Card.TFrame", padding=(14, 12))
+        card.columnconfigure(1, weight=1)
+        ttk.Label(card, text=title, style="CardMuted.TLabel").grid(
+            row=0, column=0, columnspan=3, sticky="w", pady=(0, 8)
+        )
+        return card
+
+    def _path_row(self, card, row, label, variable, command, button="Browse…"):
+        ttk.Label(card, text=label, style="Card.TLabel").grid(
+            row=row, column=0, sticky="w", padx=(0, 10)
+        )
+        self._lock(ttk.Entry(card, textvariable=variable)).grid(
+            row=row, column=1, sticky="ew", padx=(0, 10)
+        )
+        self._lock(ttk.Button(card, text=button, command=command)).grid(
+            row=row, column=2, sticky="e"
+        )
+
+    def _build_ui(self):
+        self.canvas = Canvas(self.root, highlightthickness=0, bd=0,
+                             background=DARK["bg"])
+        self.canvas.pack(fill="both", expand=True)
+        backdrop_path = asset_path(BACKDROP_PNG)
+        self.backdrop = (PhotoImage(
+            master=self.root, data=backdrop_path.read_bytes()
+        ) if backdrop_path else None)
+        self.backdrop_item = (self.canvas.create_image(
+            0, 0, anchor="se", image=self.backdrop
+        ) if self.backdrop else None)
+        self.title_item = self.canvas.create_text(
+            0, 0, anchor="nw", text="Valkyrie Profile 2",
+            fill=DARK["text"], font=self.fonts["title"]
+        )
+        self.subtitle_item = self.canvas.create_text(
+            0, 0, anchor="nw", fill=DARK["muted"], font=self.fonts["small"],
+            text="Voice tool — extract every line, or put identified WAV files "
+                 "back into a safe copy of the disc."
+        )
+
+        disc = self._card("DISC IMAGE")
+        self._path_row(disc, 1, "Source", self.source_var, self._pick_source)
+        ttk.Label(
+            disc, text="USA (English) or Japan (Japanese) · source is never modified",
+            style="CardMuted.TLabel"
+        ).grid(row=2, column=1, columnspan=2, sticky="w", pady=(5, 0))
+
+        extract = self._card("EXTRACT VOICES")
+        self._path_row(
+            extract, 1, "Voice root", self.extract_root_var,
+            self._pick_extract_root, "Change…"
+        )
+        ttk.Label(
+            extract, text="Creates en/ or jp/, grouped by known cutscene resource",
+            style="CardMuted.TLabel"
+        ).grid(row=2, column=1, columnspan=2, sticky="w", pady=(5, 8))
+        self.extract_btn = self._lock(ttk.Button(
+            extract, text="Extract every voice", style="Accent.TButton",
+            command=self._start_extract
+        ))
+        self.extract_btn.grid(row=3, column=1, sticky="w")
+
+        patch = self._card("PATCH VOICES")
+        self._path_row(patch, 1, "WAV folder", self.voices_var,
+                       self._pick_voices)
+        self._path_row(patch, 2, "ISO output", self.iso_output_var,
+                       self._pick_iso_output, "Change…")
+        self.output_name = ttk.Label(patch, text="", style="CardMuted.TLabel")
+        self.output_name.grid(row=3, column=1, columnspan=2, sticky="w",
+                              pady=(5, 8))
+        self.allow_overlong = self._lock(ttk.Checkbutton(
+            patch, text="Allow overlong WAVs (trim their tails)",
+            variable=self.allow_overlong_var, style="Chip.TCheckbutton"
+        ))
+        self.allow_overlong.grid(row=4, column=1, columnspan=2, sticky="w")
+        self.patch_btn = self._lock(ttk.Button(
+            patch, text="Patch ISO", style="Accent.TButton",
+            command=self._start_patch
+        ))
+        self.patch_btn.grid(row=5, column=1, sticky="w", pady=(5, 0))
+        self.source_var.trace_add("write", self._sync_output_name)
+        self.iso_output_var.trace_add("write", self._sync_output_name)
+
+        self.progress = ttk.Progressbar(self.canvas, maximum=100)
+        self.log_btn = ttk.Button(
+            self.canvas, text="Show details", command=self._toggle_log
+        )
+        self.status_item = self.canvas.create_text(
+            0, 0, anchor="nw", fill=DARK["text"], font=self.fonts["body"]
+        )
+        self.detail_item = self.canvas.create_text(
+            0, 0, anchor="nw", fill=DARK["muted"], font=self.fonts["small"]
+        )
+        self.status_var.trace_add("write", self._sync_status)
+        self.detail_var.trace_add("write", self._sync_status)
+        self._sync_status()
+        self.log_frame = ttk.Frame(self.canvas, style="Card.TFrame")
+        self.log = Text(
+            self.log_frame, wrap="none", height=8, font=self.fonts["mono"],
+            relief="flat", background=DARK["surface"], foreground=DARK["muted"],
+            selectbackground=DARK["accent_dim"], padx=10, pady=8
+        )
+        scrollbar = ttk.Scrollbar(
+            self.log_frame, orient="vertical", command=self.log.yview
+        )
+        self.log.configure(yscrollcommand=scrollbar.set, state=DISABLED)
+        self.log.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        self.log_frame.columnconfigure(0, weight=1)
+        self.log_frame.rowconfigure(0, weight=1)
+        widgets = {
+            "disc": disc, "extract": extract, "patch": patch,
+            "progress": self.progress, "log_btn": self.log_btn,
+            "log": self.log_frame,
+        }
+        self.items = {name: self.canvas.create_window(
+            0, 0, anchor="nw", window=widget
+        ) for name, widget in widgets.items()}
+        self.canvas.itemconfigure(self.items["log"], state="hidden")
+        self.cards = {"disc": disc, "extract": extract, "patch": patch}
+        self.canvas.bind("<Configure>", self._reflow)
+        self._append_log("%s %s\n" % (APP_NAME, __version__))
+
+    def _sync_status(self, *_args):
+        self.canvas.itemconfigure(self.status_item, text=self.status_var.get())
+        self.canvas.itemconfigure(self.detail_item, text=self.detail_var.get())
+
+    def _reflow(self, _event=None):
+        width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
+        if width <= 1 or height <= 1:
+            return
+        pad, gap = self._px(22), self._px(12)
+        inner = width - pad * 2
+        if self.backdrop_item is not None:
+            self.canvas.coords(self.backdrop_item, width, height)
+        y = self._px(18)
+        self.canvas.coords(self.title_item, pad, y)
+        title_box = self.canvas.bbox(self.title_item)
+        y = (title_box[3] if title_box else y) + 2
+        self.canvas.itemconfigure(self.subtitle_item, width=inner)
+        self.canvas.coords(self.subtitle_item, pad, y)
+        subtitle_box = self.canvas.bbox(self.subtitle_item)
+        y = (subtitle_box[3] if subtitle_box else y) + gap
+        for name in ("disc", "extract", "patch"):
+            widget = self.cards[name]
+            self.canvas.coords(self.items[name], pad, y)
+            self.canvas.itemconfigure(self.items[name], width=inner)
+            y += widget.winfo_reqheight() + gap
+        self.canvas.coords(self.items["progress"], pad, y)
+        self.canvas.itemconfigure(self.items["progress"], width=inner)
+        y += self.progress.winfo_reqheight() + 8
+        self.canvas.coords(self.status_item, pad, y)
+        self.canvas.itemconfigure(self.status_item, width=inner - 130)
+        self.canvas.coords(
+            self.items["log_btn"], width - pad - self.log_btn.winfo_reqwidth(), y
+        )
+        status = self.canvas.bbox(self.status_item)
+        y = (status[3] if status else y + 20) + 2
+        self.canvas.coords(self.detail_item, pad, y)
+        self.canvas.itemconfigure(self.detail_item, width=inner)
+        detail = self.canvas.bbox(self.detail_item)
+        y = (detail[3] if detail else y + 18) + gap
+        if self.log_shown.get():
+            self.canvas.coords(self.items["log"], pad, y)
+            self.canvas.itemconfigure(
+                self.items["log"], width=inner,
+                height=max(self._px(90), height - y - self._px(16))
+            )
+
+    def _pick_source(self):
+        path = filedialog.askopenfilename(
+            title="Select the USA or Japanese Valkyrie Profile 2 ISO",
+            filetypes=[("Disc images", "*.iso"), ("All files", "*.*")]
+        )
+        if not path:
+            return
+        self.source_var.set(path)
+        try:
+            region, boot = describe_disc(path)
+        except ValueError as exc:
+            self.status_var.set("Unsupported disc image.")
+            self.detail_var.set(str(exc))
+            messagebox.showerror("Unexpected disc image", str(exc))
+        else:
+            label = "English" if region == "en" else "Japanese"
+            self.status_var.set("%s voice source recognised." % label)
+            self.detail_var.set("%s · %.2f GB" % (
+                boot, Path(path).stat().st_size / (1 << 30)
+            ))
+
+    def _pick_extract_root(self):
+        path = filedialog.askdirectory(title="Where should en/ or jp/ be created?")
+        if path:
+            self.extract_root_var.set(path)
+
+    def _pick_voices(self):
+        path = filedialog.askdirectory(
+            title="Select a folder of replacement WAV files"
+        )
+        if path:
+            self.voices_var.set(path)
+
+    def _pick_iso_output(self):
+        path = filedialog.askdirectory(title="Where should the patched ISO be written?")
+        if path:
+            self.iso_output_var.set(path)
+
+    def _sync_output_name(self, *_args):
+        source = self.source_var.get().strip()
+        folder = self.iso_output_var.get().strip()
+        if source and folder:
+            self.output_name.configure(
+                text="Writes %s" % (Path(folder) / default_patch_output(source).name).name
+            )
+        else:
+            self.output_name.configure(text="")
+
+    def _validated_source(self):
+        raw = self.source_var.get().strip()
+        if not raw:
+            messagebox.showinfo("Pick an ISO", "Choose the USA or Japanese ISO first.")
+            return None
+        try:
+            describe_disc(raw)
+        except ValueError as exc:
+            messagebox.showerror("Unusable image", str(exc))
+            return None
+        return Path(raw)
+
+    def _begin(self, kind, function, *args, **kwargs):
+        self.started_at = time.time()
+        self._set_busy(True)
+        self.progress.configure(value=0)
+        self._append_log("\n=== %s ===\n" % kind)
+        self.runner.start(kind, function, *args, progress=print, **kwargs)
+
+    def _start_extract(self):
+        if self.runner.busy:
+            return
+        source = self._validated_source()
+        if source is None:
+            return
+        root = Path(self.extract_root_var.get().strip() or default_voice_root())
+        try:
+            region, _boot = describe_disc(source)
+        except ValueError:
+            return
+        if (root / region).exists():
+            messagebox.showerror(
+                "Output already exists",
+                "Move or remove this existing extraction first:\n%s" % (root / region),
+            )
+            return
+        self.status_var.set("Extracting every voice line…")
+        self.detail_var.set("Output: %s" % (root / region))
+        self._begin("extract", extract_voices, source, root)
+
+    def _start_patch(self):
+        if self.runner.busy:
+            return
+        source = self._validated_source()
+        if source is None:
+            return
+        voices = Path(self.voices_var.get().strip())
+        if not voices.is_dir():
+            messagebox.showinfo(
+                "Pick voice files", "Choose the folder containing replacement WAVs."
+            )
+            return
+        folder = Path(
+            self.iso_output_var.get().strip()
+            or default_patch_output(source).parent
+        )
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            messagebox.showerror("Output folder", str(exc))
+            return
+        output = folder / default_patch_output(source).name
+        if output.exists():
+            if not messagebox.askyesno(
+                    "Overwrite?", "Output already exists:\n%s\n\nReplace it?" % output):
+                return
+            try:
+                output.unlink()
+            except OSError as exc:
+                messagebox.showerror("Output folder", str(exc))
+                return
+        self.status_var.set("Reading and encoding replacement voices…")
+        self.detail_var.set(str(voices))
+        self._begin(
+            "patch", patch_iso, source, voices, output,
+            allow_overlong=self.allow_overlong_var.get(),
+        )
+
+    def _set_busy(self, busy):
+        for widget, idle in self.locked:
+            widget.configure(state=DISABLED if busy else idle)
+
+    def _on_line(self, text):
+        self._append_log(text)
+        for line in text.splitlines():
+            line = line.strip()
+            copied = COPY_LINE.match(line)
+            extracted = EXTRACT_LINE.match(line)
+            if copied:
+                percent = int(copied.group(1))
+                self.progress.configure(value=percent * 0.9)
+                self.status_var.set("Copying source ISO… %d%%" % percent)
+            elif extracted:
+                current, total = map(int, extracted.groups())
+                self.progress.configure(value=current * 100 / total)
+                self.status_var.set("Extracting voice banks… %d/%d" % (current, total))
+            elif line.startswith("write:"):
+                self.progress.configure(value=92)
+                self.status_var.set("Writing replacement voices…")
+            elif line.startswith("verify:"):
+                self.progress.configure(value=96)
+                self.status_var.set("Verifying every replaced slot…")
+        self.detail_var.set("%s elapsed" % self._elapsed())
+
+    def _elapsed(self):
+        seconds = int(time.time() - (self.started_at or time.time()))
+        return "%ds" % seconds if seconds < 60 else "%dm %02ds" % divmod(seconds, 60)
+
+    def _on_done(self, kind, result, error):
+        self._set_busy(False)
+        if error is not None:
+            self.progress.configure(value=0)
+            self.status_var.set("%s failed." % kind.capitalize())
+            self.detail_var.set(str(error))
+            if not self.log_shown.get():
+                self._toggle_log()
+            messagebox.showerror("%s failed" % kind.capitalize(), str(error))
+            return
+        self.progress.configure(value=100)
+        self.status_var.set("%s complete in %s." % (kind.capitalize(), self._elapsed()))
+        self.detail_var.set(str(result.output))
+        self._append_log("=== done ===\n")
+        if messagebox.askyesno(
+                "%s complete" % kind.capitalize(),
+                "Output written to:\n%s\n\nOpen its folder?" % result.output):
+            self._open_folder(result.output if result.output.is_dir()
+                              else result.output.parent)
+
+    def _append_log(self, text):
+        self.log.configure(state=NORMAL)
+        self.log.insert(END, text)
+        self.log.see(END)
+        self.log.configure(state=DISABLED)
+
+    def _toggle_log(self):
+        shown = not self.log_shown.get()
+        self.log_shown.set(shown)
+        self.canvas.itemconfigure(
+            self.items["log"], state="normal" if shown else "hidden"
+        )
+        self.log_btn.configure(text="Hide details" if shown else "Show details")
+        width = self.root.winfo_width()
+        self.root.geometry("%dx%d" % (
+            width, self.expanded_height if shown else self.compact_height
+        ))
+        self._reflow()
+
+    def _on_close(self):
+        if self.runner.busy and not messagebox.askyesno(
+                "Still working", "A voice operation is still running. Close anyway?"):
+            return
+        self.root.destroy()
+
+    def _open_folder(self, path):
+        try:
+            if sys.platform == "win32":
+                os.startfile(str(path))
+            elif sys.platform == "darwin":
+                __import__("subprocess").Popen(["open", str(path)])
+            else:
+                __import__("subprocess").Popen(["xdg-open", str(path)])
+        except OSError as exc:
+            messagebox.showerror("Could not open folder", str(exc))
+
+
+def run_gui():
+    if TK_IMPORT_ERROR is not None:
+        print("this build has no Tk: %s" % TK_IMPORT_ERROR, file=sys.stderr)
+        return 3
+    enable_dpi_awareness()
+    root = Tk()
+    root.withdraw()
+    App(root)
+    use_dark_titlebar(root)
+    root.deiconify()
+    root.mainloop()
+    return 0

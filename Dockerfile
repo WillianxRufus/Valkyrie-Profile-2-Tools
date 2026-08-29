@@ -43,11 +43,15 @@ RUN python -m unittest discover -s tests -q \
     && pyinstaller data/vp2_cheats.spec \
     --workpath workspace/internal/build \
     --clean --noconfirm \
-    && ./dist/ValkyrieProfile2-CheatPatcher --self-check
+    && ./dist/ValkyrieProfile2-CheatPatcher --self-check \
+    && pyinstaller data/vp2_voices.spec \
+    --workpath workspace/internal/build \
+    --clean --noconfirm \
+    && ./dist/ValkyrieProfile2-VoiceTool --self-check
 
 RUN set -eux; \
     mkdir roundtrip; \
-    for binary in ValkyrieProfile2-Translator ValkyrieProfile2-CheatPatcher; do \
+    for binary in ValkyrieProfile2-Translator ValkyrieProfile2-CheatPatcher ValkyrieProfile2-VoiceTool; do \
     name="${binary}-${VERSION}-linux-x64"; \
     mv "dist/${binary}" "dist/${name}"; \
     chmod +x "dist/${name}"; \

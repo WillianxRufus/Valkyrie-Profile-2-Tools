@@ -1,6 +1,6 @@
 # Building release artifacts
 
-This guide is for maintainers packaging the two applications. End users can
+This guide is for maintainers packaging the three applications. End users can
 run the published Windows and Linux downloads without Python.
 
 ## Linux archives
@@ -16,9 +16,10 @@ This creates:
 
 - `ValkyrieProfile2-Translator-dev-local-linux-x64.tar.gz`
 - `ValkyrieProfile2-CheatPatcher-dev-local-linux-x64.tar.gz`
+- `ValkyrieProfile2-VoiceTool-dev-local-linux-x64.tar.gz`
 
 The container uses Ubuntu 24.04, Python 3.11.16, and PyInstaller 6.22.2. It
-builds both applications, runs each frozen binary's `--self-check`, unpacks
+builds all three applications, runs each frozen binary's `--self-check`, unpacks
 each archive, and runs the self-check again.
 
 ## Windows archives
@@ -32,11 +33,13 @@ python -m pip install --disable-pip-version-check "pyinstaller==6.22.2"
 python -m unittest discover -s tests -q
 python -m PyInstaller data/vp2_release.spec --workpath workspace/internal/build --clean --noconfirm
 python -m PyInstaller data/vp2_cheats.spec --workpath workspace/internal/build --clean --noconfirm
+python -m PyInstaller data/vp2_voices.spec --workpath workspace/internal/build --clean --noconfirm
 .\dist\ValkyrieProfile2-Translator.exe --self-check
 .\dist\ValkyrieProfile2-CheatPatcher.exe --self-check
+.\dist\ValkyrieProfile2-VoiceTool.exe --self-check
 ```
 
-Package both executables using the names in
+Package all three executables using the names in
 `.github/workflows/release.yml`, then unpack each archive and run its
 `--self-check` before publication.
 

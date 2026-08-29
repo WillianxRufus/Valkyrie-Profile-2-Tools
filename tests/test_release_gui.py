@@ -74,13 +74,15 @@ class ReleaseSpecTests(unittest.TestCase):
         """Both tools ship, and neither scratches outside the workspace."""
         self.assertTrue(self.spec_path.is_file())
         self.assertTrue((ROOT / "data" / "vp2_cheats.spec").is_file())
+        self.assertTrue((ROOT / "data" / "vp2_voices.spec").is_file())
         expected_workpath = "--workpath workspace/internal/build"
         for path in (
                 ROOT / "Dockerfile",
                 ROOT / ".github" / "workflows" / "release.yml",
                 ROOT / "docs" / "building-releases.md"):
             source = path.read_text(encoding="utf-8")
-            for spec in ("data/vp2_release.spec", "data/vp2_cheats.spec"):
+            for spec in ("data/vp2_release.spec", "data/vp2_cheats.spec",
+                         "data/vp2_voices.spec"):
                 self.assertIn(spec, source, "%s: %s" % (path, spec))
             self.assertIn(expected_workpath, source, path)
             self.assertNotIn(

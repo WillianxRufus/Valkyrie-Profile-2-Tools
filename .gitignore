@@ -13,7 +13,7 @@ dist/
 release/
 resources/
 .research*/
-voices/
+/voices/
 
 # Python and test state
 __pycache__/

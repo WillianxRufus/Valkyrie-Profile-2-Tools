@@ -6,12 +6,16 @@ Current applications:
 
 - **ValkyrieProfile2-Translator** builds a translated copy of the game.
 - **ValkyrieProfile2-CheatPatcher** writes selected cheats into a copy of the game so they work without an emulator cheat file. Can be used to create a new iso with the game's Anti-Cheat functions patched out.
+- **ValkyrieProfile2-VoiceTool** extracts the English or Japanese voices and
+  patches identified replacement WAV files into a copy of either release.
 
 Neither application modifies the source disc image.
 
 ## Requirements
 
-- A clean USA disc image (`SLUS_214.52`). Other releases are not supported.
+- A clean USA disc image (`SLUS_214.52`) for translation and cheats.
+- A USA or Japanese disc image (`SLPM_664.19`) for voice extraction and
+  replacement.
 - About 12 GB of free disk space for the source image, output image, and
   generated workspace.
 - Optionally, a Japanese disc image (`SLPM_664.19`) if you want Japanese text
@@ -74,10 +78,29 @@ Passing an image without `--patch` applies every available cheat. Repeat
 [cheat-patcher guide](docs/cheat-patcher.md) for the complete cheat list,
 dependencies, output behavior, and safety checks.
 
+## Voice Tool
+
+Open `ValkyrieProfile2-VoiceTool`, select a USA or Japanese image, then choose
+either **Extract every voice** or a folder of replacement WAVs and **Patch
+ISO**. The source image is only read.
+
+From a source checkout:
+
+```bash
+python vp2_voices.py
+python vp2_voices.py extract <usa-or-japan-image.iso>
+python vp2_voices.py patch <base-image.iso> <replacement-wav-folder>
+```
+
+Extraction creates `voices/en/` or `voices/jp/`. See the [voice-tool
+guide](docs/voices.md) for the reversible file names, cutscene folders, WAV
+requirements, and legacy dub-kit compatibility.
+
 ## Documentation
 
 - [Translator guide](docs/translator.md)
 - [Cheat-patcher guide](docs/cheat-patcher.md)
+- [Voice-tool guide](docs/voices.md)
 - [Translation-pack format](docs/translation-format.md)
 - [Drawing new glyphs](docs/authoring-glyphs.md)
 - [Building release artifacts](docs/building-releases.md)

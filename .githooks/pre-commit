@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+run_python() {
+    if command -v py >/dev/null 2>&1; then
+        py -3 "$@"
+    elif command -v python >/dev/null 2>&1; then
+        python "$@"
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 "$@"
+    else
+        echo "Error: Python was not found."
+        exit 1
+    fi
+}
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACMR)
+
+run_python tools/scripts/strip_original_columns.py --write
+
+if [ -n "$staged_files" ]; then
+    echo "$staged_files" | while IFS= read -r file; do
+        [ -f "$file" ] && git add -- "$file"
+    done
+fi
