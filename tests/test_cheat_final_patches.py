@@ -96,6 +96,10 @@ class SealstonePatchTests(unittest.TestCase):
                     )
                 self.assertEqual(bytes(expected), new)
                 self.assertEqual(suffix, final[span:span + len(suffix)])
+                self.assertEqual(
+                    span if number == 866 else 0,
+                    struct.unpack_from("<I", final, 0x0C)[0],
+                )
 
     def test_restore_installs_exact_highest_address_routine(self):
         executable, _ = make_executable()

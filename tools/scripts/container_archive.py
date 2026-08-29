@@ -668,23 +668,54 @@ def _pack_inline_slz(raw, blob, resource, container_offset):
     old_stored = struct.unpack_from("<I", raw, container_offset + 4)[0]
     packed, encoded_stored = _compress_container(
         blob, raw[container_offset + 3], target_stored=old_stored)
-    new_total = container_offset + len(packed)
-    if new_total > len(raw):
-        raise ValueError(
-            "resource #%d container needs %d more compressed bytes but its "
-            "entry has only %d bytes total" %
-            (resource, new_total - len(raw), len(raw)))
-    rebuilt = bytearray(len(raw))
-    rebuilt[:container_offset] = raw[:container_offset]
-    rebuilt[container_offset:new_total] = packed
-    old_total = container_offset + 0x10 + old_stored
-    if new_total < old_total:
-        rebuilt[new_total:old_total] = bytes(old_total - new_total)
+    next_offset = struct.unpack_from("<I", raw, container_offset + 0x0C)[0]
+    if next_offset:
+        suffix_at = container_offset + next_offset
+        if not container_offset + 0x10 + old_stored <= suffix_at <= len(raw):
+            raise ValueError("resource #%d has an invalid inline SLZ chain" %
+                             resource)
+        packed, encoded_stored = _tighten(
+            packed, encoded_stored, blob, raw[container_offset + 3],
+            old_stored, False, next_offset)
+        suffix = raw[suffix_at:]
+        used = len(suffix.rstrip(bytes(1)))
+        new_next = next_offset
+        if len(packed) > next_offset:
+            new_next += _round_up(len(packed) - next_offset, 16)
+        if container_offset + new_next + used > len(raw):
+            raise ValueError(
+                "resource #%d needs %d more compressed bytes but its inline "
+                "stream chain has only %d bytes of trailing slack" %
+                (resource, new_next - next_offset,
+                 len(raw) - suffix_at - used))
+        packed = bytearray(packed)
+        struct.pack_into("<I", packed, 0x0C, new_next)
+        rebuilt = bytearray(len(raw))
+        rebuilt[:container_offset] = raw[:container_offset]
+        rebuilt[container_offset:container_offset + len(packed)] = packed
+        new_suffix_at = container_offset + new_next
+        rebuilt[new_suffix_at:new_suffix_at + len(suffix)] = suffix[
+            :len(rebuilt) - new_suffix_at]
+        if any(suffix[len(rebuilt) - new_suffix_at:]):
+            raise ValueError("shifting resource #%d would truncate its inline "
+                             "stream chain" % resource)
+    else:
+        new_next = 0
+        new_total = container_offset + len(packed)
+        if new_total > len(raw):
+            raise ValueError(
+                "resource #%d container needs %d more compressed bytes but "
+                "its entry has only %d bytes total" %
+                (resource, new_total - len(raw), len(raw)))
+        rebuilt = bytearray(len(raw))
+        rebuilt[:container_offset] = raw[:container_offset]
+        rebuilt[container_offset:new_total] = packed
     details = {
         "wrapper": "inline-SLZ",
         "stored_before": old_stored,
         "stored_after": len(packed) - 0x10,
         "encoded_after": encoded_stored,
+        "suffix_shift": max(new_next - next_offset, 0),
     }
     check = unpack_container_entry(bytes(rebuilt), resource)
     if check != bytes(blob):

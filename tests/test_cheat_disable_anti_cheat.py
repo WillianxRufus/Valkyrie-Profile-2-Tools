@@ -218,13 +218,15 @@ def make_item_resource():
 
 def make_sealstone_resource(resource_number):
     base = 0x00495500
+    fixed_span = 0x8910
     output = bytearray(0xFC00)
     struct.pack_into("<I", output, 8, base)
     for address, original, _ in (RESTORE_SEALSTONE_PATCHES +
                                  WITHDRAWAL_PATCHES):
         struct.pack_into("<I", output, address - base, original)
-    encoded = slz3.compress(bytes(output))
-    fixed_span = 0x8910
+    encoded = slz3.compress(
+        bytes(output), next_offset=(fixed_span if resource_number == 866 else 0)
+    )
     if len(encoded) > fixed_span:
         raise AssertionError("synthetic sealstone overlay exceeds its span")
     suffix = (b"SEALSTONE-INLINE-BANK" + b"\xA5" * 32

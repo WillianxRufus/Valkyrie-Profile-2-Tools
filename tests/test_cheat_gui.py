@@ -38,7 +38,7 @@ class CatalogTests(unittest.TestCase):
             catalog.required_with(["heavenly-punishment-15-ap"])
         )
         self.assertEqual(
-            ("hold-circle-float",),
+            ("disable-anti-cheat", "hold-circle-float"),
             catalog.required_with(["hold-circle-float"])
         )
         self.assertEqual(

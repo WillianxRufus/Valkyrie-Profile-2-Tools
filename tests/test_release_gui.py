@@ -78,7 +78,7 @@ class ReleaseSpecTests(unittest.TestCase):
         for path in (
                 ROOT / "Dockerfile",
                 ROOT / ".github" / "workflows" / "release.yml",
-                ROOT / "Readme.md"):
+                ROOT / "docs" / "building-releases.md"):
             source = path.read_text(encoding="utf-8")
             for spec in ("data/vp2_release.spec", "data/vp2_cheats.spec"):
                 self.assertIn(spec, source, "%s: %s" % (path, spec))

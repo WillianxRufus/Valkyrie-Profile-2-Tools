@@ -141,15 +141,13 @@ CHEATS = (
     Cheat(
         "restore-all-sealstones",
         "Restore A Sealstone To Unlock All",
-        "Unlocks every sealstone when any one is restored. Known issue: the "
-        "sealstone menu may show flickering colours at the top.",
+        "Unlocks every sealstone when any one is restored.",
         False,
     ),
     Cheat(
         "no-limit-sealstone-withdrawals",
         "No Limit For Sealstone Withdrawals",
-        "Removes the switching limit; the number may go negative. Known "
-        "issue: the sealstone menu may show flickering colours at the top.",
+        "Removes the switching limit; the number may go negative.",
         False,
     ),
     Cheat(

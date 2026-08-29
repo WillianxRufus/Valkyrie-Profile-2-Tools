@@ -47,7 +47,8 @@ def replace(resource, output, resource_number, label, mode, fixed_span):
         raise ValueError("%s expanded size changed" % label)
     if mode != 3:
         raise ValueError("%s uses unsupported rewrite mode %d" % (label, mode))
-    encoded = slz3.compress(output)
+    next_offset = struct.unpack_from("<I", resource, 0x0C)[0]
+    encoded = slz3.compress(output, next_offset=next_offset)
     if len(encoded) > fixed_span:
         raise ValueError(
             "recompressed %s needs 0x%X bytes but its fixed span holds 0x%X"
@@ -60,6 +61,8 @@ def replace(resource, output, resource_number, label, mode, fixed_span):
     new = read(rebuilt, resource_number, label, mode, fixed_span)
     if new.output != output:
         raise ValueError("rebuilt %s overlay did not read back" % label)
+    if struct.unpack_from("<I", rebuilt, 0x0C)[0] != next_offset:
+        raise ValueError("rebuilt %s overlay changed its stream chain" % label)
     if rebuilt[fixed_span:] != resource[fixed_span:]:
         raise ValueError("data following %s changed or moved" % label)
     return rebuilt, new.stored_size
