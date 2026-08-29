@@ -18,6 +18,7 @@ import translation_columns as tc
 
 DEFAULT_TRANSLATIONS = tc.script_relative_default_translations()
 COLUMN = "original_en"
+SPEAKER = "speaker"
 
 subprocess.run(
     ["git", "config", "core.hooksPath", ".githooks"],
@@ -27,29 +28,27 @@ subprocess.run(
 def add_one(translation_path, reference_path, write):
     if not os.path.isfile(reference_path):
         return "missing-reference"
-    if not tc.reference_has_populated_column(reference_path, COLUMN):
-        lookup = tc.load_reference(reference_path)
-        if lookup is None:
-            return "missing-column"
-        return "empty-reference"
-
     lookup = tc.load_reference(reference_path)
+    if lookup is None:
+        return "missing-column"
+
     fields, rows = tc.read_table(translation_path)
-    if COLUMN in fields:
-        changed = tc.fill_value(rows, COLUMN, lookup)
-        verb = "filled" if write else "would-fill"
-        if changed == 0:
-            return "no-change"
-        if write:
-            tc.write_table(translation_path, fields, rows)
-        return verb
-    position = tc.insert_position(fields, COLUMN)
-    new_fields = fields[:position] + [COLUMN] + fields[position:]
-    tc.fill_value(rows, COLUMN, lookup)
-    verb = "added" if write else "would-add"
-    if write:
-        tc.write_table(translation_path, new_fields, rows)
-    return verb
+    actions = []
+    has_values = False
+    for column in (COLUMN, SPEAKER):
+        if not any(bool(entry.get(column, "")) for entry in lookup.values()):
+            continue
+        has_values = True
+        action = tc.apply_column(translation_path, fields, rows, lookup, column, write)
+        if action is not None:
+            actions.append(action)
+
+    if not has_values:
+        return "empty-reference"
+    if not actions:
+        return "no-change"
+    verb = "add" if "added" in actions else "fill"
+    return verb if write else "would-" + verb
 
 
 def run(translations_root, languages, write):

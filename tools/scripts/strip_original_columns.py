@@ -16,7 +16,7 @@ import translation_columns as tc
 
 
 DEFAULT_TRANSLATIONS = tc.script_relative_default_translations()
-TARGETS = ("original_en", "original_jp")
+TARGETS = ("original_en", "original_jp", "speaker")
 
 
 def strip_one(translation_path, write):

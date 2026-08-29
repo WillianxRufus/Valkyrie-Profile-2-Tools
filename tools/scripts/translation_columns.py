@@ -31,15 +31,9 @@ def load_reference(path):
             lookup[key] = {
                 "original_en": row.get("original_en", "") or "",
                 "original_jp": row.get("original_jp", "") or "",
+                "speaker": row.get("speaker", "") or "",
             }
         return lookup
-
-
-def reference_has_populated_column(path, column):
-    lookup = load_reference(path)
-    if not lookup:
-        return False
-    return any(bool(row.get(column, "")) for row in lookup.values())
 
 
 def read_table(path):
@@ -69,6 +63,30 @@ def insert_position(fields, column):
         if anchor in fields:
             return fields.index(anchor)
     return len(fields)
+
+
+def speaker_position(fields):
+    if "message_id" in fields:
+        return fields.index("message_id") + 1
+    return 0
+
+
+def apply_column(path, fields, rows, lookup, column, write):
+    if column in fields:
+        if fill_value(rows, column, lookup) == 0:
+            return None
+        if write:
+            write_table(path, fields, rows)
+        return "filled"
+    if column == "speaker":
+        position = speaker_position(fields)
+    else:
+        position = insert_position(fields, column)
+    fields[:] = fields[:position] + [column] + fields[position:]
+    fill_value(rows, column, lookup)
+    if write:
+        write_table(path, fields, rows)
+    return "added"
 
 
 def row_key(row):
