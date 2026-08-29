@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-r"""Add or refresh the ``original_en`` column on every translator table.
-
-Reads ``original_en`` from the matching file under
-``opensource/workspace/reference`` and copies it onto each row of every
-language folder under ``opensource/translations``.  Rows are joined by
-``(resource, message_id)``; reference-only columns never travel.
-
-When the translator table already has ``original_en`` the column is kept in
-place and any blank cells are filled; no column move happens, so running
-this twice is safe.  When the column is absent it is inserted in the
-correct slot:
-
-* before ``original_jp`` (so the two originals sit side by side, ``jp``
-  then ``en``)
-* otherwise before ``english_en`` if it is already present
-* otherwise before ``translated``
-
-A reference file must exist, have the required columns, and carry at least
-one non-empty ``original_en`` value.  Anything else is reported and skipped
--- the script never invents text.
-
-    py -3 opensource\tools\scripts\add_original_en.py              # dry-run
-    py -3 opensource\tools\scripts\add_original_en.py --write      # rewrite
-    py -3 opensource\tools\scripts\add_original_en.py pt-BR --write
+r"""
+    py -3 tools/scripts/add_original_en.py              # dry-run
+    py -3 tools/scripts/add_original_en.py --write      # rewrite
+    py -3 tools/scripts/add_original_en.py pt-BR --write
 """
 import subprocess
 import argparse
@@ -45,19 +25,9 @@ subprocess.run(
 )
 
 def add_one(translation_path, reference_path, write):
-    """Run the add/refresh for one table. Returns one of:
-
-    * ``"missing-reference"``        -- no reference file at all
-    * ``"missing-column"``           -- reference missing ``original_en``
-    * ``"empty-reference"``          -- reference ``original_en`` is all blank
-    * ``"no-change"``                -- column already present and values match
-    * ``"would-add"`` / ``"added"``  -- column inserted
-    * ``"would-fill"`` / ``"filled"``-- column already there, blanks backfilled
-    """
     if not os.path.isfile(reference_path):
         return "missing-reference"
     if not tc.reference_has_populated_column(reference_path, COLUMN):
-        # distinguish "missing column" vs "all blank" so the operator can fix
         lookup = tc.load_reference(reference_path)
         if lookup is None:
             return "missing-column"

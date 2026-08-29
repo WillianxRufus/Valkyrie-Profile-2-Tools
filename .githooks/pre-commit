@@ -15,12 +15,7 @@ run_python() {
     fi
 }
 
-staged_files=$(git diff --cached --name-only --diff-filter=ACMR)
-
 run_python tools/scripts/strip_original_columns.py --write
 
-if [ -n "$staged_files" ]; then
-    echo "$staged_files" | while IFS= read -r file; do
-        [ -f "$file" ] && git add -- "$file"
-    done
-fi
+git diff --cached --name-only --diff-filter=ACMR -z |
+    xargs -0 -r git add --

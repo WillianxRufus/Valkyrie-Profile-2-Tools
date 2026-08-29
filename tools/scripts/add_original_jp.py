@@ -1,27 +1,8 @@
 #!/usr/bin/env python3
-r"""Add or refresh the ``original_jp`` column on every translator table.
-
-Reads ``original_jp`` from the matching file under
-``opensource/workspace/reference`` and copies it onto each row of every
-language folder under ``opensource/translations``.  Rows are joined by
-``(resource, message_id)``; reference-only columns never travel.
-
-When the translator table already has ``original_jp`` the column is kept
-in place and blank cells are filled; running this twice is safe.  When the
-column is absent it is inserted in the correct slot:
-
-* before ``original_en`` (so the two originals sit side by side, ``jp``
-  then ``en``)
-* otherwise before ``english_en`` if it is already present
-* otherwise before ``translated``
-
-A reference file must exist, have the required columns, and carry at least
-one non-empty ``original_jp`` value.  Anything else is reported and skipped
--- the script never invents text.
-
-    py -3 opensource\tools\scripts\add_original_jp.py              # dry-run
-    py -3 opensource\tools\scripts\add_original_jp.py --write      # rewrite
-    py -3 opensource\tools\scripts\add_original_jp.py pt-BR --write
+r"""
+    py -3 tools/scripts/add_original_jp.py              # dry-run
+    py -3 tools/scripts/add_original_jp.py --write      # rewrite
+    py -3 tools/scripts/add_original_jp.py pt-BR --write
 """
 
 import subprocess
@@ -45,7 +26,6 @@ subprocess.run(
 )
 
 def add_one(translation_path, reference_path, write):
-    """Return a status string; same vocabulary as :func:`add_original_en.add_one`."""
     if not os.path.isfile(reference_path):
         return "missing-reference"
     if not tc.reference_has_populated_column(reference_path, COLUMN):

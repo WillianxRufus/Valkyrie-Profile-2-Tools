@@ -1,17 +1,8 @@
 #!/usr/bin/env python3
-r"""Strip ``original_en`` and ``original_jp`` from every translator table.
-
-Removes both columns in place.  Any other column is preserved bit-for-bit
-(UTF-8, CRLF terminators, quoting).  Tables that do not carry either column
-are left alone.
-
-The script does not touch ``opensource/workspace/reference`` -- that is the
-provenance tree, not the translation tree.  It also skips ``build-profile.csv``
-and any non-CSV file.
-
-    py -3 opensource\tools\scripts\strip_original_columns.py              # dry-run
-    py -3 opensource\tools\scripts\strip_original_columns.py --write      # rewrite
-    py -3 opensource\tools\scripts\strip_original_columns.py pt-BR --write
+r"""
+    py -3 tools/scripts/strip_original_columns.py              # dry-run
+    py -3 tools/scripts/strip_original_columns.py --write      # rewrite
+    py -3 tools/scripts/strip_original_columns.py pt-BR --write
 """
 import argparse
 import os
