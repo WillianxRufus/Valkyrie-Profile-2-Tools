@@ -35,7 +35,7 @@ else:
     TK_IMPORT_ERROR = None
 
 
-__version__ = "0.1.0"
+__version__ = "0.0.4"
 APP_NAME = "Valkyrie Profile 2 Voice Tool"
 SHORT_NAME = "VP2 Voice Tool"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

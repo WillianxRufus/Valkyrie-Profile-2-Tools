@@ -45,7 +45,7 @@ else:
     TK_IMPORT_ERROR = None
 
 
-__version__ = "0.0.2"
+__version__ = "0.0.4"
 APP_NAME = "Valkyrie Profile 2 Cheat Patcher"
 SHORT_NAME = "VP2 Cheat Patcher"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
