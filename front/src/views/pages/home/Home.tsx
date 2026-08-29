@@ -1,6 +1,13 @@
 import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import IoC from '@/modules/ioc'
 import { SERVICES, type IHomeService } from '@/types'
+
+const toolLinks = [
+  { to: '/translation', label: 'Translation', hint: 'ISO rewriter + manifest' },
+  { to: '/cheats', label: 'Cheats', hint: '21 ISO cheats' },
+  { to: '/voices', label: 'Voices', hint: '85 voice banks' }
+]
 
 function Home() {
   const homeService = IoC.getOrCreateInstance<IHomeService>(SERVICES.HOME)
@@ -201,6 +208,18 @@ function Home() {
           preload="metadata"
           src={homeService.getDubVideo()}
         />
+      </section>
+
+      <section className="tool-grid">
+        <h2>Tools</h2>
+        <div className="tool-cards">
+          {toolLinks.map((tool) => (
+            <Link key={tool.to} to={tool.to} className="tool-card">
+              <span className="tool-card-label">{tool.label}</span>
+              <span className="tool-card-hint">{tool.hint}</span>
+            </Link>
+          ))}
+        </div>
       </section>
     </>
   )

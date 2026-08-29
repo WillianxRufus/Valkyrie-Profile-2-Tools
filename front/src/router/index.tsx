@@ -1,7 +1,15 @@
 import { createHashRouter, Navigate } from 'react-router-dom'
 import { LazyPage, RootLayout } from './Layout'
 
-import { ErrorPage, Home, Io, Changelog } from '@/views/pages'
+import {
+  ErrorPage,
+  Home,
+  Changelog,
+  Translation,
+  Cheats,
+  Voices,
+  About
+} from '@/views/pages'
 
 export const router = createHashRouter([
   {
@@ -18,10 +26,34 @@ export const router = createHashRouter([
         )
       },
       {
-        path: 'io',
+        path: 'translation',
         element: (
           <LazyPage>
-            <Io />
+            <Translation />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'cheats',
+        element: (
+          <LazyPage>
+            <Cheats />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'voices',
+        element: (
+          <LazyPage>
+            <Voices />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'about',
+        element: (
+          <LazyPage>
+            <About />
           </LazyPage>
         )
       },

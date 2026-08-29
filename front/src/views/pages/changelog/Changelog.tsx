@@ -1,27 +1,14 @@
 import { Link } from 'react-router-dom'
-
-type ChangeType = 'added' | 'changed' | 'fixed'
-
-interface ChangelogItem {
-  type: ChangeType
-  text: string
-}
-
-interface ChangelogEntry {
-  version: string
-  date: string
-  items: ChangelogItem[]
-}
-
-const entries: ChangelogEntry[] = []
-
-const tagLabel: Record<ChangeType, string> = {
-  added: 'Added',
-  changed: 'Changed',
-  fixed: 'Fixed'
-}
+import IoC from '@/modules/ioc'
+import { type IChangelogService, SERVICES, tagLabel } from '@/types'
 
 function Changelog() {
+  const changelogService = IoC.getOrCreateInstance<IChangelogService>(
+    SERVICES.CHANGELOG
+  )
+
+  const entries = changelogService.getEntries()
+
   return (
     <section className="changelog">
       <h1>Changelog</h1>

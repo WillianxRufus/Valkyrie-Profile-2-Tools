@@ -1,6 +1,7 @@
 import { Suspense, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { init } from '@/setup'
+import Navbar from '@/components/navbar/Navbar'
 
 function RootLayout() {
   useEffect(() => {
@@ -8,9 +9,12 @@ function RootLayout() {
   }, [])
 
   return (
-    <main>
-      <Outlet />
-    </main>
+    <>
+      <Navbar />
+      <main>
+        <Outlet />
+      </main>
+    </>
   )
 }
 

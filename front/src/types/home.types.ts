@@ -8,8 +8,11 @@ export interface IHomeService {
   getProjectURL(): string
   getImageBase(): string
   getDubVideo(): string
-  getCount(): number
-  increment(): void
-  decrement(): void
-  reset(): void
+}
+
+export interface IHomeRepository {
+  getImages(): Image[]
+  getProjectURL(): string
+  getImageBase(): string
+  getDubVideo(): string
 }
