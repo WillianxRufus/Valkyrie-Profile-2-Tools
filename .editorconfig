@@ -1,5 +1,0 @@
-root = true
-[*.csv]
-end_of_line = crlf
-trim_trailing_whitespace = false
-insert_final_newline = false

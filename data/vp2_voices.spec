@@ -18,7 +18,7 @@ ARTWORK = (
     "images/vp2_release.png",
     "images/vp2_release_bg.png",
 )
-PAYLOAD = ("data/voice-bank-map.csv",)
+PAYLOAD = ("data/voice-bank-map.csv", "data/unmapped-voice-map.csv")
 UNUSED_TCL_TREES = ("_tcl_data/tzdata", "_tcl_data/msgs", "_tk_data/msgs")
 
 datas = [(os.fspath(ROOT / name), os.path.dirname(name))

@@ -12,7 +12,7 @@ from tools.voice_patcher import audio
 from tools.voice_patcher.build import (
     default_patch_output, default_voice_root, extract_voices, patch_iso,
 )
-from tools.voice_patcher.layout import load_bank_map
+from tools.voice_patcher.layout import load_bank_map, load_unmapped_map
 
 
 def _parser():
@@ -52,6 +52,11 @@ def self_check(stream=None):
         notes.append("known bank map    : %d cutscene bank(s)" % len(owners))
     except Exception as exc:
         problems.append("voice-bank map does not load: %r" % exc)
+    try:
+        voices = load_unmapped_map()
+        notes.append("unmapped voice map: %d sample(s)" % len(voices))
+    except Exception as exc:
+        problems.append("unmapped-voice map does not load: %r" % exc)
     try:
         encoded = audio.encode_adpcm(b"\0\0" * 28)
         if len(encoded) != audio.FRAME:
@@ -102,8 +107,10 @@ def main(argv=None):
                 args.source, args.output or default_voice_root(), progress=print
             )
             print(
-                "Extracted %d clips from %d banks to %s"
-                % (result.clips, result.banks, result.output)
+                "Extracted %d cutscene clips from %d banks and %d unmapped "
+                "samples to %s"
+                % (result.clips - result.unmapped_clips, result.banks,
+                   result.unmapped_clips, result.output)
             )
         else:
             result = patch_iso(

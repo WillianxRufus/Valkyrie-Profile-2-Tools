@@ -78,8 +78,7 @@ class ReleaseSpecTests(unittest.TestCase):
         expected_workpath = "--workpath workspace/internal/build"
         for path in (
                 ROOT / "Dockerfile",
-                ROOT / ".github" / "workflows" / "release.yml",
-                ROOT / "docs" / "building-releases.md"):
+                ROOT / ".github" / "workflows" / "release.yml"):
             source = path.read_text(encoding="utf-8")
             for spec in ("data/vp2_release.spec", "data/vp2_cheats.spec",
                          "data/vp2_voices.spec"):

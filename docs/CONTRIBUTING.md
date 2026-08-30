@@ -22,19 +22,7 @@ python vp2_translate.py check-pack <locale>
 - fonts, glyph bitmaps, graphics, audio or caches taken from a release;
 - anything generated into `workspace/`, `build/` or `dist/`.
 
-Two things that look like exceptions and are not.
-
-**Glyph bitmaps the project drew** are tracked, in
-`data/authored-glyphs.csv` and `data/authored-marks.csv`. The line is where
-the pixels came from, not what they are.
-
-**The glossary** carries names — characters, items, places, skills,
-sealstones — in English, Japanese and translation. Translating consistently
-means knowing what a term already was, and a term is a name rather than
-expression: the entries run about a dozen characters and the longest is
-thirty. Extending it is fine; turning it into sentences is not. The moment
-an entry is a line someone speaks, it is script and belongs in a pack as an
-identity.
+A language pack's `translated` column is the only script you may add.
 
 ## Language packs
 

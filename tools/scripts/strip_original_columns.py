@@ -53,10 +53,10 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("languages", nargs="*",
-                        help="language folder(s) under opensource/translations; "
+                        help="language folder(s) under translations; "
                              "default = every folder")
     parser.add_argument("--translations-root", default=DEFAULT_TRANSLATIONS,
-                        help="path to opensource/translations (default: %(default)s)")
+                        help="path to translations (default: %(default)s)")
     parser.add_argument("--write", action="store_true",
                         help="rewrite the translator tables; default is to report only")
     args = parser.parse_args()

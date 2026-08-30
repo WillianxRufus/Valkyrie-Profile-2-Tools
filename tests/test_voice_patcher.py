@@ -28,6 +28,10 @@ BANK = 1483
 BANK_OFFSET = 0x210000
 BANK_LENGTH = 0x1000
 CLIP_ID = 0x8028
+UNMAPPED_ENTRY = 685
+UNMAPPED_OFFSET = 0x212000
+UNMAPPED_LENGTH = 0x800
+UNMAPPED_CLIP_ID = 0x0B00
 
 
 def synthetic_bank():
@@ -45,10 +49,29 @@ def synthetic_bank():
     return bytes(data)
 
 
+def synthetic_unmapped_entry(tail_flag=7):
+    data = bytearray(UNMAPPED_LENGTH)
+    data[:4] = b"SEQW"
+    struct.pack_into("<I", data, 4, 0x80)
+    data[0x80:0x84] = b"WAV "
+    struct.pack_into("<III", data, 0x88, 0x80, 0x1C, 64)
+    struct.pack_into("<HH", data, 0xA0, 0x1C, UNMAPPED_CLIP_ID)
+    struct.pack_into("<I", data, 0xA4, 0x14)
+    struct.pack_into("<I", data, 0xB4, 0)
+    data[0x100:0x140] = audio.SILENCE_FRAME * 4
+    if tail_flag == 3:
+        data[0x111] = 2
+        data[0x121] = 6
+    data[0x131] = tail_flag
+    return bytes(data)
+
+
 def encrypted_index():
     decoded = [0] * (TOTAL * 3)
     decoded[BANK] = BANK_OFFSET // layout.SECTOR
     decoded[TOTAL + BANK] = BANK_LENGTH // layout.SECTOR
+    decoded[UNMAPPED_ENTRY] = UNMAPPED_OFFSET // layout.SECTOR
+    decoded[TOTAL + UNMAPPED_ENTRY] = UNMAPPED_LENGTH // layout.SECTOR
     raw = decoded[:]
     key = SEED
     for index in range(TOTAL):
@@ -63,11 +86,14 @@ def encrypted_index():
 
 
 def synthetic_iso(path, boot="SLUS_214.52"):
-    image = bytearray(BANK_OFFSET + BANK_LENGTH)
+    image = bytearray(UNMAPPED_OFFSET + UNMAPPED_LENGTH)
     image[0x1000:0x1000 + len(boot)] = boot.encode("ascii")
     index = encrypted_index()
     image[TABLE_OFFSET:TABLE_OFFSET + len(index)] = index
     image[BANK_OFFSET:BANK_OFFSET + BANK_LENGTH] = synthetic_bank()
+    image[UNMAPPED_OFFSET:UNMAPPED_OFFSET + UNMAPPED_LENGTH] = (
+        synthetic_unmapped_entry()
+    )
     path.write_bytes(image)
 
 
@@ -112,6 +138,27 @@ class LayoutTests(unittest.TestCase):
              owners[1562].slot_count),
         )
 
+    def test_unmapped_map_and_standalone_sample_identity_are_exact(self):
+        voices = layout.load_unmapped_map()
+        self.assertEqual(93, len(voices))
+        self.assertEqual(
+            layout.UnmappedVoice(
+                UNMAPPED_ENTRY, 0, UNMAPPED_CLIP_ID, 0
+            ),
+            voices[(UNMAPPED_ENTRY, 0)],
+        )
+        self.assertIn((1582, 14), voices)
+        self.assertIn((1621, 21), voices)
+        clip = layout.parse_standalone(synthetic_unmapped_entry())[0]
+        name = layout.unmapped_filename(UNMAPPED_ENTRY, clip)
+        self.assertEqual("unmapped-0685-000-0b00-0.wav", name)
+        self.assertEqual(
+            (UNMAPPED_ENTRY, 0, UNMAPPED_CLIP_ID, 0),
+            layout.parse_unmapped_filename(name),
+        )
+        self.assertEqual(64, clip.payload_length)
+        self.assertEqual(7, clip.tail_flag)
+
 
 class ExtractionTests(unittest.TestCase):
     def test_extracts_to_language_and_known_cutscene_folder(self):
@@ -122,7 +169,9 @@ class ExtractionTests(unittest.TestCase):
             owner = layout.BankOwner(BANK, 1197, 10, 1)
             with mock.patch.object(build, "VOICE_BANKS", (BANK,)), \
                     mock.patch.object(build, "load_bank_map",
-                                      return_value={BANK: owner}):
+                                      return_value={BANK: owner}), \
+                    mock.patch.object(build, "load_unmapped_map",
+                                      return_value={}):
                 result = build.extract_voices(source, root / "voices")
             wav = result.output / "1197" / "1483-000-8028.wav"
             self.assertTrue(wav.is_file())
@@ -142,9 +191,34 @@ class ExtractionTests(unittest.TestCase):
             owner = layout.BankOwner(BANK, 1197, 10, 1)
             with mock.patch.object(build, "VOICE_BANKS", (BANK,)), \
                     mock.patch.object(build, "load_bank_map",
-                                      return_value={BANK: owner}):
+                                      return_value={BANK: owner}), \
+                    mock.patch.object(build, "load_unmapped_map",
+                                      return_value={}):
                 result = build.extract_voices(source, root / "voices")
             self.assertEqual(root / "voices" / "jp", result.output)
+
+    def test_extracts_language_dependent_samples_to_unmapped_folder(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "usa.iso"
+            synthetic_iso(source)
+            voice = layout.UnmappedVoice(
+                UNMAPPED_ENTRY, 0, UNMAPPED_CLIP_ID, 0
+            )
+            with mock.patch.object(build, "VOICE_BANKS", ()), \
+                    mock.patch.object(build, "load_bank_map",
+                                      return_value={}), \
+                    mock.patch.object(build, "load_unmapped_map",
+                                      return_value={(UNMAPPED_ENTRY, 0): voice}):
+                result = build.extract_voices(source, root / "voices")
+            target = (result.output / "unmapped" /
+                      "unmapped-0685-000-0b00-0.wav")
+            self.assertTrue(target.is_file())
+            self.assertEqual(1, result.unmapped_clips)
+            with (result.output / "manifest.csv").open(
+                    encoding="utf-8") as manifest:
+                rows = list(csv.DictReader(manifest))
+            self.assertEqual("unmapped", rows[0]["kind"])
 
 
 class PatchingTests(unittest.TestCase):
@@ -170,6 +244,63 @@ class PatchingTests(unittest.TestCase):
             self.assertEqual(len(before), len(after))
             self.assertEqual(1, len(result.replacements))
             self.assertEqual(1, after[end - 15])
+
+    def test_replaces_only_one_unmapped_sample_slot(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "source.iso"
+            output = root / "output.iso"
+            voices = root / "voices"
+            voices.mkdir()
+            synthetic_iso(source)
+            replacement = voices / "unmapped-0685-000-0b00-0.wav"
+            write_wav(replacement, [900, -900] * 14)
+            before = source.read_bytes()
+            voice = layout.UnmappedVoice(
+                UNMAPPED_ENTRY, 0, UNMAPPED_CLIP_ID, 0
+            )
+            with mock.patch.object(
+                    build, "load_unmapped_map",
+                    return_value={(UNMAPPED_ENTRY, 0): voice}):
+                result = build.patch_iso(source, voices, output)
+            after = output.read_bytes()
+            start = UNMAPPED_OFFSET + 0x100
+            end = start + 64
+            self.assertEqual(before[:start], after[:start])
+            self.assertNotEqual(before[start:end], after[start:end])
+            self.assertEqual(before[end:], after[end:])
+            self.assertEqual("unmapped", result.replacements[0].kind)
+            self.assertEqual(UNMAPPED_ENTRY, result.replacements[0].entry)
+            self.assertEqual(7, after[end - 15])
+
+    def test_unmapped_loop_flag_is_preserved(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "source.iso"
+            output = root / "output.iso"
+            voices = root / "voices"
+            voices.mkdir()
+            synthetic_iso(source)
+            with source.open("r+b") as image:
+                image.seek(UNMAPPED_OFFSET)
+                image.write(synthetic_unmapped_entry(tail_flag=3))
+            replacement = voices / "unmapped-0685-000-0b00-0.wav"
+            write_wav(replacement, [700, -700] * 14)
+            voice = layout.UnmappedVoice(
+                UNMAPPED_ENTRY, 0, UNMAPPED_CLIP_ID, 0
+            )
+            with mock.patch.object(
+                    build, "load_unmapped_map",
+                    return_value={(UNMAPPED_ENTRY, 0): voice}):
+                build.patch_iso(source, voices, output)
+            payload = output.read_bytes()[
+                UNMAPPED_OFFSET + 0x100:UNMAPPED_OFFSET + 0x140
+            ]
+            self.assertEqual(
+                [0, 2, 6, 3],
+                [payload[offset + 1]
+                 for offset in range(0, len(payload), audio.FRAME)],
+            )
 
     def test_legacy_dub_kit_manifest_makes_clip_id_names_reversible(self):
         with tempfile.TemporaryDirectory() as folder:

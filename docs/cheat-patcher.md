@@ -80,17 +80,9 @@ cutscenes, battles, map changes, and saves. The window and command-line
 launcher automatically add `disable-anti-cheat` whenever a selected cheat
 requires it.
 
-## Validation and ISO safety
+## Safety
 
 The patcher supports only the USA release identified by `SLUS_214.52`. Before
-writing the output, it checks the disc identity, resource index, owning module,
-and original instructions expected by every selected patch. It also ensures
-that recompressed streams fit their disc allocations. The completed output is
-read back before receiving its final filename.
-
-Some cheats patch code loaded and unloaded by the game, while others inject
-new functions into unused executable space. Their implementations preserve
-the original PNACH addresses exactly. The sealstone cheats also preserve the
-complete linked stream chain in resource 866; they have been tested together
-with the other patches on a translated ISO without corrupting the sealstone
-menu.
+writing the output, it checks the disc identity and verifies that every
+selected patch fits. The completed output is read back before receiving its
+final filename.

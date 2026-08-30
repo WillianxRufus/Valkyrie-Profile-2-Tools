@@ -12,3 +12,8 @@ Some glyphs are missing, and existing ones could use some polishing.
 ### Title Screen
 
 The texts in the title screen (New Game, Load Game and Settings) seems to be art.
+
+### Translation Limits and Blockers
+
+Build errors or in-game freezes/crashes can happen if a translated scene goes beyond it's byte headroom.
+This is caused by a scene using many different glyphs, line length, and multiple lines going a little over it's original byte size combined

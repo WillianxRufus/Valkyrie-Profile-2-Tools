@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import hashlib
 import os
 from pathlib import Path
@@ -14,8 +14,9 @@ import shutil
 from . import audio
 from .layout import (
     JAPAN_BOOT, SUPPORTED_BOOTS, USA_BOOT, VOICE_BANKS, entry_span,
-    exported_filename, load_bank_map, parse_bank, parse_exported_filename,
-    read_index,
+    exported_filename, load_bank_map, load_unmapped_map, parse_bank,
+    parse_exported_filename, parse_standalone, parse_unmapped_filename,
+    read_index, unmapped_filename,
 )
 from ..scripts import disc_identity
 from ..scripts.paths import PROJECT_ROOT, output_root
@@ -23,9 +24,10 @@ from ..scripts.paths import PROJECT_ROOT, output_root
 
 COPY_CHUNK = 8 * 1024 * 1024
 MANIFEST_FIELDS = (
-    "region", "resource", "voice_scene", "bank", "sub", "clip_id",
-    "relative_path", "slot_bytes", "max_seconds", "seconds", "target_rms",
-    "peak", "voiced_pct", "silent", "sha256",
+    "kind", "region", "resource", "voice_scene", "bank", "sub", "entry",
+    "sample", "zone", "clip_id", "relative_path", "slot_bytes",
+    "max_seconds", "seconds", "target_rms", "peak", "voiced_pct",
+    "silent", "sha256",
 )
 
 
@@ -36,15 +38,20 @@ class ExtractionResult:
     banks: int
     clips: int
     mapped_banks: int
+    unmapped_clips: int
 
 
 @dataclass(frozen=True)
 class Replacement:
     path: Path
-    bank: int
-    sub: int
+    kind: str
     clip_id: int
     slot_bytes: int
+    bank: int | None = None
+    sub: int | None = None
+    entry: int | None = None
+    sample: int | None = None
+    zone: int | None = None
     truncated: bool = False
 
 
@@ -100,8 +107,18 @@ def _read_bank(handle, table, total, bank):
     return offset, data
 
 
-def extract_voices(source, output=None, progress=None, bank_map=None):
-    """Decode every USA/Japan voice bank to a reversible folder tree."""
+def _read_entry(handle, table, total, entry):
+    offset, length = entry_span(table, total, entry)
+    handle.seek(offset)
+    data = handle.read(length)
+    if len(data) != length:
+        raise ValueError("voice entry %d extends past the ISO" % entry)
+    return offset, data
+
+
+def extract_voices(source, output=None, progress=None, bank_map=None,
+                   unmapped_map=None):
+    """Decode mapped cutscenes and language-dependent unmapped samples."""
     say = progress or (lambda _message: None)
     source, region, boot = _validated_source(source)
     root = Path(output).expanduser().resolve() if output else default_voice_root()
@@ -117,6 +134,11 @@ def extract_voices(source, output=None, progress=None, bank_map=None):
             "partial voice output already exists; remove it first: %s" % partial
         )
     owners = load_bank_map(bank_map)
+    unmapped_voices = load_unmapped_map(unmapped_map)
+    by_entry = {}
+    for voice in unmapped_voices.values():
+        by_entry.setdefault(voice.entry, {})[voice.sample] = voice
+    extraction_steps = len(VOICE_BANKS) + len(by_entry)
     rows = []
     mapped = 0
     root.mkdir(parents=True, exist_ok=True)
@@ -151,6 +173,7 @@ def extract_voices(source, output=None, progress=None, bank_map=None):
                     peak, rms, voiced = audio.statistics(pcm)
                     relative = target.relative_to(partial).as_posix()
                     rows.append({
+                        "kind": "cutscene",
                         "region": region,
                         "resource": owner.resource if owner else "",
                         "voice_scene": (
@@ -160,6 +183,9 @@ def extract_voices(source, output=None, progress=None, bank_map=None):
                         ),
                         "bank": bank,
                         "sub": clip.sub_index,
+                        "entry": "",
+                        "sample": "",
+                        "zone": "",
                         "clip_id": "%04x" % clip.clip_id,
                         "relative_path": relative,
                         "slot_bytes": clip.payload_length,
@@ -178,7 +204,73 @@ def extract_voices(source, output=None, progress=None, bank_map=None):
                     })
                 say(
                     "extract: bank %d (%d/%d), %d clip(s)"
-                    % (bank, position, len(VOICE_BANKS), len(clips))
+                    % (bank, position, extraction_steps, len(clips))
+                )
+            unmapped_folder = partial / "unmapped"
+            unmapped_folder.mkdir(exist_ok=True)
+            unmapped_count = 0
+            for position, (entry, expected) in enumerate(
+                    sorted(by_entry.items()), 1):
+                _offset, entry_data = _read_entry(handle, table, total, entry)
+                clips = parse_standalone(entry_data)
+                indexed = {clip.sample_index: clip for clip in clips}
+                for sample_index, voice in sorted(expected.items()):
+                    clip = indexed.get(sample_index)
+                    if clip is None:
+                        raise ValueError(
+                            "unmapped voice entry %d has no sample %d"
+                            % (entry, sample_index)
+                        )
+                    if (clip.clip_id, clip.zone) != (
+                            voice.clip_id, voice.zone):
+                        raise ValueError(
+                            "unmapped voice entry %d sample %d is %04x/%d, "
+                            "but its map expects %04x/%d"
+                            % (entry, sample_index, clip.clip_id, clip.zone,
+                               voice.clip_id, voice.zone)
+                        )
+                    payload = entry_data[
+                        clip.payload_offset:
+                        clip.payload_offset + clip.payload_length
+                    ]
+                    pcm = audio.decode_adpcm(payload)
+                    target = unmapped_folder / unmapped_filename(entry, clip)
+                    audio.write_wav(target, pcm)
+                    peak, rms, voiced = audio.statistics(pcm)
+                    relative = target.relative_to(partial).as_posix()
+                    rows.append({
+                        "kind": "unmapped",
+                        "region": region,
+                        "resource": "",
+                        "voice_scene": "",
+                        "bank": "",
+                        "sub": "",
+                        "entry": entry,
+                        "sample": sample_index,
+                        "zone": clip.zone,
+                        "clip_id": "%04x" % clip.clip_id,
+                        "relative_path": relative,
+                        "slot_bytes": clip.payload_length,
+                        "max_seconds": "%.4f" % (
+                            clip.payload_length // audio.FRAME
+                            * audio.SAMPLES_PER_FRAME / audio.SAMPLE_RATE
+                        ),
+                        "seconds": "%.4f" % (
+                            len(pcm) // 2 / audio.SAMPLE_RATE
+                        ),
+                        "target_rms": int(rms),
+                        "peak": peak,
+                        "voiced_pct": "%.1f" % (100 * voiced),
+                        "silent": "yes" if rms == 0 else "",
+                        "sha256": hashlib.sha256(
+                            target.read_bytes()
+                        ).hexdigest(),
+                    })
+                    unmapped_count += 1
+                say(
+                    "extract: unmapped entry %d (%d/%d), %d sample(s)"
+                    % (entry, len(VOICE_BANKS) + position,
+                       extraction_steps, len(expected))
                 )
         with (partial / "manifest.csv").open(
                 "w", encoding="utf-8", newline="") as manifest:
@@ -187,7 +279,9 @@ def extract_voices(source, output=None, progress=None, bank_map=None):
             writer.writerows(rows)
         (partial / "README.txt").write_text(
             "Extracted from %s (%s).\n"
-            "Files are named <bank>-<subfile>-<clip-id>.wav.\n"
+            "Cutscene files are named <bank>-<subfile>-<clip-id>.wav.\n"
+            "Unmapped files are named unmapped-<entry>-<sample>-<clip-id>-"
+            "<zone>.wav.\n"
             "Folders named by number are cutscene resources. Some script-"
             "driven banks have no numeric voice-scene field, but are still "
             "grouped under their cutscene resource.\n"
@@ -205,6 +299,7 @@ def extract_voices(source, output=None, progress=None, bank_map=None):
         banks=len(VOICE_BANKS),
         clips=len(rows),
         mapped_banks=mapped,
+        unmapped_clips=unmapped_count,
     )
 
 
@@ -253,21 +348,21 @@ def discover_replacements(folder):
     for path in wavs:
         identity = parse_exported_filename(path)
         if identity is None:
+            identity = parse_unmapped_filename(path)
+        if identity is None:
             stem = path.stem.lower().removeprefix("id_").removeprefix("0x")
             identity = legacy.get(stem)
         if identity is None:
             unknown.append(path)
             continue
         if identity in found:
-            raise ValueError(
-                "two WAV files target bank %d subfile %d: %s and %s"
-                % (identity[0], identity[1], found[identity], path)
-            )
+            raise ValueError("two WAV files target the same voice slot: %s and %s"
+                             % (found[identity], path))
         found[identity] = path
     if unknown:
         preview = ", ".join(str(path.relative_to(folder)) for path in unknown[:5])
         raise ValueError(
-            "%d WAV file(s) have no bank/subfile identity: %s%s"
+            "%d WAV file(s) have no cutscene/unmapped identity: %s%s"
             % (len(unknown), preview, " ..." if len(unknown) > 5 else "")
         )
     return found
@@ -308,28 +403,88 @@ def patch_iso(source, voices, output=None, progress=None,
     with source.open("rb") as handle:
         total, table = read_index(handle)
         banks = {}
-        for bank, _sub, _clip_id in selected:
-            if bank not in VOICE_BANKS:
-                raise ValueError("replacement targets non-voice bank %d" % bank)
-            if bank not in banks:
-                bank_offset, bank_data = _read_bank(handle, table, total, bank)
-                banks[bank] = (bank_offset, bank_data, {
-                    clip.sub_index: clip for clip in parse_bank(bank_data)
-                })
+        entries = {}
+        allowed_unmapped = {
+            (voice.entry, voice.sample, voice.clip_id, voice.zone)
+            for voice in load_unmapped_map().values()
+        }
         for identity, path in sorted(selected.items()):
-            bank, sub_index, clip_id = identity
-            bank_offset, bank_data, clips = banks[bank]
-            clip = clips.get(sub_index)
-            if clip is None:
-                raise ValueError(
-                    "%s targets missing subfile %d in bank %d"
-                    % (path.name, sub_index, bank)
+            if len(identity) == 3:
+                bank, sub_index, clip_id = identity
+                if bank not in VOICE_BANKS:
+                    raise ValueError(
+                        "replacement targets non-voice bank %d" % bank
+                    )
+                if bank not in banks:
+                    bank_offset, bank_data = _read_bank(
+                        handle, table, total, bank
+                    )
+                    banks[bank] = (bank_offset, {
+                        item.sub_index: item for item in parse_bank(bank_data)
+                    })
+                bank_offset, clips = banks[bank]
+                clip = clips.get(sub_index)
+                if clip is None:
+                    raise ValueError(
+                        "%s targets missing subfile %d in bank %d"
+                        % (path.name, sub_index, bank)
+                    )
+                if clip.clip_id != clip_id:
+                    raise ValueError(
+                        "%s says clip %04x, but bank %d subfile %d is %04x"
+                        % (path.name, clip_id, bank, sub_index, clip.clip_id)
+                    )
+                absolute = (
+                    bank_offset + clip.sub_offset + clip.payload_offset
                 )
-            if clip.clip_id != clip_id:
-                raise ValueError(
-                    "%s says clip %04x, but bank %d subfile %d is %04x"
-                    % (path.name, clip_id, bank, sub_index, clip.clip_id)
+                replacement = Replacement(
+                    path=path, kind="cutscene", bank=bank, sub=sub_index,
+                    clip_id=clip_id, slot_bytes=clip.payload_length,
                 )
+                label = "bank %d subfile %d" % (bank, sub_index)
+            elif len(identity) == 4:
+                entry, sample_index, clip_id, zone = identity
+                if identity not in allowed_unmapped:
+                    raise ValueError(
+                        "%s is not a tracked unmapped voice slot" % path.name
+                    )
+                if entry not in entries:
+                    entry_offset, entry_data = _read_entry(
+                        handle, table, total, entry
+                    )
+                    entries[entry] = (entry_offset, entry_data, {
+                        item.sample_index: item
+                        for item in parse_standalone(entry_data)
+                    })
+                entry_offset, entry_data, clips = entries[entry]
+                clip = clips.get(sample_index)
+                if clip is None:
+                    raise ValueError(
+                        "%s targets missing sample %d in entry %d"
+                        % (path.name, sample_index, entry)
+                    )
+                if (clip.clip_id, clip.zone) != (clip_id, zone):
+                    raise ValueError(
+                        "%s says clip %04x/%d, but entry %d sample %d is "
+                        "%04x/%d"
+                        % (path.name, clip_id, zone, entry, sample_index,
+                           clip.clip_id, clip.zone)
+                    )
+                absolute = entry_offset + clip.payload_offset
+                original_payload = entry_data[
+                    clip.payload_offset:
+                    clip.payload_offset + clip.payload_length
+                ]
+                replacement = Replacement(
+                    path=path, kind="unmapped", entry=entry,
+                    sample=sample_index, zone=zone, clip_id=clip_id,
+                    slot_bytes=clip.payload_length,
+                )
+                label = "unmapped entry %d sample %d" % (
+                    entry, sample_index
+                )
+            else:
+                raise ValueError("unknown voice identity for %s" % path.name)
             pcm = audio.read_wav(path)
             encoded = audio.encode_adpcm(pcm)
             truncated = len(encoded) > clip.payload_length
@@ -348,14 +503,14 @@ def patch_iso(source, voices, output=None, progress=None,
                     "%s is %.3fs but its game slot is %.3fs: %s"
                     % (path.name, duration, maximum, exc)
                 ) from exc
-            absolute = bank_offset + clip.sub_offset + clip.payload_offset
-            pending.append((absolute, fitted, Replacement(
-                path=path, bank=bank, sub=sub_index, clip_id=clip_id,
-                slot_bytes=clip.payload_length, truncated=truncated,
-            )))
-            say("prepare: bank %d subfile %d <- %s" % (
-                bank, sub_index, path.name
-            ))
+            if replacement.kind == "unmapped":
+                fitted = bytearray(fitted)
+                for offset in range(0, len(fitted), audio.FRAME):
+                    fitted[offset + 1] = original_payload[offset + 1]
+                fitted = bytes(fitted)
+            replacement = replace(replacement, truncated=truncated)
+            pending.append((absolute, fitted, replacement))
+            say("prepare: %s <- %s" % (label, path.name))
             if truncated:
                 say("warning: %s is overlong and will be trimmed to %.3fs" % (
                     path.name, maximum
@@ -378,8 +533,8 @@ def patch_iso(source, voices, output=None, progress=None,
                 candidate.seek(offset)
                 if candidate.read(len(payload)) != payload:
                     raise ValueError(
-                        "bank %d subfile %d did not read back byte-for-byte"
-                        % (replacement.bank, replacement.sub)
+                        "%s voice %04x did not read back byte-for-byte"
+                        % (replacement.kind, replacement.clip_id)
                     )
         if partial.stat().st_size != source.stat().st_size:
             raise ValueError("output ISO size differs from source")

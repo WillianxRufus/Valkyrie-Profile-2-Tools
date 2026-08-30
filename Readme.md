@@ -103,7 +103,6 @@ requirements, and legacy dub-kit compatibility.
 - [Voice-tool guide](docs/voices.md)
 - [Translation-pack format](docs/translation-format.md)
 - [Drawing new glyphs](docs/authoring-glyphs.md)
-- [Building release artifacts](docs/building-releases.md)
 - [Known issues](docs/issues.md)
 - [Contributing](docs/CONTRIBUTING.md)
 

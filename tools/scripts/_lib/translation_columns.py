@@ -13,7 +13,6 @@ ANCHOR_CHAINS = {
 
 
 def open_csv(path, mode="r"):
-    """Open *path* with UTF-8 BOM tolerance and no implicit newline mangling."""
     return io.open(path, mode, encoding="utf-8-sig", newline="")
 
 
@@ -134,4 +133,4 @@ def reference_path_for(translations_root, lang, rel_path):
 
 def script_relative_default_translations():
     here = os.path.dirname(os.path.abspath(__file__))
-    return os.path.normpath(os.path.join(here, "..", "..", "translations"))
+    return os.path.normpath(os.path.join(here, "..", "..", "..", "translations"))
