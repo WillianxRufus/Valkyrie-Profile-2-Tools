@@ -11,8 +11,9 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-if HERE not in sys.path:
-    sys.path.insert(0, HERE)
+_LIB = os.path.join(HERE, "_lib")
+if _LIB not in sys.path:
+    sys.path.insert(0, _LIB)
 
 import translation_columns as tc
 
