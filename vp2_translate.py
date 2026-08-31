@@ -43,7 +43,7 @@ else:
     TK_IMPORT_ERROR = None
 
 
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 APP_NAME = "Valkyrie Profile 2 Translation Builder"
 SHORT_NAME = "VP2 Translation Builder"
 DEFAULT_WORKSPACE = str(WORKSPACE_DIR)

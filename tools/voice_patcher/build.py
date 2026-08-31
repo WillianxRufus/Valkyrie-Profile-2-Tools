@@ -23,8 +23,8 @@ from .layout import (
 )
 from ..cheat_patcher import battle_overlay
 from ..scripts import (
-    disc_identity, package_archive, protected_package, slz, slz_compress,
-    vp2_iso_space,
+    disc_identity, package_archive, pk1_archive, protected_package, slz,
+    slz_compress, vp2_dcms, vp2_iso_space,
 )
 from ..scripts.paths import PROJECT_ROOT, output_root
 
@@ -503,8 +503,209 @@ def _protected_stream_entries(handle, values, total):
     return tuple(entries)
 
 
+def _indexed_audio_groups(data):
+    """Return structurally valid standalone audio in indexed PK1 rows."""
+    groups = []
+    for number, (tag, offset, length) in enumerate(
+            vp2_dcms.parse_pk1(data)):
+        payload = data[offset:offset + length]
+        try:
+            clips = parse_standalone(payload)
+        except ValueError:
+            continue
+        groups.append((
+            number, tag, offset,
+            tuple((clip.clip_id, clip.zone) for clip in clips),
+            payload,
+        ))
+    return tuple(groups)
+
+
+def _merge_indexed_audio_groups(base, donor):
+    """Keep target PK1 rows except for complete matching donor audio rows."""
+    base_groups = _indexed_audio_groups(base)
+    donor_groups = _indexed_audio_groups(donor)
+    base_shape = tuple(
+        (tag, identities)
+        for _number, tag, _offset, identities, _payload in base_groups
+    )
+    donor_shape = tuple(
+        (tag, identities)
+        for _number, tag, _offset, identities, _payload in donor_groups
+    )
+    if not base_groups or base_shape != donor_shape:
+        raise ValueError("regional indexed-audio PK1 structure does not match")
+    replacements = [
+        (number, tag, identities, donor_payload)
+        for ((number, tag, _base_offset, identities, base_payload),
+             (_donor_number, _donor_tag, _donor_offset,
+              _donor_identities, donor_payload))
+        in zip(base_groups, donor_groups)
+        if base_payload != donor_payload
+    ]
+    if not replacements:
+        return base, 0
+
+    base_by_number = {group[0]: group[4] for group in base_groups}
+    growth = sum(max(len(payload) - len(base_by_number[number]), 0)
+                 for number, _tag, _identities, payload in replacements)
+    rebuilt = base + bytes(growth + layout.SECTOR)
+    for number, tag, identities, payload in replacements:
+        current = _indexed_audio_groups(rebuilt)
+        matches = [
+            group for group in current
+            if group[0] == number and group[1] == tag and
+            group[3] == identities
+        ]
+        if len(matches) != 1:
+            raise ValueError("indexed-audio PK1 row moved unexpectedly")
+        rebuilt = pk1_archive.repack_pk1_subresource(
+            rebuilt, tag, payload, target_offset=matches[0][2]
+        )
+
+    entries = vp2_dcms.parse_pk1(rebuilt)
+    content_end = max(offset + length for _tag, offset, length in entries)
+    final_size = (
+        (content_end + layout.SECTOR - 1) // layout.SECTOR * layout.SECTOR
+    )
+    rebuilt = rebuilt[:final_size]
+    checked = _indexed_audio_groups(rebuilt)
+    donor_by_number = {
+        number: payload
+        for number, _tag, _identities, payload in replacements
+    }
+    base_entries = vp2_dcms.parse_pk1(base)
+    checked_entries = vp2_dcms.parse_pk1(rebuilt)
+    if len(checked_entries) != len(base_entries):
+        raise ValueError("indexed-audio merge changed the PK1 row count")
+    replacement_numbers = {item[0] for item in replacements}
+    for number, ((base_tag, base_offset, base_length),
+                 (checked_tag, checked_offset, checked_length)) in enumerate(
+                     zip(base_entries, checked_entries)):
+        expected = (donor_by_number[number]
+                    if number in replacement_numbers
+                    else base[base_offset:base_offset + base_length])
+        actual = rebuilt[checked_offset:checked_offset + checked_length]
+        if checked_tag != base_tag or actual != expected:
+            raise ValueError("indexed-audio merge changed an unrelated PK1 row")
+    if tuple((item[1], item[3]) for item in checked) != donor_shape:
+        raise ValueError("indexed-audio merge failed structural read-back")
+    return rebuilt, len(replacements)
+
+
+def _indexed_audio_hybrids(base_handle, base_values, donor_handle,
+                           donor_values, total):
+    """Discover regional audio stored as indexed PK1 subresources."""
+    hybrids = {}
+    group_count = 0
+    for entry in range(1, total):
+        if not (base_values[total + entry] and
+                donor_values[total + entry]):
+            continue
+        _offset, donor = _read_entry(
+            donor_handle, donor_values, total, entry
+        )
+        if not _indexed_audio_groups(donor):
+            continue
+        _offset, base = _read_entry(base_handle, base_values, total, entry)
+        base_shape = tuple(
+            (item[1], item[3])
+            for item in _indexed_audio_groups(base)
+        )
+        donor_shape = tuple(
+            (item[1], item[3])
+            for item in _indexed_audio_groups(donor)
+        )
+        if not base_shape or base_shape != donor_shape:
+            continue
+        rebuilt, groups = _merge_indexed_audio_groups(base, donor)
+        if rebuilt == base:
+            continue
+        hybrids[entry] = rebuilt
+        group_count += groups
+    return hybrids, group_count
+
+
+def _streamed_audio_tail(data):
+    """Return ``(tail offset, clip identities)`` for a PK1 audio tail."""
+    entries = vp2_dcms.parse_pk1(data)
+    if not entries:
+        return None
+    content_end = max(offset + length for _tag, offset, length in entries)
+    tail_start = (
+        (content_end + layout.SECTOR - 1) // layout.SECTOR * layout.SECTOR
+    )
+    if tail_start >= len(data):
+        return None
+    identities = []
+    position = tail_start
+    while True:
+        position = data.find(b"SEQW", position)
+        if position < 0:
+            break
+        if position % 16 == 0:
+            try:
+                clips = parse_standalone(data[position:])
+            except ValueError:
+                pass
+            else:
+                identities.append(tuple(
+                    (clip.clip_id, clip.zone) for clip in clips
+                ))
+        position += 4
+    if not identities:
+        return None
+    return tail_start, tuple(identities)
+
+
+def _merge_streamed_audio_tail(base, donor):
+    """Keep target PK1 content/offsets and replace its complete audio tail."""
+    base_audio = _streamed_audio_tail(base)
+    donor_audio = _streamed_audio_tail(donor)
+    if base_audio is None or donor_audio is None:
+        raise ValueError("regional streamed-audio PK1 structure does not match")
+    base_start, base_identities = base_audio
+    donor_start, donor_identities = donor_audio
+    if base_identities != donor_identities:
+        raise ValueError("regional streamed-audio clip identities do not match")
+    rebuilt = base[:base_start] + donor[donor_start:]
+    if len(rebuilt) % layout.SECTOR:
+        raise ValueError("rebuilt streamed-audio resource is not sector-aligned")
+    if rebuilt[:base_start] != base[:base_start]:
+        raise ValueError("streamed-audio merge changed indexed target content")
+    if rebuilt[base_start:] != donor[donor_start:]:
+        raise ValueError("streamed-audio merge did not preserve the donor tail")
+    checked = _streamed_audio_tail(rebuilt)
+    if checked != (base_start, donor_identities):
+        raise ValueError("streamed-audio merge failed structural read-back")
+    return rebuilt, sum(len(group) for group in donor_identities)
+
+
+def _streamed_audio_hybrids(base_handle, base_values, donor_handle,
+                            donor_values, total):
+    """Discover localized audio after PK1 indexed content on both discs."""
+    hybrids = {}
+    clip_count = 0
+    for entry in range(1, total):
+        if not (base_values[total + entry] and
+                donor_values[total + entry]):
+            continue
+        _offset, donor = _read_entry(
+            donor_handle, donor_values, total, entry
+        )
+        if _streamed_audio_tail(donor) is None:
+            continue
+        _offset, base = _read_entry(base_handle, base_values, total, entry)
+        rebuilt, clips = _merge_streamed_audio_tail(base, donor)
+        if rebuilt == base:
+            continue
+        hybrids[entry] = rebuilt
+        clip_count += clips
+    return hybrids, clip_count
+
+
 def _canonical_archive_layout(base_values, donor_values, total,
-                              donor_resources):
+                              donor_resources, sector_overrides=None):
     """Repack the complete archive in the physical order its readers use.
 
     All compared retail discs and the historical UNDUB store active entries
@@ -536,9 +737,14 @@ def _canonical_archive_layout(base_values, donor_values, total,
     rebuilt = list(base_values)
     cursor = base_values[base_active[0]]
     donor_resources = set(donor_resources)
+    sector_overrides = dict(sector_overrides or {})
     for entry in base_active:
         rebuilt[entry] = cursor
-        if entry in donor_resources:
+        if entry in sector_overrides:
+            if sector_overrides[entry] <= 0:
+                raise ValueError("resource sector override must be positive")
+            rebuilt[total + entry] = sector_overrides[entry]
+        elif entry in donor_resources:
             rebuilt[total + entry] = donor_values[total + entry]
         cursor += rebuilt[total + entry]
     return rebuilt, tuple(base_active), cursor
@@ -743,8 +949,33 @@ def import_japanese_audio(base, japan, output=None, progress=None):
         protected = _protected_stream_entries(
             donor_handle, donor_values, total
         )
+        indexed_hybrids, indexed_groups = _indexed_audio_hybrids(
+            base_handle, base_values, donor_handle, donor_values, total
+        )
+        if indexed_hybrids:
+            say(
+                "prepare: %d indexed-scene audio group(s) in %d resource(s)"
+                % (indexed_groups, len(indexed_hybrids))
+            )
+        streamed_hybrids, streamed_clips = _streamed_audio_hybrids(
+            base_handle, base_values, donor_handle, donor_values, total
+        )
+        if streamed_hybrids:
+            say(
+                "prepare: %d streamed-scene audio clip(s) in %d resource(s)"
+                % (streamed_clips, len(streamed_hybrids))
+            )
+        overlap = set(indexed_hybrids) & set(streamed_hybrids)
+        if overlap:
+            raise ValueError(
+                "audio occurs in indexed rows and the streamed tail of "
+                "resource(s): %s" % ", ".join(map(str, sorted(overlap)))
+            )
+        hybrids = dict(indexed_hybrids)
+        hybrids.update(streamed_hybrids)
         resources = tuple(sorted(
-            set(VOICE_BANKS) | standalone | set(battle) | set(protected)
+            set(VOICE_BANKS) | standalone | set(battle) | set(protected) |
+            set(hybrids)
         ))
         for entry in resources:
             if not (base_values[total + entry] and
@@ -754,11 +985,15 @@ def import_japanese_audio(base, japan, output=None, progress=None):
         if image_bytes % layout.SECTOR:
             raise ValueError("target ISO size is not a whole number of sectors")
         image_lba = image_bytes // layout.SECTOR
+        hybrid_sectors = {
+            entry: len(data) // layout.SECTOR
+            for entry, data in hybrids.items()
+            if entry in resources
+        }
         rebuilt, archive_entries, end_lba = _canonical_archive_layout(
-            base_values, donor_values, total, resources
+            base_values, donor_values, total, resources, hybrid_sectors
         )
         _rewrite_logical_positions(base_values, rebuilt, total)
-        hybrids = {}
         if (base_values[total + GLOBAL_BATTLE_RESOURCE] and
                 donor_values[total + GLOBAL_BATTLE_RESOURCE]):
             _offset, base_battle = _read_entry(

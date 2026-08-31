@@ -4,6 +4,7 @@
 """Synthetic, source-free round trips for the voice extractor/patcher."""
 
 import csv
+import io
 import struct
 import sys
 import tempfile
@@ -81,6 +82,60 @@ def synthetic_battle_entry():
         struct.pack_into("<I", stored, offset, word)
     assert struct.unpack_from("<I", stored)[0] == BATTLE_SIGNATURE
     return bytes(stored)
+
+
+def synthetic_streamed_scene(tail_flag, extra_tail_sectors=0,
+                             indexed_marker=b"TARGET"):
+    data = bytearray(layout.SECTOR)
+    struct.pack_into("<III", data, 0, 0, 1, 0x20)
+    data[0x10:0x14] = b"PAM\0"
+    struct.pack_into("<III", data, 0x14, 0, 0x10, 0x30)
+    data[0x20:0x24] = b"SLZ\2"
+    struct.pack_into("<III", data, 0x24, 0, 0x10, 0)
+    data[0x30:0x30 + len(indexed_marker)] = indexed_marker
+    tail = bytearray(0x120)
+    for clip_id in (0x0A89, 0x0A8A):
+        entry = bytearray(synthetic_unmapped_entry(tail_flag))
+        struct.pack_into("<H", entry, 0xA2, clip_id)
+        tail.extend(entry)
+    tail.extend(bytes(extra_tail_sectors * layout.SECTOR))
+    data.extend(tail)
+    data.extend(bytes(-len(data) % layout.SECTOR))
+    return bytes(data)
+
+
+def synthetic_indexed_audio_scene(tail_flag, extra_audio_sectors=0,
+                                  indexed_marker=b"TARGET HUD",
+                                  extra_indexed_rows=0):
+    audio_rows = []
+    for clip_id in (0x0A80, 0x0A83):
+        entry = bytearray(synthetic_unmapped_entry(tail_flag))
+        struct.pack_into("<H", entry, 0xA2, clip_id)
+        entry.extend(bytes(extra_audio_sectors * layout.SECTOR))
+        audio_rows.append(bytes(entry))
+    leading = bytearray(16 + len(indexed_marker))
+    leading[16:] = indexed_marker
+    rows = [(b"MINA", leading)]
+    rows.extend(
+        (b"SYS\0", ("HUD ROW %d" % number).encode("ascii"))
+        for number in range(extra_indexed_rows)
+    )
+    rows.extend(((b"ESM\0", audio_rows[0]),
+                 (b"ESM\0", audio_rows[1])))
+    count = len(rows)
+    table_end = 0x10 + count * 16
+    data = bytearray(table_end)
+    struct.pack_into("<III", data, 0, 0, count, table_end)
+    for number, (tag, payload) in enumerate(rows):
+        position = 0x10 + number * 16
+        offset = len(data)
+        data[position:position + 4] = tag
+        struct.pack_into("<III", data, position + 4, 0, len(payload), offset)
+        data.extend(payload)
+        if number == 0:
+            data[offset:offset + 16] = data[position:position + 16]
+    data.extend(bytes(-len(data) % layout.SECTOR))
+    return bytes(data)
 
 
 def encrypted_index(include_battle=False):
@@ -543,6 +598,138 @@ class JapaneseAudioImportTests(unittest.TestCase):
         self.assertEqual([100, 102, 106], rebuilt[1:4])
         self.assertEqual([2, 4, 1], rebuilt[total + 1:total + 4])
         self.assertEqual(107, end)
+
+    def test_archive_repack_uses_exact_hybrid_sector_override(self):
+        total = 4
+        base = [0, 100, 102, 104] + [0, 2, 2, 1] + [0, 10, 12, 14]
+        donor = [0, 200, 202, 206] + [0, 2, 4, 1] + [0, 20, 22, 26]
+        rebuilt, active, end = build._canonical_archive_layout(
+            base, donor, total, (2,), {2: 3}
+        )
+        self.assertEqual((1, 2, 3), active)
+        self.assertEqual([100, 102, 105], rebuilt[1:4])
+        self.assertEqual([2, 3, 1], rebuilt[total + 1:total + 4])
+        self.assertEqual(106, end)
+
+    def test_indexed_audio_merge_preserves_target_hud_rows(self):
+        base = synthetic_indexed_audio_scene(
+            tail_flag=7, indexed_marker=b"USA HUD"
+        )
+        donor = synthetic_indexed_audio_scene(
+            tail_flag=3, extra_audio_sectors=1,
+            indexed_marker=b"JP HUD",
+        )
+        rebuilt, groups = build._merge_indexed_audio_groups(base, donor)
+        base_entries = build.vp2_dcms.parse_pk1(base)
+        donor_entries = build.vp2_dcms.parse_pk1(donor)
+        rebuilt_entries = build.vp2_dcms.parse_pk1(rebuilt)
+
+        self.assertEqual(2, groups)
+        self.assertEqual(layout.SECTOR * 2, len(rebuilt) - len(base))
+        self.assertEqual(
+            base[base_entries[0][1]:sum(base_entries[0][1:])],
+            rebuilt[
+                rebuilt_entries[0][1]:sum(rebuilt_entries[0][1:])
+            ],
+        )
+        self.assertIn(b"USA HUD", rebuilt)
+        self.assertNotIn(b"JP HUD", rebuilt)
+        for number in (1, 2):
+            donor_payload = donor[
+                donor_entries[number][1]:sum(donor_entries[number][1:])
+            ]
+            rebuilt_payload = rebuilt[
+                rebuilt_entries[number][1]:sum(rebuilt_entries[number][1:])
+            ]
+            self.assertEqual(donor_payload, rebuilt_payload)
+
+    def test_indexed_audio_merge_rejects_identity_drift(self):
+        base = synthetic_indexed_audio_scene(tail_flag=7)
+        donor = bytearray(synthetic_indexed_audio_scene(tail_flag=3))
+        group = build._indexed_audio_groups(donor)[1]
+        struct.pack_into("<H", donor, group[2] + 0xA2, 0x0B00)
+        with self.assertRaisesRegex(ValueError, "structure does not match"):
+            build._merge_indexed_audio_groups(base, bytes(donor))
+
+    def test_indexed_audio_merge_allows_regional_row_positions(self):
+        base = synthetic_indexed_audio_scene(
+            tail_flag=7, extra_indexed_rows=1
+        )
+        donor = synthetic_indexed_audio_scene(tail_flag=3)
+        rebuilt, groups = build._merge_indexed_audio_groups(base, donor)
+
+        self.assertEqual(2, groups)
+        self.assertIn(b"HUD ROW 0", rebuilt)
+        self.assertEqual(
+            tuple(item[3] for item in build._indexed_audio_groups(donor)),
+            tuple(item[3] for item in build._indexed_audio_groups(rebuilt)),
+        )
+
+    def test_indexed_audio_is_discovered_without_resource_ids(self):
+        base = synthetic_indexed_audio_scene(tail_flag=7)
+        donor = synthetic_indexed_audio_scene(
+            tail_flag=3, extra_audio_sectors=1
+        )
+        total = 2
+        base_values = [0, 0, 0, len(base) // layout.SECTOR, 0, 0]
+        donor_values = [0, 0, 0, len(donor) // layout.SECTOR, 0, 0]
+        hybrids, groups = build._indexed_audio_hybrids(
+            io.BytesIO(base), base_values,
+            io.BytesIO(donor), donor_values, total,
+        )
+
+        self.assertEqual((1,), tuple(hybrids))
+        self.assertEqual(2, groups)
+        self.assertIn(b"TARGET HUD", hybrids[1])
+
+    def test_streamed_scene_audio_merge_keeps_target_indexed_content(self):
+        base = synthetic_streamed_scene(
+            tail_flag=7, indexed_marker=b"USA INDEXED"
+        )
+        donor = synthetic_streamed_scene(
+            tail_flag=3, extra_tail_sectors=1,
+            indexed_marker=b"JP INDEXED",
+        )
+        rebuilt, clips = build._merge_streamed_audio_tail(base, donor)
+        base_start, identities = build._streamed_audio_tail(base)
+        donor_start, donor_identities = build._streamed_audio_tail(donor)
+
+        self.assertEqual(2, clips)
+        self.assertEqual(identities, donor_identities)
+        self.assertEqual(base[:base_start], rebuilt[:base_start])
+        self.assertEqual(donor[donor_start:], rebuilt[base_start:])
+        self.assertEqual(
+            (base_start, donor_identities),
+            build._streamed_audio_tail(rebuilt),
+        )
+        self.assertIn(b"USA INDEXED", rebuilt[:base_start])
+        self.assertNotIn(b"JP INDEXED", rebuilt[:base_start])
+
+    def test_streamed_scene_audio_merge_rejects_identity_drift(self):
+        base = synthetic_streamed_scene(tail_flag=7)
+        donor = bytearray(synthetic_streamed_scene(tail_flag=3))
+        donor_start, _identities = build._streamed_audio_tail(donor)
+        struct.pack_into("<H", donor, donor_start + 0x120 + 0xA2, 0x0B00)
+        with self.assertRaisesRegex(ValueError, "clip identities"):
+            build._merge_streamed_audio_tail(base, bytes(donor))
+
+    def test_streamed_scene_audio_is_discovered_without_resource_ids(self):
+        base = synthetic_streamed_scene(tail_flag=7)
+        donor = synthetic_streamed_scene(
+            tail_flag=3, extra_tail_sectors=1
+        )
+        total = 2
+        base_values = [0, 0, 0, len(base) // layout.SECTOR, 0, 0]
+        donor_values = [0, 0, 0, len(donor) // layout.SECTOR, 0, 0]
+        hybrids, clips = build._streamed_audio_hybrids(
+            io.BytesIO(base), base_values,
+            io.BytesIO(donor), donor_values, total,
+        )
+
+        self.assertEqual((1,), tuple(hybrids))
+        self.assertEqual(2, clips)
+        self.assertEqual(base[:layout.SECTOR], hybrids[1][:layout.SECTOR])
+        self.assertEqual(donor[layout.SECTOR:], hybrids[1][layout.SECTOR:])
 
     def test_region_asset_merge_uses_only_matching_package_flags(self):
         def package(items, flags):
