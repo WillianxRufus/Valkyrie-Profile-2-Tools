@@ -16,7 +16,7 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from tools.voice_patcher import audio, build, layout  # noqa: E402
+from tools.voice_patcher import audio, build, gui, layout  # noqa: E402
 
 
 TABLE_OFFSET = 0x200000
@@ -25,13 +25,18 @@ SEED = 0x49287491
 SIGNATURE = 0x516F6699
 MASK = 0xFFFFFFFF
 BANK = 1483
-BANK_OFFSET = 0x210000
+BANK_OFFSET = 0x210800
 BANK_LENGTH = 0x1000
 CLIP_ID = 0x8028
 UNMAPPED_ENTRY = 685
-UNMAPPED_OFFSET = 0x212000
+UNMAPPED_OFFSET = 0x210000
 UNMAPPED_LENGTH = 0x800
 UNMAPPED_CLIP_ID = 0x0B00
+BATTLE_ENTRY = 2138
+BATTLE_OFFSET = 0x211800
+BATTLE_LENGTH = 0x800
+BATTLE_SIGNATURE = 0x5D63FC57
+BATTLE_SEED = 0x0006107D
 
 
 def synthetic_bank():
@@ -66,12 +71,27 @@ def synthetic_unmapped_entry(tail_flag=7):
     return bytes(data)
 
 
-def encrypted_index():
+def synthetic_battle_entry():
+    clear = synthetic_unmapped_entry()
+    stored = bytearray(len(clear))
+    state = BATTLE_SEED
+    for offset in range(0, len(clear), 4):
+        state = (state * 0x000323BD + 0x000075BB) & MASK
+        word = struct.unpack_from("<I", clear, offset)[0] ^ state
+        struct.pack_into("<I", stored, offset, word)
+    assert struct.unpack_from("<I", stored)[0] == BATTLE_SIGNATURE
+    return bytes(stored)
+
+
+def encrypted_index(include_battle=False):
     decoded = [0] * (TOTAL * 3)
     decoded[BANK] = BANK_OFFSET // layout.SECTOR
     decoded[TOTAL + BANK] = BANK_LENGTH // layout.SECTOR
     decoded[UNMAPPED_ENTRY] = UNMAPPED_OFFSET // layout.SECTOR
     decoded[TOTAL + UNMAPPED_ENTRY] = UNMAPPED_LENGTH // layout.SECTOR
+    if include_battle:
+        decoded[BATTLE_ENTRY] = BATTLE_OFFSET // layout.SECTOR
+        decoded[TOTAL + BATTLE_ENTRY] = BATTLE_LENGTH // layout.SECTOR
     raw = decoded[:]
     key = SEED
     for index in range(TOTAL):
@@ -85,15 +105,24 @@ def encrypted_index():
     return struct.pack("<%dI" % len(raw), *raw)
 
 
-def synthetic_iso(path, boot="SLUS_214.52"):
-    image = bytearray(UNMAPPED_OFFSET + UNMAPPED_LENGTH)
+def synthetic_iso(path, boot="SLUS_214.52", battle=False):
+    image_length = max(
+        BANK_OFFSET + BANK_LENGTH,
+        UNMAPPED_OFFSET + UNMAPPED_LENGTH,
+        BATTLE_OFFSET + BATTLE_LENGTH if battle else 0,
+    )
+    image = bytearray(image_length)
     image[0x1000:0x1000 + len(boot)] = boot.encode("ascii")
-    index = encrypted_index()
+    index = encrypted_index(battle)
     image[TABLE_OFFSET:TABLE_OFFSET + len(index)] = index
     image[BANK_OFFSET:BANK_OFFSET + BANK_LENGTH] = synthetic_bank()
     image[UNMAPPED_OFFSET:UNMAPPED_OFFSET + UNMAPPED_LENGTH] = (
         synthetic_unmapped_entry()
     )
+    if battle:
+        image[BATTLE_OFFSET:BATTLE_OFFSET + BATTLE_LENGTH] = (
+            synthetic_battle_entry()
+        )
     path.write_bytes(image)
 
 
@@ -118,7 +147,7 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(64, clips[0].payload_length)
         self.assertEqual(1, clips[0].tail_flag)
 
-    def test_all_voice_banks_are_mapped_to_resources(self):
+    def test_all_voice_banks_have_a_valid_placement_category(self):
         owners = layout.load_bank_map()
         self.assertEqual(85, len(owners))
         self.assertEqual(
@@ -128,14 +157,14 @@ class LayoutTests(unittest.TestCase):
         )
         self.assertEqual(set(layout.VOICE_BANKS), set(owners))
         self.assertEqual(
-            (1337, None, 21),
+            (None, None, 21, "alternate"),
             (owners[1520].resource, owners[1520].voice_scene,
-             owners[1520].slot_count),
+             owners[1520].slot_count, owners[1520].category),
         )
         self.assertEqual(
-            (1323, None, 16),
+            (None, None, 16, "alternate"),
             (owners[1562].resource, owners[1562].voice_scene,
-             owners[1562].slot_count),
+             owners[1562].slot_count, owners[1562].category),
         )
 
     def test_unmapped_map_and_standalone_sample_identity_are_exact(self):
@@ -158,6 +187,57 @@ class LayoutTests(unittest.TestCase):
         )
         self.assertEqual(64, clip.payload_length)
         self.assertEqual(7, clip.tail_flag)
+
+    def test_battle_transform_and_filename_are_reversible(self):
+        stored = synthetic_battle_entry()
+        clear, signature = layout.decode_battle_entry(stored)
+        self.assertEqual(BATTLE_SIGNATURE, signature)
+        self.assertEqual(synthetic_unmapped_entry(), clear)
+        self.assertEqual(stored, layout.encode_battle_entry(clear, signature))
+        clip = layout.parse_standalone(clear)[0]
+        name = layout.battle_filename(BATTLE_ENTRY, clip)
+        self.assertEqual("battle-2138-000-0b00-0.wav", name)
+        self.assertEqual(
+            (BATTLE_ENTRY, 0, UNMAPPED_CLIP_ID, 0),
+            layout.parse_battle_filename(name),
+        )
+
+
+class GuiStyleTests(unittest.TestCase):
+    @unittest.skipIf(gui.TK_IMPORT_ERROR is not None, "Tkinter unavailable")
+    def test_notebook_border_does_not_inherit_clam_light_colors(self):
+        root = mock.Mock()
+        style = mock.Mock()
+        with mock.patch.object(gui.ttk, "Style", return_value=style):
+            gui.apply_dark_theme(root)
+
+        notebook = next(
+            call.kwargs for call in style.configure.call_args_list
+            if call.args == ("TNotebook",)
+        )
+        self.assertEqual(0, notebook["borderwidth"])
+        self.assertEqual("flat", notebook["relief"])
+        self.assertEqual(gui.DARK["bg"], notebook["bordercolor"])
+        self.assertEqual(gui.DARK["bg"], notebook["lightcolor"])
+        self.assertEqual(gui.DARK["bg"], notebook["darkcolor"])
+
+    @unittest.skipIf(gui.TK_IMPORT_ERROR is not None, "Tkinter unavailable")
+    def test_checkbox_hover_and_disabled_background_stays_dark(self):
+        root = mock.Mock()
+        style = mock.Mock()
+        with mock.patch.object(gui.ttk, "Style", return_value=style):
+            gui.apply_dark_theme(root)
+
+        checkbutton = next(
+            call.kwargs for call in style.map.call_args_list
+            if call.args == ("Chip.TCheckbutton",)
+        )
+        self.assertEqual(
+            [("disabled", gui.DARK["surface"]),
+             ("pressed", gui.DARK["surface"]),
+             ("active", gui.DARK["surface"])],
+            checkbutton["background"],
+        )
 
 
 class ExtractionTests(unittest.TestCase):
@@ -197,6 +277,29 @@ class ExtractionTests(unittest.TestCase):
                 result = build.extract_voices(source, root / "voices")
             self.assertEqual(root / "voices" / "jp", result.output)
 
+    def test_unverified_bank_stays_under_alternate_takes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "jp.iso"
+            synthetic_iso(source, "SLPM_664.19")
+            owner = layout.BankOwner(
+                BANK, None, None, 1, "alternate"
+            )
+            with mock.patch.object(build, "VOICE_BANKS", (BANK,)), \
+                    mock.patch.object(build, "load_bank_map",
+                                      return_value={BANK: owner}), \
+                    mock.patch.object(build, "load_unmapped_map",
+                                      return_value={}):
+                result = build.extract_voices(source, root / "voices")
+            wav = (result.output / "unmapped" / "alternate-takes" /
+                   "1483-000-8028.wav")
+            self.assertTrue(wav.is_file())
+            with (result.output / "manifest.csv").open(
+                    encoding="utf-8") as manifest:
+                row = next(csv.DictReader(manifest))
+            self.assertEqual("alternate", row["kind"])
+            self.assertEqual("", row["resource"])
+
     def test_extracts_language_dependent_samples_to_unmapped_folder(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -219,6 +322,26 @@ class ExtractionTests(unittest.TestCase):
                     encoding="utf-8") as manifest:
                 rows = list(csv.DictReader(manifest))
             self.assertEqual("unmapped", rows[0]["kind"])
+
+    def test_extracts_encrypted_battle_samples_to_unmapped_folder(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "usa.iso"
+            synthetic_iso(source, battle=True)
+            with mock.patch.object(build, "VOICE_BANKS", ()), \
+                    mock.patch.object(build, "load_bank_map",
+                                      return_value={}), \
+                    mock.patch.object(build, "load_unmapped_map",
+                                      return_value={}):
+                result = build.extract_voices(source, root / "voices")
+            target = (result.output / "unmapped" /
+                      "battle-2138-000-0b00-0.wav")
+            self.assertTrue(target.is_file())
+            self.assertEqual(1, result.battle_clips)
+            with (result.output / "manifest.csv").open(
+                    encoding="utf-8") as manifest:
+                rows = list(csv.DictReader(manifest))
+            self.assertEqual("battle", rows[0]["kind"])
 
 
 class PatchingTests(unittest.TestCase):
@@ -299,7 +422,57 @@ class PatchingTests(unittest.TestCase):
             self.assertEqual(
                 [0, 2, 6, 3],
                 [payload[offset + 1]
-                 for offset in range(0, len(payload), audio.FRAME)],
+                for offset in range(0, len(payload), audio.FRAME)],
+            )
+
+    def test_replaces_battle_sample_and_restores_encrypted_entry(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "source.iso"
+            output = root / "output.iso"
+            voices = root / "voices"
+            voices.mkdir()
+            synthetic_iso(source, battle=True)
+            replacement = voices / "battle-2138-000-0b00-0.wav"
+            write_wav(replacement, [850, -850] * 14)
+            before = source.read_bytes()
+            result = build.patch_iso(source, voices, output)
+            after = output.read_bytes()
+            self.assertEqual(before[:BATTLE_OFFSET], after[:BATTLE_OFFSET])
+            self.assertNotEqual(
+                before[BATTLE_OFFSET:BATTLE_OFFSET + BATTLE_LENGTH],
+                after[BATTLE_OFFSET:BATTLE_OFFSET + BATTLE_LENGTH],
+            )
+            self.assertEqual(
+                before[BATTLE_OFFSET + BATTLE_LENGTH:],
+                after[BATTLE_OFFSET + BATTLE_LENGTH:],
+            )
+            clear, signature = layout.decode_battle_entry(
+                after[BATTLE_OFFSET:BATTLE_OFFSET + BATTLE_LENGTH]
+            )
+            self.assertEqual(BATTLE_SIGNATURE, signature)
+            clip = layout.parse_standalone(clear)[0]
+            self.assertEqual(7, clear[
+                clip.payload_offset + clip.payload_length - 15
+            ])
+            self.assertEqual("battle", result.replacements[0].kind)
+
+    def test_cutscene_and_battle_replacements_can_share_one_build(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "source.iso"
+            output = root / "output.iso"
+            voices = root / "voices"
+            voices.mkdir()
+            synthetic_iso(source, battle=True)
+            write_wav(voices / "1483-000-8028.wav", [500, -500] * 14)
+            write_wav(
+                voices / "battle-2138-000-0b00-0.wav", [650, -650] * 14
+            )
+            result = build.patch_iso(source, voices, output)
+            self.assertEqual(
+                {"cutscene", "battle"},
+                {replacement.kind for replacement in result.replacements},
             )
 
     def test_legacy_dub_kit_manifest_makes_clip_id_names_reversible(self):
@@ -346,7 +519,7 @@ class PatchingTests(unittest.TestCase):
             self.assertTrue(output.is_file())
             self.assertTrue(result.replacements[0].truncated)
 
-    def test_wrong_game_release_is_rejected_before_copying(self):
+    def test_pal_release_is_rejected_by_fixed_wav_patching(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             source = root / "wrong.iso"
@@ -354,8 +527,174 @@ class PatchingTests(unittest.TestCase):
             voices.mkdir()
             synthetic_iso(source, "SLES_546.44")
             write_wav(voices / "1483-000-8028.wav", [0] * 28)
-            with self.assertRaisesRegex(ValueError, "unsupported disc"):
+            with self.assertRaisesRegex(ValueError, "fixed-slot voice patching"):
                 build.patch_iso(source, voices, root / "output.iso")
+
+
+class JapaneseAudioImportTests(unittest.TestCase):
+    def test_archive_repack_preserves_entry_order_and_uses_donor_sizes(self):
+        total = 4
+        base = [0, 100, 102, 104] + [0, 2, 2, 1] + [0, 10, 12, 14]
+        donor = [0, 200, 202, 206] + [0, 2, 4, 1] + [0, 20, 22, 26]
+        rebuilt, active, end = build._canonical_archive_layout(
+            base, donor, total, (2,)
+        )
+        self.assertEqual((1, 2, 3), active)
+        self.assertEqual([100, 102, 106], rebuilt[1:4])
+        self.assertEqual([2, 4, 1], rebuilt[total + 1:total + 4])
+        self.assertEqual(107, end)
+
+    def test_region_asset_merge_uses_only_matching_package_flags(self):
+        def package(items, flags):
+            count = len(items)
+            table_end = 8 + (count + 1) * 8
+            offsets = [table_end]
+            for item in items:
+                offsets.append(offsets[-1] + len(item))
+            result = bytearray(offsets[-1])
+            result[:4] = b"p@Ck"
+            struct.pack_into("<BBH", result, 4, 1, 0, count)
+            for index, offset in enumerate(offsets):
+                item_flag = flags[index] if index < count else 0
+                struct.pack_into(
+                    "<II", result, 8 + index * 8, offset, item_flag
+                )
+            for index, item in enumerate(items):
+                result[offsets[index]:offsets[index + 1]] = item
+            return bytes(result)
+
+        base = package((b"USA0", b"KEEP", b"USA2"),
+                       (0x5400, 0x2000, 0x5400))
+        donor = package((b"JP00", b"NOPE", b"JP22"),
+                        (0x5400, 0x2000, 0x5400))
+        merged, selected = build._replace_flagged_package_items(
+            base, donor, 0x5400
+        )
+        parsed = build.package_archive.layout(merged)
+        items = tuple(
+            merged[start:end]
+            for start, end in zip(parsed.offsets, parsed.offsets[1:])
+        )
+        self.assertEqual((0, 2), selected)
+        self.assertEqual((b"JP00", b"KEEP", b"JP22"), items)
+
+    def test_logical_positions_follow_active_entries_across_zero_rows(self):
+        total = 5
+        original = (
+            [10, 0, 20, 23, 30] +
+            [2, 7, 3, 1, 1] +
+            [100, 0, 102, 105, 50]
+        )
+        rebuilt = list(original)
+        rebuilt[total + 0] = 4
+        build._rewrite_logical_positions(original, rebuilt, total)
+        self.assertEqual([100, 0, 104, 107, 50], rebuilt[2 * total:])
+
+    def test_import_copies_complete_resources_and_reads_them_back(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            base = root / "usa.iso"
+            donor = root / "jp.iso"
+            output = root / "imported.iso"
+            synthetic_iso(base, "SLUS_214.52", battle=True)
+            synthetic_iso(donor, "SLPM_664.19", battle=True)
+            with donor.open("r+b") as image:
+                image.seek(BANK_OFFSET + 0x100)
+                image.write(b"Japanese resource marker")
+            with mock.patch.object(build, "VOICE_BANKS", (BANK,)), \
+                    mock.patch.object(build, "load_unmapped_map",
+                                      return_value={}):
+                result = build.import_japanese_audio(base, donor, output)
+            self.assertEqual((BANK, BATTLE_ENTRY), result.resources)
+            self.assertEqual(0, result.appended_sectors)
+            with output.open("rb") as image:
+                total, table = layout.read_index(image)
+                active = [
+                    entry for entry in range(1, total)
+                    if table[total + entry]
+                ]
+                self.assertTrue(all(
+                    table[previous] + table[total + previous] == table[entry]
+                    for previous, entry in zip(active, active[1:])
+                ))
+                offset, length = layout.entry_span(table, total, BANK)
+                image.seek(offset)
+                imported = image.read(length)
+                unmapped_offset, unmapped_length = layout.entry_span(
+                    table, total, UNMAPPED_ENTRY
+                )
+                image.seek(unmapped_offset)
+                retained = image.read(unmapped_length)
+            self.assertEqual(
+                donor.read_bytes()[BANK_OFFSET:BANK_OFFSET + BANK_LENGTH],
+                imported,
+            )
+            self.assertEqual(
+                base.read_bytes()[
+                    UNMAPPED_OFFSET:UNMAPPED_OFFSET + UNMAPPED_LENGTH
+                ],
+                retained,
+            )
+
+    def test_import_requires_supported_target_and_japanese_donor(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            usa = root / "usa.iso"
+            japan = root / "jp.iso"
+            synthetic_iso(usa, "SLUS_214.52", battle=True)
+            synthetic_iso(japan, "SLPM_664.19", battle=True)
+            with self.assertRaisesRegex(ValueError, "Japanese-audio import"):
+                build.import_japanese_audio(japan, japan, root / "bad.iso")
+            with self.assertRaisesRegex(ValueError, "donor selection"):
+                build.import_japanese_audio(usa, usa, root / "bad.iso")
+
+    def test_every_pal_release_is_an_import_target_and_keeps_padding(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            donor = root / "jp.iso"
+            synthetic_iso(donor, layout.JAPAN_BOOT, battle=True)
+            for boot, release in layout.PAL_BOOTS.items():
+                with self.subTest(boot=boot):
+                    base = root / (release + ".iso")
+                    output = root / (release + "-jp.iso")
+                    synthetic_iso(base, boot, battle=True)
+                    with base.open("ab") as image:
+                        image.write(bytes(3 * layout.SECTOR))
+                    original_size = base.stat().st_size
+                    original_sectors = original_size // layout.SECTOR
+                    pvd = bytearray(layout.SECTOR)
+                    pvd[0] = 1
+                    pvd[1:6] = b"CD001"
+                    struct.pack_into("<I", pvd, 80, original_sectors)
+                    struct.pack_into(">I", pvd, 84, original_sectors)
+                    with base.open("r+b") as image:
+                        image.seek(16 * layout.SECTOR)
+                        image.write(pvd)
+                    with mock.patch.object(build, "VOICE_BANKS", (BANK,)), \
+                            mock.patch.object(build, "load_unmapped_map",
+                                              return_value={}):
+                        result = build.import_japanese_audio(
+                            base, donor, output
+                        )
+                    self.assertEqual(original_size, result.output.stat().st_size)
+                    self.assertEqual((release, boot), build.describe_disc(output))
+                    with output.open("rb") as image:
+                        image.seek(16 * layout.SECTOR + 80)
+                        volume = image.read(8)
+                    self.assertEqual(
+                        original_sectors, struct.unpack_from("<I", volume)[0]
+                    )
+                    self.assertEqual(
+                        original_sectors, struct.unpack_from(">I", volume, 4)[0]
+                    )
+
+    def test_pal_release_remains_outside_fixed_wav_workflows(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            pal = root / "pal.iso"
+            synthetic_iso(pal, "SLES_546.44")
+            with self.assertRaisesRegex(ValueError, "voice extraction"):
+                build.extract_voices(pal, root / "voices")
 
 
 if __name__ == "__main__":

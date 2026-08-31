@@ -10,19 +10,29 @@ import hashlib
 import os
 from pathlib import Path
 import shutil
+import struct
 
-from . import audio
+from . import audio, layout
 from .layout import (
-    JAPAN_BOOT, SUPPORTED_BOOTS, USA_BOOT, VOICE_BANKS, entry_span,
-    exported_filename, load_bank_map, load_unmapped_map, parse_bank,
-    parse_exported_filename, parse_standalone, parse_unmapped_filename,
-    read_index, unmapped_filename,
+    JAPAN_BOOT, JAPANESE_AUDIO_TARGET_BOOTS, SUPPORTED_BOOTS,
+    VOICE_BANKS, VOICE_SOURCE_BOOTS, entry_span,
+    battle_filename, battle_signature, decode_battle_entry,
+    encode_battle_entry, exported_filename, load_bank_map, load_unmapped_map,
+    parse_bank, parse_battle_filename, parse_exported_filename,
+    parse_standalone, parse_unmapped_filename, read_index, unmapped_filename,
 )
-from ..scripts import disc_identity
+from ..cheat_patcher import battle_overlay
+from ..scripts import (
+    disc_identity, package_archive, protected_package, slz, slz_compress,
+    vp2_iso_space,
+)
 from ..scripts.paths import PROJECT_ROOT, output_root
 
 
 COPY_CHUNK = 8 * 1024 * 1024
+PROTECTED_STREAM_MAGIC = bytes.fromhex("77522267")
+GLOBAL_BATTLE_RESOURCE = 1781
+BATTLE_RESULT_ASSET_FLAG = 0x5400
 MANIFEST_FIELDS = (
     "kind", "region", "resource", "voice_scene", "bank", "sub", "entry",
     "sample", "zone", "clip_id", "relative_path", "slot_bytes",
@@ -39,6 +49,7 @@ class ExtractionResult:
     clips: int
     mapped_banks: int
     unmapped_clips: int
+    battle_clips: int
 
 
 @dataclass(frozen=True)
@@ -62,6 +73,13 @@ class PatchResult:
     replacements: tuple[Replacement, ...]
 
 
+@dataclass(frozen=True)
+class ImportResult:
+    output: Path
+    resources: tuple[int, ...]
+    appended_sectors: int
+
+
 def default_voice_root():
     """Repository-local output in source, current-directory output frozen."""
     if getattr(__import__("sys"), "frozen", False):
@@ -74,25 +92,34 @@ def default_patch_output(source):
     return output_root() / (source.stem + "-voice-patched.iso")
 
 
+def default_japanese_audio_output(source):
+    source = Path(source)
+    return output_root() / (source.stem + "-japanese-audio.iso")
+
+
 def describe_disc(path):
-    """Return ``(language folder, boot)`` for the two supported releases."""
+    """Return ``(release code, boot)`` for every supported source or target."""
     try:
         boot, _region = disc_identity.identify(path)
     except disc_identity.DiscError as exc:
         raise ValueError(str(exc)) from exc
     if boot not in SUPPORTED_BOOTS:
         raise ValueError(
-            "unsupported disc %s; select Valkyrie Profile 2 USA (%s) or "
-            "Japan (%s)" % (boot, USA_BOOT, JAPAN_BOOT)
+            "unsupported disc %s; select a supported Valkyrie Profile 2 "
+            "USA, PAL, or Japanese release" % boot
         )
     return SUPPORTED_BOOTS[boot], boot
 
 
-def _validated_source(path):
+def _validated_source(path, allowed_boots=None, purpose="this operation"):
     path = Path(path).expanduser().resolve()
     if not path.is_file():
         raise ValueError("source ISO does not exist: %s" % path)
     region, boot = describe_disc(path)
+    if allowed_boots is not None and boot not in allowed_boots:
+        raise ValueError(
+            "%s does not support %s (%s)" % (purpose, path.name, boot)
+        )
     with path.open("rb") as handle:
         read_index(handle)
     return path, region, boot
@@ -116,11 +143,26 @@ def _read_entry(handle, table, total, entry):
     return offset, data
 
 
+def _battle_entries(handle, table, total):
+    """Discover encrypted SEQW entries by the loader's signature table."""
+    entries = []
+    for entry in range(total):
+        if not table[total + entry]:
+            continue
+        offset, length = entry_span(table, total, entry)
+        handle.seek(offset)
+        if battle_signature(handle.read(4)) is not None:
+            entries.append(entry)
+    return entries
+
+
 def extract_voices(source, output=None, progress=None, bank_map=None,
                    unmapped_map=None):
     """Decode mapped cutscenes and language-dependent unmapped samples."""
     say = progress or (lambda _message: None)
-    source, region, boot = _validated_source(source)
+    source, region, boot = _validated_source(
+        source, VOICE_SOURCE_BOOTS, "voice extraction"
+    )
     root = Path(output).expanduser().resolve() if output else default_voice_root()
     destination = root / region
     partial = root / (region + ".partial")
@@ -138,7 +180,6 @@ def extract_voices(source, output=None, progress=None, bank_map=None,
     by_entry = {}
     for voice in unmapped_voices.values():
         by_entry.setdefault(voice.entry, {})[voice.sample] = voice
-    extraction_steps = len(VOICE_BANKS) + len(by_entry)
     rows = []
     mapped = 0
     root.mkdir(parents=True, exist_ok=True)
@@ -146,6 +187,10 @@ def extract_voices(source, output=None, progress=None, bank_map=None,
     try:
         with source.open("rb") as handle:
             total, table = read_index(handle)
+            battle_entries = _battle_entries(handle, table, total)
+            extraction_steps = (
+                len(VOICE_BANKS) + len(by_entry) + len(battle_entries)
+            )
             for position, bank in enumerate(VOICE_BANKS, 1):
                 _offset, bank_data = _read_bank(handle, table, total, bank)
                 clips = parse_bank(bank_data)
@@ -156,11 +201,14 @@ def extract_voices(source, output=None, progress=None, bank_map=None,
                             "voice bank %d has %d clips, but its scene map "
                             "expects %d" % (bank, len(clips), owner.slot_count)
                         )
-                    folder = partial / str(owner.resource)
-                    mapped += 1
+                    if owner.category == "cutscene":
+                        folder = partial / str(owner.resource)
+                        mapped += 1
+                    else:
+                        folder = partial / "unmapped" / "alternate-takes"
                 else:
                     folder = partial / "unmapped"
-                folder.mkdir(exist_ok=True)
+                folder.mkdir(parents=True, exist_ok=True)
                 for clip in clips:
                     payload_start = clip.sub_offset + clip.payload_offset
                     payload = bank_data[
@@ -173,9 +221,13 @@ def extract_voices(source, output=None, progress=None, bank_map=None,
                     peak, rms, voiced = audio.statistics(pcm)
                     relative = target.relative_to(partial).as_posix()
                     rows.append({
-                        "kind": "cutscene",
+                        "kind": owner.category if owner else "unmapped-bank",
                         "region": region,
-                        "resource": owner.resource if owner else "",
+                        "resource": (
+                            owner.resource
+                            if owner and owner.resource is not None
+                            else ""
+                        ),
                         "voice_scene": (
                             owner.voice_scene
                             if owner and owner.voice_scene is not None
@@ -272,6 +324,55 @@ def extract_voices(source, output=None, progress=None, bank_map=None,
                     % (entry, len(VOICE_BANKS) + position,
                        extraction_steps, len(expected))
                 )
+            battle_count = 0
+            for position, entry in enumerate(battle_entries, 1):
+                _offset, stored = _read_entry(handle, table, total, entry)
+                clear, _signature = decode_battle_entry(stored)
+                clips = parse_standalone(clear)
+                for clip in clips:
+                    payload = clear[
+                        clip.payload_offset:
+                        clip.payload_offset + clip.payload_length
+                    ]
+                    pcm = audio.decode_adpcm(payload)
+                    target = unmapped_folder / battle_filename(entry, clip)
+                    audio.write_wav(target, pcm)
+                    peak, rms, voiced = audio.statistics(pcm)
+                    relative = target.relative_to(partial).as_posix()
+                    rows.append({
+                        "kind": "battle",
+                        "region": region,
+                        "resource": "",
+                        "voice_scene": "",
+                        "bank": "",
+                        "sub": "",
+                        "entry": entry,
+                        "sample": clip.sample_index,
+                        "zone": clip.zone,
+                        "clip_id": "%04x" % clip.clip_id,
+                        "relative_path": relative,
+                        "slot_bytes": clip.payload_length,
+                        "max_seconds": "%.4f" % (
+                            clip.payload_length // audio.FRAME
+                            * audio.SAMPLES_PER_FRAME / audio.SAMPLE_RATE
+                        ),
+                        "seconds": "%.4f" % (
+                            len(pcm) // 2 / audio.SAMPLE_RATE
+                        ),
+                        "target_rms": int(rms),
+                        "peak": peak,
+                        "voiced_pct": "%.1f" % (100 * voiced),
+                        "silent": "yes" if rms == 0 else "",
+                        "sha256": hashlib.sha256(
+                            target.read_bytes()
+                        ).hexdigest(),
+                    })
+                    battle_count += 1
+                say(
+                    "extract: battle entry %d (%d/%d), %d sample(s)"
+                    % (entry, len(VOICE_BANKS) + len(by_entry) + position,
+                       extraction_steps, len(clips))
+                )
         with (partial / "manifest.csv").open(
                 "w", encoding="utf-8", newline="") as manifest:
             writer = csv.DictWriter(manifest, fieldnames=MANIFEST_FIELDS)
@@ -282,9 +383,11 @@ def extract_voices(source, output=None, progress=None, bank_map=None,
             "Cutscene files are named <bank>-<subfile>-<clip-id>.wav.\n"
             "Unmapped files are named unmapped-<entry>-<sample>-<clip-id>-"
             "<zone>.wav.\n"
-            "Folders named by number are cutscene resources. Some script-"
-            "driven banks have no numeric voice-scene field, but are still "
-            "grouped under their cutscene resource.\n"
+            "Battle files in unmapped/ are named battle-<entry>-<sample>-"
+            "<clip-id>-<zone>.wav.\n"
+            "Folders named by number are cutscene resources. Banks containing "
+            "unverified alternate performances remain under unmapped/"
+            "alternate-takes/.\n"
             % (source.name, boot),
             encoding="utf-8",
         )
@@ -300,6 +403,7 @@ def extract_voices(source, output=None, progress=None, bank_map=None,
         clips=len(rows),
         mapped_banks=mapped,
         unmapped_clips=unmapped_count,
+        battle_clips=battle_count,
     )
 
 
@@ -350,6 +454,9 @@ def discover_replacements(folder):
         if identity is None:
             identity = parse_unmapped_filename(path)
         if identity is None:
+            battle = parse_battle_filename(path)
+            identity = (("battle",) + battle) if battle else None
+        if identity is None:
             stem = path.stem.lower().removeprefix("id_").removeprefix("0x")
             identity = legacy.get(stem)
         if identity is None:
@@ -362,7 +469,7 @@ def discover_replacements(folder):
     if unknown:
         preview = ", ".join(str(path.relative_to(folder)) for path in unknown[:5])
         raise ValueError(
-            "%d WAV file(s) have no cutscene/unmapped identity: %s%s"
+            "%d WAV file(s) have no cutscene/unmapped/battle identity: %s%s"
             % (len(unknown), preview, " ..." if len(unknown) > 5 else "")
         )
     return found
@@ -384,11 +491,373 @@ def _copy_with_progress(source, target, say):
                 last = percent
 
 
+def _protected_stream_entries(handle, values, total):
+    """Return every protected movie-stream component on a VP2 disc."""
+    entries = []
+    for entry in range(total):
+        if not values[total + entry]:
+            continue
+        handle.seek(values[entry] * layout.SECTOR)
+        if handle.read(4) == PROTECTED_STREAM_MAGIC:
+            entries.append(entry)
+    return tuple(entries)
+
+
+def _canonical_archive_layout(base_values, donor_values, total,
+                              donor_resources):
+    """Repack the complete archive in the physical order its readers use.
+
+    All compared retail discs and the historical UNDUB store active entries
+    1+ as one contiguous, entry-ordered stream. Some sound readers advance inside
+    that stream instead of independently seeking every index LBA, so relocating
+    only selected entries is not compatible even when the index reads back.
+    """
+    base_active = [
+        entry for entry in range(1, total)
+        if base_values[total + entry]
+    ]
+    donor_active = [
+        entry for entry in range(1, total)
+        if donor_values[total + entry]
+    ]
+    if not base_active or base_active != donor_active:
+        raise ValueError(
+            "target and Japanese archives have different active entries"
+        )
+    for name, values in (("target", base_values), ("Japanese", donor_values)):
+        for previous, entry in zip(base_active, base_active[1:]):
+            if (values[previous] + values[total + previous] !=
+                    values[entry]):
+                raise ValueError(
+                    "%s archive is not physically contiguous at resources "
+                    "%d/%d" % (name, previous, entry)
+                )
+
+    rebuilt = list(base_values)
+    cursor = base_values[base_active[0]]
+    donor_resources = set(donor_resources)
+    for entry in base_active:
+        rebuilt[entry] = cursor
+        if entry in donor_resources:
+            rebuilt[total + entry] = donor_values[total + entry]
+        cursor += rebuilt[total + entry]
+    return rebuilt, tuple(base_active), cursor
+
+
+def _replace_flagged_package_items(base, donor, flag):
+    """Copy a structural family of fixed-span package items from *donor*."""
+    base_layout = package_archive.layout(base)
+    donor_layout = package_archive.layout(donor)
+    if base_layout.count != donor_layout.count:
+        raise ValueError("regional battle packages have different item counts")
+    selected = tuple(
+        index for index, item_flag in enumerate(base_layout.flags)
+        if item_flag == flag
+    )
+    if not selected or selected != tuple(
+            index for index, item_flag in enumerate(donor_layout.flags)
+            if item_flag == flag):
+        raise ValueError("regional battle asset groups do not match")
+    rebuilt = bytearray(base)
+    for index in selected:
+        base_start, base_end = base_layout.offsets[index:index + 2]
+        donor_start, donor_end = donor_layout.offsets[index:index + 2]
+        if base_end - base_start != donor_end - donor_start:
+            raise ValueError(
+                "regional battle asset %d has incompatible geometry" % index
+            )
+        rebuilt[base_start:base_end] = donor[donor_start:donor_end]
+    if package_archive.layout(bytes(rebuilt)) != base_layout:
+        raise ValueError("regional battle asset merge changed package geometry")
+    return bytes(rebuilt), selected
+
+
+def _decoded_package_stream(clear):
+    """Find the package that owns the global text bank and decode its parent."""
+    _bank, path = package_archive.locate_container(clear)
+    if not path.steps or path.steps[0].compression is None:
+        raise ValueError("global battle bank has no compressed parent package")
+    root = clear[path.root_offset:path.root_offset + path.root_size]
+    root_layout = package_archive.layout(root)
+    item = path.steps[0].item
+    start, end = root_layout.offsets[item:item + 2]
+    stream = root[start:end]
+    if len(stream) < 0x10 or stream[:3] != b"SLZ":
+        raise ValueError("global battle parent item is not SLZ")
+    stored = struct.unpack_from("<I", stream, 4)[0]
+    if 0x10 + stored > len(stream):
+        raise ValueError("global battle parent SLZ exceeds its package item")
+    return path, root, root_layout, item, slz.decompress(
+        stream[:0x10 + stored]
+    )
+
+
+def _pack_fixed_slz(decoded, old_item):
+    """Recompress one SLZ output without changing its package allocation."""
+    mode = old_item[3]
+    packed = bytearray(slz_compress.compress(
+        decoded, mode=mode, optimal=False, cache_dir=""
+    ))
+    if len(packed) > len(old_item):
+        packed = bytearray(slz_compress.compress(
+            decoded, mode=mode, optimal=True, cache_dir=""
+        ))
+    if len(packed) > len(old_item):
+        raise ValueError(
+            "Japanese battle assets need %d bytes but the target item holds %d"
+            % (len(packed), len(old_item))
+        )
+    encoded_stored = len(packed) - 0x10
+    old_stored = struct.unpack_from("<I", old_item, 4)[0]
+    if encoded_stored <= old_stored and 0x10 + old_stored <= len(old_item):
+        struct.pack_into("<I", packed, 4, old_stored)
+        packed.extend(bytes(old_stored - encoded_stored))
+    packed.extend(bytes(len(old_item) - len(packed)))
+    if slz.decompress(bytes(packed)) != decoded:
+        raise ValueError("Japanese battle asset SLZ failed read-back")
+    return bytes(packed)
+
+
+def _merge_battle_result_assets(base, donor):
+    """Keep target battle code/text and carry Japanese result-screen assets."""
+    base_clear, base_protected = protected_package.decode_entry(base)
+    donor_clear, _donor_protected = protected_package.decode_entry(donor)
+    base_parts = _decoded_package_stream(base_clear)
+    donor_parts = _decoded_package_stream(donor_clear)
+    base_path, base_root, base_root_layout, item, base_inner = base_parts
+    _donor_path, _donor_root, _donor_layout, _donor_item, donor_inner = (
+        donor_parts
+    )
+    merged_inner, selected = _replace_flagged_package_items(
+        base_inner, donor_inner, BATTLE_RESULT_ASSET_FLAG
+    )
+    start, end = base_root_layout.offsets[item:item + 2]
+    rebuilt_root = bytearray(base_root)
+    rebuilt_root[start:end] = _pack_fixed_slz(
+        merged_inner, base_root[start:end]
+    )
+    rebuilt_clear = bytearray(base_clear)
+    rebuilt_clear[
+        base_path.root_offset:base_path.root_offset + base_path.root_size
+    ] = rebuilt_root
+    rebuilt = protected_package.encode_entry(
+        base, bytes(rebuilt_clear), base_protected
+    )
+    if battle_overlay.read(rebuilt).output != battle_overlay.read(base).output:
+        raise ValueError("battle asset merge changed the target executable overlay")
+    checked_clear, _checked = protected_package.decode_entry(rebuilt)
+    if (package_archive.unpack_container(checked_clear) !=
+            package_archive.unpack_container(base_clear)):
+        raise ValueError("battle asset merge changed the target text bank")
+    checked_inner = _decoded_package_stream(checked_clear)[-1]
+    donor_layout = package_archive.layout(donor_inner)
+    checked_layout = package_archive.layout(checked_inner)
+    for index in selected:
+        checked_start, checked_end = checked_layout.offsets[index:index + 2]
+        donor_start, donor_end = donor_layout.offsets[index:index + 2]
+        if (checked_inner[checked_start:checked_end] !=
+                donor_inner[donor_start:donor_end]):
+            raise ValueError("Japanese battle asset %d failed read-back" % index)
+    return rebuilt, selected
+
+
+def _rewrite_logical_positions(original, rebuilt, total):
+    """Carry changed sector counts through the index's active logical runs."""
+    active = [
+        entry for entry in range(total)
+        if original[total + entry] and original[2 * total + entry]
+    ]
+    for previous, entry in zip(active, active[1:]):
+        if (original[2 * total + entry] ==
+                original[2 * total + previous] +
+                original[total + previous]):
+            rebuilt[2 * total + entry] = (
+                rebuilt[2 * total + previous] +
+                rebuilt[total + previous]
+            )
+
+
+def _copy_resource(source, target, source_lba, target_lba, sectors):
+    remaining = sectors * layout.SECTOR
+    source.seek(source_lba * layout.SECTOR)
+    target.seek(target_lba * layout.SECTOR)
+    digest = hashlib.sha256()
+    while remaining:
+        chunk = source.read(min(COPY_CHUNK, remaining))
+        if not chunk:
+            raise ValueError("Japanese audio resource extends past its ISO")
+        target.write(chunk)
+        digest.update(chunk)
+        remaining -= len(chunk)
+    return digest.digest()
+
+
+def _write_resource(target, target_lba, sectors, data):
+    data = bytes(data)
+    expected = sectors * layout.SECTOR
+    if len(data) != expected:
+        raise ValueError(
+            "rebuilt resource has %d bytes; its allocation is %d"
+            % (len(data), expected)
+        )
+    target.seek(target_lba * layout.SECTOR)
+    target.write(data)
+    return hashlib.sha256(data).digest()
+
+
+def import_japanese_audio(base, japan, output=None, progress=None):
+    """Build a Japanese-audio variant of a supported USA or PAL ISO."""
+    say = progress or (lambda _message: None)
+    base, _base_region, _base_boot = _validated_source(
+        base, JAPANESE_AUDIO_TARGET_BOOTS, "Japanese-audio import"
+    )
+    japan, donor_region, _donor_boot = _validated_source(
+        japan, {JAPAN_BOOT}, "Japanese-audio donor selection"
+    )
+    if donor_region != "jp":
+        raise ValueError("Japanese audio import requires a Japanese donor ISO")
+    output = (Path(output).expanduser().resolve()
+              if output else default_japanese_audio_output(base))
+    if output in {base, japan}:
+        raise ValueError("output must be different from both source ISOs")
+    if output.exists():
+        raise ValueError("output already exists; refusing to overwrite: %s" % output)
+    partial = output.with_name(output.name + ".partial")
+    if partial.exists():
+        raise ValueError("partial output already exists; remove it first: %s" % partial)
+
+    with base.open("rb") as base_handle, japan.open("rb") as donor_handle:
+        base_seed, base_offset, total, base_values = (
+            vp2_iso_space.read_index(base_handle)
+        )
+        donor_seed, donor_offset, donor_total, donor_values = (
+            vp2_iso_space.read_index(donor_handle)
+        )
+        if ((base_seed, base_offset, total) !=
+                (donor_seed, donor_offset, donor_total)):
+            raise ValueError("target and Japanese discs use incompatible indexes")
+        battle = _battle_entries(donor_handle, donor_values, total)
+        standalone = {
+            voice.entry for voice in load_unmapped_map().values()
+        }
+        protected = _protected_stream_entries(
+            donor_handle, donor_values, total
+        )
+        resources = tuple(sorted(
+            set(VOICE_BANKS) | standalone | set(battle) | set(protected)
+        ))
+        for entry in resources:
+            if not (base_values[total + entry] and
+                    donor_values[total + entry]):
+                raise ValueError("audio resource %d is absent from one disc" % entry)
+        image_bytes = base.stat().st_size
+        if image_bytes % layout.SECTOR:
+            raise ValueError("target ISO size is not a whole number of sectors")
+        image_lba = image_bytes // layout.SECTOR
+        rebuilt, archive_entries, end_lba = _canonical_archive_layout(
+            base_values, donor_values, total, resources
+        )
+        _rewrite_logical_positions(base_values, rebuilt, total)
+        hybrids = {}
+        if (base_values[total + GLOBAL_BATTLE_RESOURCE] and
+                donor_values[total + GLOBAL_BATTLE_RESOURCE]):
+            _offset, base_battle = _read_entry(
+                base_handle, base_values, total, GLOBAL_BATTLE_RESOURCE
+            )
+            _offset, donor_battle = _read_entry(
+                donor_handle, donor_values, total, GLOBAL_BATTLE_RESOURCE
+            )
+            hybrids[GLOBAL_BATTLE_RESOURCE], battle_assets = (
+                _merge_battle_result_assets(base_battle, donor_battle)
+            )
+            say("prepare: %d Japanese battle-result asset(s)" %
+                len(battle_assets))
+        output_lba = max(image_lba, end_lba)
+        appended = max(output_lba - image_lba, 0)
+
+        output.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            say("copy: creating a safe target-disc image")
+            _copy_with_progress(base, partial, say)
+            expected = {}
+            with partial.open("r+b") as target:
+                count = len(archive_entries)
+                resource_set = set(resources)
+                for position, entry in enumerate(archive_entries, 1):
+                    if entry in hybrids:
+                        expected[entry] = _write_resource(
+                            target, rebuilt[entry], rebuilt[total + entry],
+                            hybrids[entry]
+                        )
+                    elif entry in resource_set:
+                        expected[entry] = _copy_resource(
+                            donor_handle, target, donor_values[entry],
+                            rebuilt[entry], donor_values[total + entry],
+                        )
+                    else:
+                        expected[entry] = _copy_resource(
+                            base_handle, target, base_values[entry],
+                            rebuilt[entry], base_values[total + entry],
+                        )
+                    if (position == 1 or position == count or
+                            position % 100 == 0):
+                        say("repack: resource %d (%d/%d)" %
+                            (entry, position, count))
+                target.truncate(output_lba * layout.SECTOR)
+                if vp2_iso_space.read_volume_sectors(target) is not None:
+                    vp2_iso_space.write_volume_sectors(target, output_lba)
+                if output_lba > image_lba:
+                    vp2_iso_space.extend_last_file(target, output_lba)
+                vp2_iso_space.write_index(
+                    target, base_seed, base_offset, total, rebuilt
+                )
+
+            say("verify: reading imported resources back")
+            with partial.open("rb") as target:
+                _seed, _offset, check_total, check = (
+                    vp2_iso_space.read_index(target)
+                )
+                if check_total != total or check != rebuilt:
+                    raise ValueError("Japanese-audio index failed read-back")
+                for previous, entry in zip(
+                        archive_entries, archive_entries[1:]):
+                    if (check[previous] + check[total + previous] !=
+                            check[entry]):
+                        raise ValueError(
+                            "Japanese-audio archive is not contiguous at "
+                            "resources %d/%d" % (previous, entry)
+                        )
+                for entry in archive_entries:
+                    target.seek(check[entry] * layout.SECTOR)
+                    remaining = check[total + entry] * layout.SECTOR
+                    digest = hashlib.sha256()
+                    while remaining:
+                        chunk = target.read(min(COPY_CHUNK, remaining))
+                        if not chunk:
+                            raise ValueError(
+                                "imported resource %d extends past output" % entry
+                            )
+                        digest.update(chunk)
+                        remaining -= len(chunk)
+                    if digest.digest() != expected[entry]:
+                        raise ValueError(
+                            "imported resource %d failed read-back" % entry
+                        )
+            partial.replace(output)
+        except Exception:
+            partial.unlink(missing_ok=True)
+            raise
+    say("wrote Japanese audio to %s" % output)
+    return ImportResult(output, resources, appended)
+
+
 def patch_iso(source, voices, output=None, progress=None,
               allow_overlong=False):
     """Copy an ISO, replace selected lines in place, and read them back."""
     say = progress or (lambda _message: None)
-    source, region, _boot = _validated_source(source)
+    source, region, _boot = _validated_source(
+        source, VOICE_SOURCE_BOOTS, "fixed-slot voice patching"
+    )
     output = (Path(output).expanduser().resolve()
               if output else default_patch_output(source))
     if output == source:
@@ -404,12 +873,60 @@ def patch_iso(source, voices, output=None, progress=None,
         total, table = read_index(handle)
         banks = {}
         entries = {}
+        battle_entries = {}
         allowed_unmapped = {
             (voice.entry, voice.sample, voice.clip_id, voice.zone)
             for voice in load_unmapped_map().values()
         }
-        for identity, path in sorted(selected.items()):
-            if len(identity) == 3:
+        def identity_order(item):
+            identity = item[0]
+            if identity[0] == "battle":
+                return (2, *identity[1:])
+            return (0 if len(identity) == 3 else 1, *identity)
+
+        for identity, path in sorted(selected.items(), key=identity_order):
+            if identity[0] == "battle":
+                _kind, entry, sample_index, clip_id, zone = identity
+                if entry not in battle_entries:
+                    entry_offset, stored = _read_entry(
+                        handle, table, total, entry
+                    )
+                    clear, signature = decode_battle_entry(stored)
+                    battle_entries[entry] = {
+                        "offset": entry_offset,
+                        "clear": bytearray(clear),
+                        "signature": signature,
+                        "clips": {
+                            item.sample_index: item
+                            for item in parse_standalone(clear)
+                        },
+                        "replacements": [],
+                    }
+                current = battle_entries[entry]
+                clip = current["clips"].get(sample_index)
+                if clip is None:
+                    raise ValueError(
+                        "%s targets missing sample %d in battle entry %d"
+                        % (path.name, sample_index, entry)
+                    )
+                if (clip.clip_id, clip.zone) != (clip_id, zone):
+                    raise ValueError(
+                        "%s says clip %04x/%d, but battle entry %d sample "
+                        "%d is %04x/%d"
+                        % (path.name, clip_id, zone, entry, sample_index,
+                           clip.clip_id, clip.zone)
+                    )
+                original_payload = bytes(current["clear"])[
+                    clip.payload_offset:
+                    clip.payload_offset + clip.payload_length
+                ]
+                replacement = Replacement(
+                    path=path, kind="battle", entry=entry,
+                    sample=sample_index, zone=zone, clip_id=clip_id,
+                    slot_bytes=clip.payload_length,
+                )
+                label = "battle entry %d sample %d" % (entry, sample_index)
+            elif len(identity) == 3:
                 bank, sub_index, clip_id = identity
                 if bank not in VOICE_BANKS:
                     raise ValueError(
@@ -503,25 +1020,39 @@ def patch_iso(source, voices, output=None, progress=None,
                     "%s is %.3fs but its game slot is %.3fs: %s"
                     % (path.name, duration, maximum, exc)
                 ) from exc
-            if replacement.kind == "unmapped":
+            if replacement.kind in ("unmapped", "battle"):
                 fitted = bytearray(fitted)
                 for offset in range(0, len(fitted), audio.FRAME):
                     fitted[offset + 1] = original_payload[offset + 1]
                 fitted = bytes(fitted)
             replacement = replace(replacement, truncated=truncated)
-            pending.append((absolute, fitted, replacement))
+            if replacement.kind == "battle":
+                start = clip.payload_offset
+                current["clear"][start:start + clip.payload_length] = fitted
+                current["replacements"].append(replacement)
+            else:
+                pending.append((absolute, fitted, (replacement,)))
             say("prepare: %s <- %s" % (label, path.name))
             if truncated:
                 say("warning: %s is overlong and will be trimmed to %.3fs" % (
                     path.name, maximum
                 ))
+        for current in battle_entries.values():
+            stored = encode_battle_entry(
+                bytes(current["clear"]), current["signature"]
+            )
+            pending.append((
+                current["offset"], stored,
+                tuple(current["replacements"]),
+            ))
     output.parent.mkdir(parents=True, exist_ok=True)
     try:
         say("copy: 0%")
         _copy_with_progress(source, partial, say)
-        say("write: applying %d voice replacement(s)" % len(pending))
+        replacement_count = sum(len(item[2]) for item in pending)
+        say("write: applying %d voice replacement(s)" % replacement_count)
         with partial.open("r+b") as candidate:
-            for offset, payload, _replacement in pending:
+            for offset, payload, _replacements in pending:
                 candidate.seek(offset)
                 candidate.write(payload)
             candidate.flush()
@@ -529,12 +1060,12 @@ def patch_iso(source, voices, output=None, progress=None,
         say("verify: reading every replaced slot back from disk")
         with partial.open("rb") as candidate:
             total, table = read_index(candidate)
-            for offset, payload, replacement in pending:
+            for offset, payload, replacements in pending:
                 candidate.seek(offset)
                 if candidate.read(len(payload)) != payload:
                     raise ValueError(
                         "%s voice %04x did not read back byte-for-byte"
-                        % (replacement.kind, replacement.clip_id)
+                        % (replacements[0].kind, replacements[0].clip_id)
                     )
         if partial.stat().st_size != source.stat().st_size:
             raise ValueError("output ISO size differs from source")
@@ -545,5 +1076,9 @@ def patch_iso(source, voices, output=None, progress=None,
     say("wrote %s" % output)
     return PatchResult(
         output=output, region=region,
-        replacements=tuple(item[2] for item in pending),
+        replacements=tuple(
+            replacement
+            for _offset, _payload, replacements in pending
+            for replacement in replacements
+        ),
     )

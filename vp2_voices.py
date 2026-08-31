@@ -10,7 +10,8 @@ import sys
 
 from tools.voice_patcher import audio
 from tools.voice_patcher.build import (
-    default_patch_output, default_voice_root, extract_voices, patch_iso,
+    default_japanese_audio_output, default_patch_output, default_voice_root,
+    extract_voices, import_japanese_audio, patch_iso,
 )
 from tools.voice_patcher.layout import load_bank_map, load_unmapped_map
 
@@ -39,6 +40,15 @@ def _parser():
         "--allow-overlong", action="store_true",
         help="deliberately trim WAVs that exceed their fixed game slots",
     )
+    import_jp = commands.add_parser(
+        "import-japanese",
+        help="create a Japanese-audio edition of a supported USA or PAL ISO",
+    )
+    import_jp.add_argument(
+        "base", help="USA or PAL Valkyrie Profile 2 target ISO"
+    )
+    import_jp.add_argument("japan", help="Japanese Valkyrie Profile 2 ISO")
+    import_jp.add_argument("-o", "--output", help="new ISO path")
     return parser
 
 
@@ -49,7 +59,12 @@ def self_check(stream=None):
     notes.append("frozen            : %s" % frozen)
     try:
         owners = load_bank_map()
-        notes.append("known bank map    : %d cutscene bank(s)" % len(owners))
+        alternates = sum(owner.category == "alternate"
+                         for owner in owners.values())
+        notes.append(
+            "known bank map    : %d bank(s), %d alternate/unmapped"
+            % (len(owners), alternates)
+        )
     except Exception as exc:
         problems.append("voice-bank map does not load: %r" % exc)
     try:
@@ -112,7 +127,7 @@ def main(argv=None):
                 % (result.clips - result.unmapped_clips, result.banks,
                    result.unmapped_clips, result.output)
             )
-        else:
+        elif args.command == "patch":
             result = patch_iso(
                 args.source, args.voices,
                 args.output or default_patch_output(args.source),
@@ -122,6 +137,17 @@ def main(argv=None):
             print(
                 "Patched %d voice clips; verified output: %s"
                 % (len(result.replacements), result.output)
+            )
+        else:
+            result = import_japanese_audio(
+                args.base, args.japan,
+                args.output or default_japanese_audio_output(args.base),
+                progress=print,
+            )
+            print(
+                "Imported %d complete Japanese audio resources; verified "
+                "output: %s"
+                % (len(result.resources), result.output)
             )
     except (OSError, ValueError) as exc:
         print("error: %s" % exc, file=sys.stderr)

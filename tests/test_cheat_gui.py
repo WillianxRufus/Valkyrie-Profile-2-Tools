@@ -159,7 +159,7 @@ class WindowTests(unittest.TestCase):
         for name in (gui.ICON_ICO, gui.ICON_PNG, gui.BACKDROP_PNG):
             with self.subTest(asset=name):
                 self.assertIsNotNone(gui.asset_path(name), name)
-        translator = ROOT.parent / "opensource" / "vp2_translate.py"
+        translator = ROOT / "vp2_translate.py"
         if translator.is_file():
             source = translator.read_text(encoding="utf-8")
             for key, value in gui.DARK.items():

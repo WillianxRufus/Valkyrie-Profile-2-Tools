@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 import struct
+import sys
 
 from ..scripts.paths import DATA_DIR
 from ..scripts.triace_ps2_unpack import SECTOR, load_table
@@ -19,7 +20,16 @@ LAST_VOICE_BANK = 1566
 VOICE_BANKS = tuple(range(FIRST_VOICE_BANK, LAST_VOICE_BANK + 1))
 USA_BOOT = "SLUS_214.52"
 JAPAN_BOOT = "SLPM_664.19"
-SUPPORTED_BOOTS = {USA_BOOT: "en", JAPAN_BOOT: "jp"}
+PAL_BOOTS = {
+    "SLES_546.44": "pal-en",
+    "SLES_546.45": "fr",
+    "SLES_546.46": "de",
+    "SLES_546.47": "it",
+    "SLES_546.48": "es",
+}
+SUPPORTED_BOOTS = {USA_BOOT: "en", JAPAN_BOOT: "jp", **PAL_BOOTS}
+VOICE_SOURCE_BOOTS = frozenset((USA_BOOT, JAPAN_BOOT))
+JAPANESE_AUDIO_TARGET_BOOTS = frozenset((USA_BOOT, *PAL_BOOTS))
 EXPORTED_NAME = re.compile(
     r"^(?P<bank>\d{4})-(?P<sub>\d{3})-(?P<clip>[0-9a-fA-F]{4})\.wav$",
     re.IGNORECASE,
@@ -29,14 +39,39 @@ UNMAPPED_NAME = re.compile(
     r"(?P<clip>[0-9a-fA-F]{4})-(?P<zone>\d+)\.wav$",
     re.IGNORECASE,
 )
+BATTLE_NAME = re.compile(
+    r"^battle-(?P<entry>\d{4})-(?P<sample>\d{3})-"
+    r"(?P<clip>[0-9a-fA-F]{4})-(?P<zone>\d+)\.wav$",
+    re.IGNORECASE,
+)
+
+# The battle loader recognizes these stored first words and uses the paired
+# value as the initial state for its word-wise transform.  The table is shared
+# by the USA and Japanese executables.
+BATTLE_SEEDS = {
+    0x9E636CDE: 0x00E6373A,
+    0xAFA9E715: 0x0056F1E7,
+    0xF43962BD: 0x000D94AF,
+    0x5D63FC57: 0x0006107D,
+    0x31BD3633: 0x006C6C09,
+    0xA8493A7E: 0x003E6D5A,
+    0xB70803AD: 0x000098FF,
+    0x81C37347: 0x0177CACD,
+    0x6C4B2898: 0x00105150,
+    0x05C59B54: 0x0034A83C,
+}
+BATTLE_MULTIPLIER = 0x000323BD
+BATTLE_INCREMENT = 0x000075BB
+MASK32 = 0xFFFFFFFF
 
 
 @dataclass(frozen=True)
 class BankOwner:
     bank: int
-    resource: int
+    resource: int | None
     voice_scene: int | None
     slot_count: int
+    category: str = "cutscene"
 
 
 @dataclass(frozen=True)
@@ -75,13 +110,18 @@ def load_bank_map(path=None):
         for row in csv.DictReader(source):
             owner = BankOwner(
                 bank=int(row["bank"]),
-                resource=int(row["resource"]),
+                resource=(
+                    int(row["resource"])
+                    if row["resource"].strip()
+                    else None
+                ),
                 voice_scene=(
                     int(row["voice_scene"])
                     if row["voice_scene"].strip()
                     else None
                 ),
                 slot_count=int(row["slot_count"]),
+                category=(row.get("category") or "cutscene").strip(),
             )
             if owner.bank in owners:
                 raise ValueError("duplicate voice-bank map row: %d" % owner.bank)
@@ -89,6 +129,17 @@ def load_bank_map(path=None):
                 raise ValueError("voice-bank map row is outside 1482..1566")
             if owner.slot_count <= 0:
                 raise ValueError("voice-bank map slot count must be positive")
+            if owner.category not in {"cutscene", "alternate"}:
+                raise ValueError("unknown voice-bank category: %s"
+                                 % owner.category)
+            if ((owner.category == "cutscene") !=
+                    (owner.resource is not None)):
+                raise ValueError(
+                    "cutscene banks need a resource and alternate banks must "
+                    "remain unmapped"
+                )
+            if owner.category == "alternate" and owner.voice_scene is not None:
+                raise ValueError("alternate banks cannot claim a voice scene")
             owners[owner.bank] = owner
     return owners
 
@@ -248,6 +299,56 @@ def parse_standalone(data: bytes) -> tuple[StandaloneClip, ...]:
     return tuple(clips)
 
 
+def battle_signature(data: bytes) -> int | None:
+    """Return the loader-recognized signature for an encrypted sound entry."""
+    if len(data) < 4:
+        return None
+    signature = struct.unpack_from("<I", data)[0]
+    return signature if signature in BATTLE_SEEDS else None
+
+
+def transform_battle_entry(data: bytes, signature: int) -> bytes:
+    """Apply the symmetric battle-sound transform with *signature*'s seed."""
+    if signature not in BATTLE_SEEDS:
+        raise ValueError("unknown battle-voice signature %08x" % signature)
+    if len(data) % 4:
+        raise ValueError("battle-voice entry length is not a multiple of four")
+    state = BATTLE_SEEDS[signature]
+    output = bytearray(data)
+    if sys.byteorder == "little":
+        words = memoryview(output).cast("I")
+        for index, word in enumerate(words):
+            state = (state * BATTLE_MULTIPLIER + BATTLE_INCREMENT) & MASK32
+            words[index] = word ^ state
+    else:
+        for offset in range(0, len(output), 4):
+            state = (state * BATTLE_MULTIPLIER + BATTLE_INCREMENT) & MASK32
+            word = struct.unpack_from("<I", output, offset)[0]
+            struct.pack_into("<I", output, offset, word ^ state)
+    return bytes(output)
+
+
+def decode_battle_entry(data: bytes) -> tuple[bytes, int]:
+    """Decode one loader-recognized encrypted SEQW entry."""
+    signature = battle_signature(data)
+    if signature is None:
+        raise ValueError("entry has no recognized battle-voice signature")
+    clear = transform_battle_entry(data, signature)
+    if clear[:4] != b"SEQW":
+        raise ValueError("battle-voice transform did not produce SEQW")
+    return clear, signature
+
+
+def encode_battle_entry(clear: bytes, signature: int) -> bytes:
+    """Restore one decoded SEQW entry to its original encrypted form."""
+    if clear[:4] != b"SEQW":
+        raise ValueError("decoded battle-voice entry is not SEQW")
+    stored = transform_battle_entry(clear, signature)
+    if battle_signature(stored) != signature:
+        raise ValueError("battle-voice entry did not restore its signature")
+    return stored
+
+
 def exported_filename(bank: int, clip: Clip) -> str:
     return "%04d-%03d-%04x.wav" % (bank, clip.sub_index, clip.clip_id)
 
@@ -268,6 +369,20 @@ def unmapped_filename(entry: int, clip: StandaloneClip) -> str:
 
 def parse_unmapped_filename(path):
     match = UNMAPPED_NAME.match(Path(path).name)
+    if not match:
+        return None
+    return tuple(int(match.group(name), 16 if name == "clip" else 10)
+                 for name in ("entry", "sample", "clip", "zone"))
+
+
+def battle_filename(entry: int, clip: StandaloneClip) -> str:
+    return "battle-%04d-%03d-%04x-%d.wav" % (
+        entry, clip.sample_index, clip.clip_id, clip.zone
+    )
+
+
+def parse_battle_filename(path):
+    match = BATTLE_NAME.match(Path(path).name)
     if not match:
         return None
     return tuple(int(match.group(name), 16 if name == "clip" else 10)

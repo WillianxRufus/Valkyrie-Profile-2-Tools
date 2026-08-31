@@ -15,8 +15,11 @@ import traceback
 from pathlib import Path
 
 from .build import (
-    default_patch_output, default_voice_root, describe_disc, extract_voices,
-    patch_iso,
+    default_japanese_audio_output, default_patch_output, default_voice_root,
+    describe_disc, extract_voices, import_japanese_audio, patch_iso,
+)
+from .layout import (
+    JAPAN_BOOT, JAPANESE_AUDIO_TARGET_BOOTS, VOICE_SOURCE_BOOTS,
 )
 
 try:
@@ -35,7 +38,7 @@ else:
     TK_IMPORT_ERROR = None
 
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 APP_NAME = "Valkyrie Profile 2 Voice Tool"
 SHORT_NAME = "VP2 Voice Tool"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -44,6 +47,12 @@ ICON_PNG = "images/vp2_release.png"
 BACKDROP_PNG = "images/vp2_release_bg.png"
 COPY_LINE = re.compile(r"^copy:\s+(\d+)%")
 EXTRACT_LINE = re.compile(r"^extract: bank \d+ \((\d+)/(\d+)\)")
+IMPORT_LINE = re.compile(r"^repack: resource \d+ \((\d+)/(\d+)\)")
+RELEASE_LABELS = {
+    "en": "USA (English)", "jp": "Japan (Japanese)",
+    "pal-en": "Europe/Australia (English)", "fr": "France",
+    "de": "Germany", "it": "Italy", "es": "Spain",
+}
 
 DARK = {
     "bg": "#14161b", "surface": "#1b1e26", "surface_hi": "#232733",
@@ -125,6 +134,29 @@ def apply_dark_theme(root):
                     fieldbackground=DARK["surface"], font=fonts["body"],
                     borderwidth=0, focuscolor=DARK["accent_dim"])
     style.configure("Card.TFrame", background=DARK["surface"])
+    style.configure("Tab.TFrame", background=DARK["bg"])
+    style.configure(
+        "TNotebook", background=DARK["bg"], borderwidth=0, relief="flat",
+        bordercolor=DARK["bg"], lightcolor=DARK["bg"],
+        darkcolor=DARK["bg"], tabmargins=(0, 0, 0, 8),
+    )
+    style.configure("TNotebook.Tab", background=DARK["surface_hi"],
+                    foreground=DARK["muted"], padding=(18, 9),
+                    font=fonts["button"], borderwidth=0, relief="flat",
+                    bordercolor=DARK["surface_hi"],
+                    lightcolor=DARK["surface_hi"],
+                    darkcolor=DARK["surface_hi"])
+    style.map("TNotebook.Tab",
+              background=[("selected", DARK["accent"]),
+                          ("active", DARK["border"])],
+              foreground=[("selected", "#0d1017"),
+                          ("active", DARK["text"])],
+              bordercolor=[("selected", DARK["accent"]),
+                           ("active", DARK["border"])],
+              lightcolor=[("selected", DARK["accent"]),
+                          ("active", DARK["border"])],
+              darkcolor=[("selected", DARK["accent"]),
+                         ("active", DARK["border"])])
     style.configure("Card.TLabel", background=DARK["surface"],
                     foreground=DARK["text"])
     style.configure("CardMuted.TLabel", background=DARK["surface"],
@@ -151,6 +183,9 @@ def apply_dark_theme(root):
                     indicatorbackground=DARK["surface_hi"],
                     indicatorforeground=DARK["bg"], padding=(0, 5))
     style.map("Chip.TCheckbutton",
+              background=[("disabled", DARK["surface"]),
+                          ("pressed", DARK["surface"]),
+                          ("active", DARK["surface"])],
               indicatorbackground=[("selected", DARK["accent"]),
                                    ("active", DARK["border"])],
               foreground=[("active", DARK["text"]),
@@ -258,13 +293,18 @@ class App:
     def __init__(self, root):
         self.root = root
         self.source_var = StringVar()
+        self.undub_base_var = StringVar()
+        self.japan_var = StringVar()
         self.extract_root_var = StringVar(value=str(default_voice_root()))
         self.voices_var = StringVar()
         self.iso_output_var = StringVar(
             value=str(default_patch_output("Example.iso").parent)
         )
+        self.undub_output_var = StringVar(
+            value=str(default_japanese_audio_output("Example.iso").parent)
+        )
         self.status_var = StringVar(
-            value="Choose a USA or Japanese disc image to begin."
+            value="Choose a voice workflow or create a Japanese-audio edition."
         )
         self.detail_var = StringVar()
         self.log_shown = BooleanVar(value=False)
@@ -274,8 +314,8 @@ class App:
         root.title("%s %s" % (SHORT_NAME, __version__))
         self.scale = apply_dpi_scaling(root)
         self.fonts = apply_dark_theme(root)
-        self.compact_height = int(720 * self.scale)
-        self.expanded_height = int(900 * self.scale)
+        self.compact_height = int(790 * self.scale)
+        self.expanded_height = int(970 * self.scale)
         width = int(900 * self.scale)
         root.minsize(int(760 * self.scale), self.compact_height)
         root.geometry(initial_window_geometry(root, width, self.compact_height))
@@ -291,8 +331,8 @@ class App:
         self.locked.append((widget, str(widget.cget("state")) or NORMAL))
         return widget
 
-    def _card(self, title):
-        card = ttk.Frame(self.canvas, style="Card.TFrame", padding=(14, 12))
+    def _card(self, parent, title):
+        card = ttk.Frame(parent, style="Card.TFrame", padding=(14, 12))
         card.columnconfigure(1, weight=1)
         ttk.Label(card, text=title, style="CardMuted.TLabel").grid(
             row=0, column=0, columnspan=3, sticky="w", pady=(0, 8)
@@ -327,18 +367,29 @@ class App:
         )
         self.subtitle_item = self.canvas.create_text(
             0, 0, anchor="nw", fill=DARK["muted"], font=self.fonts["small"],
-            text="Voice tool — extract every line, or put identified WAV files "
-                 "back into a safe copy of the disc."
+            text="Extract and replace identified WAVs for a future fan dub, "
+                 "or create a complete Japanese-audio edition."
         )
 
-        disc = self._card("DISC IMAGE")
+        self.notebook = ttk.Notebook(self.canvas)
+        voice_tab = ttk.Frame(
+            self.notebook, style="Tab.TFrame", padding=(0, 4, 0, 0)
+        )
+        undub_tab = ttk.Frame(
+            self.notebook, style="Tab.TFrame", padding=(0, 4, 0, 0)
+        )
+        self.notebook.add(voice_tab, text="Voice WAVs")
+        self.notebook.add(undub_tab, text="Japanese Audio / Undub")
+
+        disc = self._card(voice_tab, "DISC IMAGE")
         self._path_row(disc, 1, "Source", self.source_var, self._pick_source)
         ttk.Label(
             disc, text="USA (English) or Japan (Japanese) · source is never modified",
             style="CardMuted.TLabel"
         ).grid(row=2, column=1, columnspan=2, sticky="w", pady=(5, 0))
+        disc.pack(fill="x", pady=(0, 12))
 
-        extract = self._card("EXTRACT VOICES")
+        extract = self._card(voice_tab, "EXTRACT VOICES")
         self._path_row(
             extract, 1, "Voice root", self.extract_root_var,
             self._pick_extract_root, "Change…"
@@ -352,8 +403,9 @@ class App:
             command=self._start_extract
         ))
         self.extract_btn.grid(row=3, column=1, sticky="w")
+        extract.pack(fill="x", pady=(0, 12))
 
-        patch = self._card("PATCH VOICES")
+        patch = self._card(voice_tab, "PATCH VOICES")
         self._path_row(patch, 1, "WAV folder", self.voices_var,
                        self._pick_voices)
         self._path_row(patch, 2, "ISO output", self.iso_output_var,
@@ -371,8 +423,59 @@ class App:
             command=self._start_patch
         ))
         self.patch_btn.grid(row=5, column=1, sticky="w", pady=(5, 0))
+        patch.pack(fill="x")
+
+        target = self._card(undub_tab, "TARGET AND JAPANESE DONOR")
+        self._path_row(
+            target, 1, "Target ISO", self.undub_base_var,
+            self._pick_undub_base,
+        )
+        self._path_row(
+            target, 2, "Japanese ISO", self.japan_var,
+            self._pick_japan,
+        )
+        self._path_row(
+            target, 3, "Output folder", self.undub_output_var,
+            self._pick_undub_output, "Change…",
+        )
+        ttk.Label(
+            target,
+            text="Targets: USA, Europe/Australia, France, Germany, Italy, Spain",
+            style="CardMuted.TLabel",
+        ).grid(row=4, column=1, columnspan=2, sticky="w", pady=(5, 0))
+        target.pack(fill="x", pady=(0, 12))
+
+        import_jp = self._card(undub_tab, "CREATE JAPANESE-AUDIO ISO")
+        ttk.Label(
+            import_jp,
+            text="Keeps the target release's text and creates a separate, "
+                 "fully verified ISO. Extracted WAV files are not required.",
+            style="Card.TLabel",
+            wraplength=self._px(720),
+        ).grid(row=1, column=0, columnspan=3, sticky="w")
+        self.jp_output_name = ttk.Label(
+            import_jp,
+            text="Choose a target ISO to see the output name",
+            style="CardMuted.TLabel",
+        )
+        self.jp_output_name.grid(
+            row=2, column=0, columnspan=3, sticky="w", pady=(7, 10)
+        )
+        self.import_btn = self._lock(ttk.Button(
+            import_jp, text="Create Japanese-audio ISO",
+            style="Accent.TButton", command=self._start_import,
+        ))
+        self.import_btn.grid(row=3, column=0, sticky="w")
+        import_jp.pack(fill="x")
+
+        self.tab_cards = {
+            "voice": (disc, extract, patch),
+            "undub": (target, import_jp),
+        }
         self.source_var.trace_add("write", self._sync_output_name)
+        self.undub_base_var.trace_add("write", self._sync_output_name)
         self.iso_output_var.trace_add("write", self._sync_output_name)
+        self.undub_output_var.trace_add("write", self._sync_output_name)
 
         self.progress = ttk.Progressbar(self.canvas, maximum=100)
         self.log_btn = ttk.Button(
@@ -402,7 +505,7 @@ class App:
         self.log_frame.columnconfigure(0, weight=1)
         self.log_frame.rowconfigure(0, weight=1)
         widgets = {
-            "disc": disc, "extract": extract, "patch": patch,
+            "notebook": self.notebook,
             "progress": self.progress, "log_btn": self.log_btn,
             "log": self.log_frame,
         }
@@ -410,7 +513,6 @@ class App:
             0, 0, anchor="nw", window=widget
         ) for name, widget in widgets.items()}
         self.canvas.itemconfigure(self.items["log"], state="hidden")
-        self.cards = {"disc": disc, "extract": extract, "patch": patch}
         self.canvas.bind("<Configure>", self._reflow)
         self._append_log("%s %s\n" % (APP_NAME, __version__))
 
@@ -434,11 +536,16 @@ class App:
         self.canvas.coords(self.subtitle_item, pad, y)
         subtitle_box = self.canvas.bbox(self.subtitle_item)
         y = (subtitle_box[3] if subtitle_box else y) + gap
-        for name in ("disc", "extract", "patch"):
-            widget = self.cards[name]
-            self.canvas.coords(self.items[name], pad, y)
-            self.canvas.itemconfigure(self.items[name], width=inner)
-            y += widget.winfo_reqheight() + gap
+        tab_height = max(
+            sum(card.winfo_reqheight() for card in cards) +
+            gap * max(0, len(cards) - 1) + self._px(52)
+            for cards in self.tab_cards.values()
+        )
+        self.canvas.coords(self.items["notebook"], pad, y)
+        self.canvas.itemconfigure(
+            self.items["notebook"], width=inner, height=tab_height
+        )
+        y += tab_height + gap
         self.canvas.coords(self.items["progress"], pad, y)
         self.canvas.itemconfigure(self.items["progress"], width=inner)
         y += self.progress.winfo_reqheight() + 8
@@ -475,11 +582,44 @@ class App:
             self.detail_var.set(str(exc))
             messagebox.showerror("Unexpected disc image", str(exc))
         else:
-            label = "English" if region == "en" else "Japanese"
+            if boot not in VOICE_SOURCE_BOOTS:
+                messagebox.showerror(
+                    "USA or Japanese ISO required",
+                    "The Voice WAVs tab currently supports the USA and "
+                    "Japanese releases. Use PAL images on the Japanese "
+                    "Audio / Undub tab.",
+                )
+                self.source_var.set("")
+                return
+            label = RELEASE_LABELS[region]
             self.status_var.set("%s voice source recognised." % label)
             self.detail_var.set("%s · %.2f GB" % (
                 boot, Path(path).stat().st_size / (1 << 30)
             ))
+
+    def _pick_undub_base(self):
+        path = filedialog.askopenfilename(
+            title="Select a USA or PAL Valkyrie Profile 2 ISO",
+            filetypes=[("Disc images", "*.iso"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+        try:
+            release, boot = describe_disc(path)
+        except ValueError as exc:
+            messagebox.showerror("Unexpected disc image", str(exc))
+            return
+        if boot not in JAPANESE_AUDIO_TARGET_BOOTS:
+            messagebox.showerror(
+                "Target ISO required",
+                "Choose a supported USA or PAL Valkyrie Profile 2 ISO.",
+            )
+            return
+        self.undub_base_var.set(path)
+        self.status_var.set("%s target recognised." % RELEASE_LABELS[release])
+        self.detail_var.set("%s · %.2f GB" % (
+            boot, Path(path).stat().st_size / (1 << 30)
+        ))
 
     def _pick_extract_root(self):
         path = filedialog.askdirectory(title="Where should en/ or jp/ be created?")
@@ -493,10 +633,37 @@ class App:
         if path:
             self.voices_var.set(path)
 
+    def _pick_japan(self):
+        path = filedialog.askopenfilename(
+            title="Select the Japanese Valkyrie Profile 2 ISO",
+            filetypes=[("Disc images", "*.iso"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+        try:
+            region, _boot = describe_disc(path)
+        except ValueError as exc:
+            messagebox.showerror("Unexpected disc image", str(exc))
+            return
+        if _boot != JAPAN_BOOT:
+            messagebox.showerror(
+                "Japanese ISO required",
+                "Choose the original Japanese Valkyrie Profile 2 ISO.",
+            )
+            return
+        self.japan_var.set(path)
+
     def _pick_iso_output(self):
         path = filedialog.askdirectory(title="Where should the patched ISO be written?")
         if path:
             self.iso_output_var.set(path)
+
+    def _pick_undub_output(self):
+        path = filedialog.askdirectory(
+            title="Where should the Japanese-audio ISO be written?"
+        )
+        if path:
+            self.undub_output_var.set(path)
 
     def _sync_output_name(self, *_args):
         source = self.source_var.get().strip()
@@ -508,15 +675,52 @@ class App:
         else:
             self.output_name.configure(text="")
 
+        target = self.undub_base_var.get().strip()
+        undub_folder = self.undub_output_var.get().strip()
+        if target and undub_folder:
+            self.jp_output_name.configure(
+                text="Writes %s" % default_japanese_audio_output(target).name
+            )
+        else:
+            self.jp_output_name.configure(
+                text="Choose a target ISO to see the output name"
+            )
+
     def _validated_source(self):
         raw = self.source_var.get().strip()
         if not raw:
             messagebox.showinfo("Pick an ISO", "Choose the USA or Japanese ISO first.")
             return None
         try:
-            describe_disc(raw)
+            _region, boot = describe_disc(raw)
         except ValueError as exc:
             messagebox.showerror("Unusable image", str(exc))
+            return None
+        if boot not in VOICE_SOURCE_BOOTS:
+            messagebox.showerror(
+                "USA or Japanese ISO required",
+                "Use a USA or Japanese ISO for extracted WAV operations.",
+            )
+            return None
+        return Path(raw)
+
+    def _validated_undub_base(self):
+        raw = self.undub_base_var.get().strip()
+        if not raw:
+            messagebox.showinfo(
+                "Pick a target ISO", "Choose a supported USA or PAL ISO first."
+            )
+            return None
+        try:
+            _release, boot = describe_disc(raw)
+        except ValueError as exc:
+            messagebox.showerror("Unusable image", str(exc))
+            return None
+        if boot not in JAPANESE_AUDIO_TARGET_BOOTS:
+            messagebox.showerror(
+                "Target ISO required",
+                "Choose a supported USA or PAL Valkyrie Profile 2 ISO.",
+            )
             return None
         return Path(raw)
 
@@ -586,6 +790,51 @@ class App:
             allow_overlong=self.allow_overlong_var.get(),
         )
 
+    def _start_import(self):
+        if self.runner.busy:
+            return
+        source = self._validated_undub_base()
+        if source is None:
+            return
+        japan = Path(self.japan_var.get().strip())
+        try:
+            _donor_region, donor_boot = describe_disc(japan)
+        except (OSError, ValueError) as exc:
+            messagebox.showerror("Japanese ISO required", str(exc))
+            return
+        if donor_boot != JAPAN_BOOT:
+            messagebox.showerror(
+                "Japanese ISO required",
+                "Choose the original Japanese Valkyrie Profile 2 ISO.",
+            )
+            return
+        folder = Path(
+            self.undub_output_var.get().strip()
+            or default_japanese_audio_output(source).parent
+        )
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            messagebox.showerror("Output folder", str(exc))
+            return
+        output = folder / default_japanese_audio_output(source).name
+        if output.exists():
+            if not messagebox.askyesno(
+                    "Overwrite?", "Output already exists:\n%s\n\nReplace it?"
+                    % output):
+                return
+            try:
+                output.unlink()
+            except OSError as exc:
+                messagebox.showerror("Output folder", str(exc))
+                return
+        self.status_var.set("Creating the Japanese-audio edition…")
+        self.detail_var.set(str(japan))
+        self._begin(
+            "Japanese audio import", import_japanese_audio,
+            source, japan, output,
+        )
+
     def _set_busy(self, busy):
         for widget, idle in self.locked:
             widget.configure(state=DISABLED if busy else idle)
@@ -596,6 +845,7 @@ class App:
             line = line.strip()
             copied = COPY_LINE.match(line)
             extracted = EXTRACT_LINE.match(line)
+            imported = IMPORT_LINE.match(line)
             if copied:
                 percent = int(copied.group(1))
                 self.progress.configure(value=percent * 0.9)
@@ -604,12 +854,19 @@ class App:
                 current, total = map(int, extracted.groups())
                 self.progress.configure(value=current * 100 / total)
                 self.status_var.set("Extracting voice banks… %d/%d" % (current, total))
+            elif imported:
+                current, total = map(int, imported.groups())
+                self.progress.configure(value=90 + current * 5 / total)
+                self.status_var.set(
+                    "Repacking the complete game archive… %d/%d"
+                    % (current, total)
+                )
             elif line.startswith("write:"):
                 self.progress.configure(value=92)
                 self.status_var.set("Writing replacement voices…")
             elif line.startswith("verify:"):
                 self.progress.configure(value=96)
-                self.status_var.set("Verifying every replaced slot…")
+                self.status_var.set("Verifying every rebuilt resource…")
         self.detail_var.set("%s elapsed" % self._elapsed())
 
     def _elapsed(self):

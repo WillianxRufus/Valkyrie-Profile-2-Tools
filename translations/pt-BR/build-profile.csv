@@ -1,2 +1,3 @@
-"kind","resource","sheet","flags","verify"
-"container","10","container-0010.csv","shared-font-glyphs",""
+kind,resource,sheet,flags,verify
+container,10,container-0010.csv,shared-font-glyphs,
+scene,1197,resource-1197-scenes.csv,,yes

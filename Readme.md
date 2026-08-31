@@ -7,7 +7,8 @@ Current applications:
 - **ValkyrieProfile2-Translator** builds a translated copy of the game.
 - **ValkyrieProfile2-CheatPatcher** writes selected cheats into a copy of the game so they work without an emulator cheat file. Can be used to create a new iso with the game's Anti-Cheat functions patched out.
 - **ValkyrieProfile2-VoiceTool** extracts the English or Japanese voices and
-  patches identified replacement WAV files into a copy of either release.
+  patches identified replacement WAV files into a copy of either release. It
+  can also create a Japanese-audio edition of the USA and PAL releases.
 
 Neither application modifies the source disc image.
 
@@ -16,6 +17,8 @@ Neither application modifies the source disc image.
 - A clean USA disc image (`SLUS_214.52`) for translation and cheats.
 - A USA or Japanese disc image (`SLPM_664.19`) for voice extraction and
   replacement.
+- A Japanese disc image plus a supported USA or PAL disc image to create a
+  Japanese-audio edition.
 - About 12 GB of free disk space for the source image, output image, and
   generated workspace.
 - Optionally, a Japanese disc image (`SLPM_664.19`) if you want Japanese text
@@ -82,7 +85,9 @@ dependencies, output behavior, and safety checks.
 
 Open `ValkyrieProfile2-VoiceTool`, select a USA or Japanese image, then choose
 either **Extract every voice** or a folder of replacement WAVs and **Patch
-ISO**. The source image is only read.
+ISO**. To create an undub, open **Japanese Audio / Undub**, select the target
+USA or PAL image and the Japanese image, then choose **Create Japanese-audio
+ISO**. Source images are only read.
 
 From a source checkout:
 
@@ -90,6 +95,7 @@ From a source checkout:
 python vp2_voices.py
 python vp2_voices.py extract <usa-or-japan-image.iso>
 python vp2_voices.py patch <base-image.iso> <replacement-wav-folder>
+python vp2_voices.py import-japanese <usa-or-pal-image.iso> <japan-image.iso>
 ```
 
 Extraction creates `voices/en/` or `voices/jp/`. See the [voice-tool

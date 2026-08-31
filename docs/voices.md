@@ -1,9 +1,9 @@
 # Voice tool
 
-ValkyrieProfile2-VoiceTool extracts mapped cutscene voices and
-language-dependent samples from a USA or Japanese _Valkyrie Profile 2_ image,
-and can put replacement WAVs back into a new image. It never modifies the
-source image and does not include game audio.
+ValkyrieProfile2-VoiceTool extracts cutscene, battle, and other voice audio
+from a USA or Japanese _Valkyrie Profile 2_ image, and can put replacement
+WAVs back into a new image. It never modifies the source image and does not
+include game audio.
 
 ## Extract voices
 
@@ -34,6 +34,18 @@ parts identify the exact game slot when the file is patched back. The
 adjacent `manifest.csv` records the region, cutscene resource, slot limit,
 duration, loudness measurements, and file hash.
 
+Audio without a cutscene or text-line folder goes under `unmapped/`. Battle
+files have names such as:
+
+```text
+voices/en/unmapped/battle-2189-000-1c49-0.wav
+```
+
+The name is `battle-<entry>-<sample>-<clip-id>-<zone>.wav`. Keep all five
+parts unchanged so the file can be patched back into its original slot.
+Banks containing unverified alternate performances are kept under
+`unmapped/alternate-takes/` rather than being assigned to a numbered scene.
+
 ## Patch replacement voices
 
 Select the base USA or Japanese image, select any folder containing identified
@@ -56,6 +68,40 @@ audio is padded with the game's silence frame. A deliberate rough test can
 enable **Allow overlong WAVs** in the window or pass `--allow-overlong`,
 which trims each tail exactly at the fixed slot boundary.
 
+Battle replacements follow the same fixed-slot duration rule as cutscene
+replacements. Several replacement files from one entry may be patched in the
+same build.
+
+Fixed-slot WAV replacement is intended for audio made for the selected base
+release. Do not use **Allow overlong WAVs** to convert a complete Japanese
+extraction into a USA image; the releases have different resource geometry.
+
+## Import all Japanese audio
+
+Open the **Japanese Audio / Undub** tab to make a Japanese-audio copy without
+extracting WAV files. Select a supported target image, the original Japanese
+image, and an output folder, then choose **Create Japanese-audio ISO**.
+
+Supported targets are:
+
+- USA (`SLUS_214.52`)
+- Europe/Australia (`SLES_546.44`)
+- France (`SLES_546.45`)
+- Germany (`SLES_546.46`)
+- Italy (`SLES_546.47`)
+- Spain (`SLES_546.48`)
+
+The Japanese donor must be `SLPM_664.19`. The equivalent command is:
+
+```bash
+python vp2_voices.py import-japanese <target.iso> <japan.iso>
+python vp2_voices.py import-japanese <target.iso> <japan.iso> -o <output.iso>
+```
+
+The result keeps the target release's text and menus while using Japanese
+audio. It does not use extracted WAV files. Both source images remain
+unchanged, and the tool verifies the new image before reporting success.
+
 The older dubbing-kit layout is supported too. A folder such as
 `vp2/dub/opening/ptbr-chatterbox` may contain files named only by clip ID,
 such as `8028.wav`, when its parent kit has the original `manifest.csv` with
@@ -69,5 +115,8 @@ the `bank` and `sub` columns.
 - Existing ISO outputs are never overwritten by the command line. The window
   asks before replacing an output ISO.
 - Existing extraction folders are never overwritten automatically.
-- This is fixed-slot replacement. It does not enlarge a line or move voice
-  banks, so generated delivery must fit the recorded slot.
+- Fixed-slot replacement does not enlarge a line, so generated delivery must
+  fit the recorded slot. Use the separate Japanese-audio import for a complete
+  Japanese-audio conversion of any supported target.
+- Keep files in `unmapped/` even when they have no direct text-line equivalent;
+  their exported names are their patch identities.
