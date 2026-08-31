@@ -1,18 +1,41 @@
 resource,message_id,translated,notes
-109,4,,
-109,3,,
+109,4,"Ouviram, ouviram, viajantes cansados!
+O vendedor ambulante está aqui para servir!",
+109,3,Aguardo ansioso pelo nosso próximo encontro!,
 109,5,,
-109,6,,
-109,16,,
-109,7,,
-109,8,,
-109,9,,
-109,10,,
-109,11,,
-109,12,,
-109,13,,
-109,14,,
-109,15,,
+109,6,"Onde posso achar monstros por aqui?
+Preciso de certo material.",
+109,16,"Magma quente... diga, algum dos
+seus clientes é arqueiro ou mago? <PART>
+---
+Um grupo com arqueiros ou magos
+tem o melhor alcance de ataque. <PART>
+---
+Não precisar correr no calor
+seria vantagem na batalha.",
+109,7,"Infelizmente, não temos muitos clientes, e
+não parece que vai mudar tão cedo.",
+109,8,"Simplesmente não entendo os aventureiros!
+Por que se jogam no perigo? <PART>
+---
+Um caçador de tesouros foi às cavernas
+ultimamente, mas não voltou.",
+109,9,"Jogar a vida fora atrás de tesouros,
+e você fica sem nada!",
+109,10,"Oh, olha quem está aqui! Um cliente?
+O vendedor ambulante está aqui para servir!",
+109,11,Aguardo o próximo encontro!,
+109,12,"Crell Monferaigne estava contratando tropas,
+então me alistei. Os treinos começaram logo. <PART>
+---
+Treinos de batalha no meio do
+deserto não é minha ideia de diversão.",
+109,13,"Vou furar os treinos, matar tempo e
+receber meu pagamento, muito obrigado.",
+109,14,"Aconteceu algo em algum lugar?
+Os viajantes estão agitados.",
+109,15,"Dipan é aquele país lá no norte, não?
+Ouvi que têm mágicos ou algo assim...",
 109,2861,,
 109,2862,,
 109,2863,,
@@ -25,47 +48,67 @@ resource,message_id,translated,notes
 109,2247,,
 109,2248,,
 109,2249,,
-109,2815,,
-109,2816,,
-109,2817,,
-109,2818,,
-109,2819,,
-109,2820,,
-109,2821,,
-109,2822,,
-109,2823,,
-109,2824,,
-109,2825,,
-109,2826,,
-109,2827,,
-109,2828,,
-109,2829,,
-109,2830,,
-109,2831,,
-109,2832,,
-109,2833,,
-109,2834,,
-109,2835,,
-109,2836,,
-109,2837,,
-109,2838,,
-109,2839,,
-109,2840,,
-109,2841,,
-109,2842,,
-109,2843,,
-109,2844,,
-109,1,,not displayed by the event script
+109,2815,"Vai ficar?
+Temos um quarto com vista disponível.",
+109,2816,Bem-vindo. Gostaria de um quarto?,
+109,2817,"Ora, hóspedes procurando quarto?",
+109,2818,"Vocês são viajantes, certo? Vão ficar?",
+109,2819,"Saudações. Vocês parecem
+estar procurando quarto. Acertou?",
+109,2820,"É uma honra recebê-los.
+Reservo seu quarto?",
+109,2821,"Que pena.
+Volte se mudar de ideia.",
+109,2822,"Por favor, visitem-nos novamente
+quando tiverem chance.",
+109,2823,Droga. E eu já estava animado.,
+109,2824,"Sigam seu caminho, sem vadiagem.",
+109,2825,"Bem, é sua perda.
+Está perdendo um ótimo serviço.",
+109,2826,"Se a oportunidade surgir,
+volte a nos honrar.",
+109,2827,"Deixe a canção das ondas
+ser seu convite ao sono.",
+109,2828,"Por favor, aproveite a estadia.",
+109,2829,"Então vai ficar mesmo?
+Descanse!",
+109,2830,"Acabei de trocar os lençóis.
+Vai dormir como um bebê!",
+109,2831,"Café da manhã equilibrado por nossa conta!
+Durma bem.",
+109,2832,"Devem estar exaustos.
+Por favor, fiquem à vontade.",
+109,2833,"Volte em breve!
+Que as bênçãos do mar estejam com vocês.",
+109,2834,"Obrigada pela preferência.
+Se cuidem.",
+109,2835,Passem aqui quando estiverem pela área.,
+109,2836,"Descansou bem, não é?
+Cuidado lá fora!",
+109,2837,"Hehe, dormiu bem? Volte sempre!",
+109,2838,"Confio que descansaram bem.
+Esperamos servi-los de novo em breve.",
+109,2839,"Ahn, parece que falta dinheiro.",
+109,2840,"Receio que seria impossível permitir
+que fiquem sem pagar a taxa devida.",
+109,2841,"Ora, isso não serve. Vocês não podem pagar.",
+109,2842,"Não é o bastante! Que história é essa?
+Isso é um negócio, sabiam!",
+109,2843,"Hmm... Parece que falta um pouco.
+Voltem quando tiverem o dinheiro!",
+109,2844,"Receio que precisamos do pagamento total
+para alocar os quartos.",
+109,1,Sair,not displayed by the event script
 109,139,,
 109,140,,not displayed by the event script
 109,141,,
 109,142,,
 109,143,,
-109,2812,,not displayed by the event script
-109,2813,,not displayed by the event script
-109,2814,,not displayed by the event script
-109,2845,,not displayed by the event script
-109,2857,,not displayed by the event script
-109,2858,,not displayed by the event script
-109,2859,,not displayed by the event script
-109,2860,,not displayed by the event script
+109,2812,Diária: <PART> OTH,not displayed by the event script
+109,2813,Sim,not displayed by the event script
+109,2814,Não,not displayed by the event script
+109,2845,Kalstad,not displayed by the event script
+109,2857,Mercador,not displayed by the event script
+109,2858,Dono da Pousada,not displayed by the event script
+109,2859,Aventureira,not displayed by the event script
+109,2860,Habitante,not displayed by the event script

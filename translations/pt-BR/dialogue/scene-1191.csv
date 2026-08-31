@@ -87,12 +87,12 @@ resource,message_id,translated,notes
 1191,299,,
 1191,300,,
 1191,304,,
-1191,1,,not displayed by the event script
+1191,1,Saída,not displayed by the event script
 1191,2,,
-1191,3,,not displayed by the event script
-1191,4,,not displayed by the event script
-1191,5,,not displayed by the event script
-1191,301,,not displayed by the event script
+1191,3,Sim,not displayed by the event script
+1191,4,Não,not displayed by the event script
+1191,5,Desfiladeiro de Sukavia,not displayed by the event script
+1191,301,Realizar a materialização?,not displayed by the event script
 1191,302,,
 1191,303,,
 1191,305,,

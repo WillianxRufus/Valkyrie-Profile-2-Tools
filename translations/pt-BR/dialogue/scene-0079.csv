@@ -1,65 +1,202 @@
 resource,message_id,translated,notes
-79,7,,
+79,7,"Já achou algo depois de cortar
+uma parte de um monstro? <PART>
+---
+Aqui chamamos isso de acessórios.
+Afinal, a gente usa, não é? <PART>
+---
+Não é o hobby mais elegante,
+mas são como amuletos da sorte! <PART>
+---
+Coloque e vai se sentir mais forte,
+ataques de fogo queimam mais... <PART>
+---
+Mas essa nem é a melhor parte! Dependendo
+de como você equipa, eles despertam poderes <PART> ---- <PART>
+---
+habilidades <PART> ---- <PART> que dormem dentro de você.
+Se der sorte, claro! <PART>
+---
+Que tal eu te dar esse?
+Vai, experimenta!",
 79,46,,
-79,8,,
-79,9,,
-79,10,,
-79,11,,
-79,14,,
-79,12,,
-79,16,,
-79,15,,
-79,17,,
-79,20,,
-79,18,,
-79,21,,
-79,23,,
-79,22,,
-79,24,,
-79,28,,
-79,29,,
-79,30,,
-79,32,,
-79,33,,
-79,35,,
-79,36,,
-79,37,,
-79,38,,
-79,39,,
-79,40,,
-79,41,,
-79,42,,
-79,48,,
-79,49,,
-79,50,,
-79,51,,
-79,53,,
-79,52,,
-79,55,,
-79,54,,
-79,56,,
-79,57,,
-79,60,,
-79,62,,
-79,1,,not displayed by the event script
-79,2,,not displayed by the event script
-79,3,,not displayed by the event script
-79,4,,not displayed by the event script
-79,5,,not displayed by the event script
-79,6,,not displayed by the event script
+79,8,"Saber ou não saber habilidades faz toda
+a diferença do mundo! <PART>
+---
+Usar habilidades torna algumas batalhas
+difíceis fáceis como torta!",
+79,9,"Villnore de repente aumentou a coleta
+de impostos, e agora ninguém compra. <PART>
+---
+Mas você não é daqui, certo?
+Então dê uma olhada!",
+79,10,"Parece uma vila comum e ordinária,
+mas na verdade... <PART>
+---
+é uma vila comum e ordinária. Todo mundo é
+autossuficiente, então não há lojas.",
+79,11,"Esta vila é território de Villnore, mas
+não cobram impostos aqui. <PART>
+---
+A gente se governa,
+por isso todo mundo é tranquilo.",
+79,14,"Tem que ser um monstro. Meu Deus.
+Se aquilo se instalar, estamos perdidos. <PART>
+---
+Você já foi aventureira, certo?
+Derrote ele como nos velhos tempos!",
+79,12,"Você! Voltou das ruínas!?
+Que tal uma caçada de verdade? <PART>
+---
+Não precisa fazer, mas se fizer,
+tem recompensa...",
+79,16,"Você viu, não viu?
+O pássaro enorme na floresta!",
+79,15,"Fale dos bons e velhos tempos o quanto quiser,
+mas na minha idade, esqueça!",
+79,17,"Nossa... Ele nunca serve quando
+preciso. <PART>
+---
+Obrigada pela ajuda! A bela floresta
+atrai até monstros.",
+79,20,"Minha habilidade era tão boa que se eu
+morresse, a valquíria me escolheria. <PART>
+---
+Agora posso esquecer de ser escolhida.
+Eu teria sorte se apenas a visse!",
+79,18,"Você realmente cuidou daquele monstro?
+Obrigada... muito obrigada! <PART>
+---
+Se o resto for só bichinhos,
+deixe comigo! Tome isto <PART> ---- <PART>
+---
+uma amostra da nossa gratidão... Não é muito,
+mas é a intenção que conta, certo?",
+79,21,"Está quase na hora de pagar impostos, mas de novo
+este ano, Villnore não manda ninguém. <PART>
+---
+Quem precisa do nosso imposto com a indústria
+siderúrgica e o comércio deles?",
+79,23,"Ninguém nesta vila presta. Seria ótimo
+se alguém eliminasse os monstros.",
+79,22,"Outros dois aventureiros estavam indo para
+as ruínas da montanha <PART> ---- <PART> um homem e uma mulher. <PART>
+---
+Ela tinha ele na palma da mão!
+Ah, vocês se encontraram? Hehehe!",
+79,24,"Sente algo estranho no ar?
+Não parece mais pesado que o normal? Estranho.",
+79,28,O quê! Dipan? Sério?,
+79,29,"Fumaça estava subindo na direção de Dipan.
+O avô viu das montanhas.",
+79,30,Um ataque? Foi Crell Monferaigne?,
+79,32,"Pelo visto, fumaça está subindo de Dipan.
+Você sabe o que aconteceu?",
+79,33,"Obrigada por cuidar dos nossos monstros
+mais uma vez! Doce como uma deusa! <PART>
+---
+Queria poder dar mais,
+mas aceite minha gratidão...",
+79,35,"Se eu ainda fosse jovem,
+derrotaria uns dois monstros sozinho!",
+79,36,"É verdade que Dipan foi destruída?
+Me diga que é uma brincadeira cruel.",
+79,37,"É bem ruim quando um país
+grande desaparece, não?",
+79,38,"Usei o caminho real escondido para ir
+e ver Dipan. Não é bonito...",
+79,39,"Tenho que pagar impostos a Villnore, então só
+posso comprar o básico.",
+79,40,"Mesmo na recessão, a loja continua!",
+79,41,"Villnore apertou a cobrança de impostos
+de repente. <PART>
+---
+O governo também está mexendo com aço
+e comércio. Talvez estejam militarizando. <PART>
+---
+Sempre nos governamos,
+mas o que será de nós agora?",
+79,42,"Quem diria que a queda de Dipan
+afetaria nossa vila assim?",
+79,48,"Você! Voltou das ruínas!?
+Que tal uma caçada de verdade? <PART>
+---
+Um monstro estranho se mudou para a
+floresta próxima, e não temos guardas... <PART>
+---
+Não precisa fazer, mas se fizer,
+tem recompensa...",
+79,49,"A coisa na floresta parece com
+um grande pássaro ou algo assim.",
+79,50,"Eu era algo no meu tempo!
+Enfrentei eles aos milhares <PART> ---- <PART> sem suar! <PART>
+---
+Por que está me olhando assim?",
+79,51,"Você! Que bom que voltou!
+Na verdade, tem um monstro novo na floresta. <PART>
+---
+Talvez você possa dar uma olhada
+quando tiver tempo livre.",
+79,53,"Olá! Viajando, hein? Viagem traz
+problemas, e problemas trazem ferimentos. <PART>
+---
+Um pequeno corte pode custar sua vida,
+mas minha loja está aqui para evitar isso! <PART>
+---
+Estamos com promoção de falcões, mas
+apresse-se <PART> ---- <PART> a esses preços, não durarão! <PART>
+---
+Normalmente só para clientes, mas
+faço exceção para sorrisos bonitos!",
+79,52,"Olá! Viajando, hein? Viagem traz
+problemas, e problemas trazem ferimentos. <PART>
+---
+Um pequeno corte pode custar sua vida,
+mas minha loja está aqui para evitar isso!",
+79,55,"Venham todos!
+O vendedor viajante está aqui para servir! <PART>
+---
+Estamos com promoção de falcões!
+Os monstros fogem desses preços! <PART>
+---
+Você me traz materiais, eu faço suas armas!
+O que acha? Dê uma olhada!",
+79,54,"Venham todos!
+O vendedor viajante está aqui para servir!",
+79,56,"Não constroem lojas em lugares perigosos,
+é por isso que nós vendedores somos úteis!",
+79,57,"Se eu tivesse os materiais para um falcão,
+poderia fazer um agora mesmo! <PART>
+---
+Tem um monstro chamado Armadura Viva.
+Você pode achar nas Planícies Kythena. <PART>
+---
+Ele tem todos os materiais que você precisa.
+Eu ajudaria, mas não sei lutar. <PART>
+---
+Meu pai era diferente. Ele era um
+comerciante que sabia lutar!",
+79,60,QUERO!,
+79,62,CHEGA!,
+79,1,Casa,not displayed by the event script
+79,2,Coriander,not displayed by the event script
+79,3,Saída,not displayed by the event script
+79,4,Sair de Coriander?,not displayed by the event script
+79,5,Sim,not displayed by the event script
+79,6,Não,not displayed by the event script
 79,19,,
 79,31,,
 79,34,,
 79,43,,
 79,44,,
 79,45,,
-79,47,,not displayed by the event script
+79,47,Ouvir,not displayed by the event script
 79,58,,
 79,59,,
 79,61,,
 79,111,,
-79,2810,,not displayed by the event script
-79,2811,,not displayed by the event script
-79,2812,,not displayed by the event script
-79,2813,,not displayed by the event script
-79,2814,,not displayed by the event script
+79,2810,Aventureira,not displayed by the event script
+79,2811,Mercador,not displayed by the event script
+79,2812,Habitante,not displayed by the event script
+79,2813,Garota,not displayed by the event script
+79,2814,Galinha,not displayed by the event script

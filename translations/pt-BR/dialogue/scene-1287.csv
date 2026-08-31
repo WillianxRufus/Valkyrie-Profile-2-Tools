@@ -1,18 +1,19 @@
 resource,message_id,translated,notes
-1287,1,,
-1287,2,,
-1287,3,,
+1287,1,Estranho.,
+1287,2,O caminho não devia estar errado...,
+1287,3,"Será que tem algum mecanismo ou porta
+secreta por aqui...?",
 1287,4,,
-1287,5,,4
-1287,6,,5
-1287,7,,
-1287,8,,7
-1287,13,,
-1287,17,,
-1287,16,,
-1287,9,,
-1287,18,,
-1287,14,,
+1287,5,Alicia olha! Eu sabia que era aqui!,4
+1287,6,Vem rápido!,5
+1287,7,Não posso.,
+1287,8,Ah deixa pra lá...,7
+1287,13,Como você atravessou este portão?,
+1287,17,Conheço esse anel!,
+1287,16,Meio elfo?,
+1287,9,Vamos correr!,
+1287,18,Sigam! Não os deixem escapar!,
+1287,14,Aquela mulher... não parecia uma elfa.,
 1287,2755,,
 1287,2756,,
 1287,2757,,
@@ -22,30 +23,34 @@ resource,message_id,translated,notes
 1287,2761,,
 1287,2762,,
 1287,2763,,
-1287,2150,,0
-1287,2151,,
-1287,2152,,
-1287,2153,,3
-1287,2154,,
-1287,2155,,5
-1287,2158,,
-1287,2156,,
-1287,2157,,
-1287,2173,,
-1287,2174,,
-1287,2160,,
-1287,2175,,
-1287,2176,,
+1287,2150,"Quando o pó fizer efeito corremos.
+Entendido?",0
+1287,2151,Ainda dá tempo de voltar.,
+1287,2152,"Melhor não. O risco é
+grande demais...",
+1287,2153,Como assim do nada!?,3
+1287,2154,Achei!,
+1287,2155,Logo agora é claro...,5
+1287,2158,Alicia!,
+1287,2156,Rufus... vai!,
+1287,2157,Idiota! Vamos lutar!,
+1287,2173,"Consegue ficar de pé? Talvez a gente
+passe logo.",
+1287,2174,Tch...,
+1287,2160,Não faz essa cara...,
+1287,2175,"Eu juro. Vou te levar ao topo de
+Yggdrasil.",
+1287,2176,Decidido.,
 1287,2163,,
 1287,2164,,
-1287,2165,,
-1287,2166,,
+1287,2165,Ali!,
+1287,2166,Roussalier.,
 1287,2167,,
 1287,2168,,
 1287,2169,,
-1287,2177,,
-1287,2171,,
-1287,2172,,
+1287,2177,Ainda não estou seguro sem o anel.,
+1287,2171,Consegue andar? Precisamos ir.,
+1287,2172,Rufus!?,
 1287,2309,,
 1287,2310,,
 1287,2311,,

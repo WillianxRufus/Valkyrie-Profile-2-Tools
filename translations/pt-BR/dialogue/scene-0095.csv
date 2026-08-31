@@ -22,8 +22,8 @@ resource,message_id,translated,notes
 95,30,,
 95,29,,
 95,28,,
-95,1,,not displayed by the event script
-95,2,,not displayed by the event script
+95,1,Sair,not displayed by the event script
+95,2,Falar,not displayed by the event script
 95,20,,
 95,21,,
 95,22,,
@@ -32,7 +32,7 @@ resource,message_id,translated,notes
 95,25,,
 95,26,,
 95,27,,
-95,150,,not displayed by the event script
-95,2890,,not displayed by the event script
+95,150,Villnore,not displayed by the event script
+95,2890,Habitante,not displayed by the event script
 95,2891,,
-95,2892,,not displayed by the event script
+95,2892,Aventureira,not displayed by the event script

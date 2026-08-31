@@ -1,64 +1,147 @@
 resource,message_id,translated,notes
 91,8,,
-91,65,,
-91,9,,
-91,10,,
-91,11,,
-91,12,,
-91,14,,
-91,15,,
-91,16,,
-91,17,,
-91,18,,
-91,51,,
-91,25,,
-91,26,,
+91,65,Obteve <PART> OTH,
+91,9,"É perigoso lá nas minas.
+Exige músculo e coragem para sobreviver. <PART>
+---
+Num momento você está cavando e no outro <PART> ---- <PART>
+BOOM <PART> ---- <PART> explodindo monstros com dinamite!",
+91,10,"Todos louvam o comércio enquanto os
+empresários burgueses contam seus lucros. <PART>
+---
+Esquecem que nós mineradores somos a razão
+desta cidade ter comércio!",
+91,11,"Monstros foram vistos perto da cidade.
+Deve haver um covil por perto.",
+91,12,"Monstros estranhos saíram das minas.
+Meu filho está no comércio, então está seguro. <PART>
+---
+Meu filho diz que vai fechar um negócio
+com Crell Monferaigne. <PART>
+---
+O dinheiro vai entrar tão rápido que
+não teremos tempo de contar!",
+91,14,"É perigoso lá nas minas.
+Exige músculo e coragem para sobreviver. <PART>
+---
+Num momento você está cavando, e no outro <PART> ---- <PART>
+BOOM <PART> ---- <PART> explodindo monstros com dinamite!",
+91,15,"Alguém cuidou dos monstros nas minas.
+Queria conhecer e agradecer.",
+91,16,"Um cliente do meu filho disse que
+Dipan está agindo estranho. <PART>
+---
+Algo sobre pesquisa horrenda e
+preparativos para guerra...",
+91,17,"A notícia das experiências suspeitas de
+Dipan já chegou a Crell Monferaigne.",
+91,18,"Os navios de Solde ainda não voltaram
+totalmente. O que há com Dipan?",
+91,51,"Escolheu uma ótima hora para aparecer!
+Dipan tem seus problemas, mas temos os nossos! <PART>
+---
+Monstros voltaram às minas.
+Poder mágico atrai seres mágicos... <PART>
+---
+O que acha? Tenta de novo?
+Vou compensar...",
+91,25,"Quem atacou a poderosa Dipan ou era
+muito corajoso ou muito louco! <PART>
+---
+Acha que foi Crell Monferaigne ou
+compra a história dos deuses?",
+91,26,"Então voltou, hein?
+Parece que saiu em um pedaço. <PART>
+---
+Não tenho como agradecer o suficiente!
+Isso é o mínimo que posso fazer...",
 91,28,,
-91,29,,
-91,31,,
-91,30,,
-91,32,,
-91,33,,
-91,34,,
-91,35,,
-91,36,,
-91,37,,
-91,38,,
-91,39,,
-91,40,,
-91,42,,
-91,41,,
-91,44,,
-91,45,,
-91,46,,
-91,49,,
-91,50,,
+91,29,"Isso é ruim! Se Dipan perder,
+perco meu maior cliente!",
+91,31,"Não houve luta real por um tempo,
+mas isso muda se Dipan cair.",
+91,30,"Agora Dipan está sob ataque e há monstros
+nas minas... Nunca dá certo!",
+91,32,"Ainda não acredito <PART> ---- <PART>
+Dipan destruída numa noite! <PART>
+---
+O gigante do continente é apenas
+um rato diante dos deuses.",
+91,33,"Com o poder do continente acabado,
+todos os territórios estão em jogo.",
+91,34,"Por toda parte, falam de Dipan.
+Mostra como Dipan era importante!",
+91,35,"Me deixe em paz! Preciso descobrir como
+conseguir novos clientes sem Dipan.",
+91,36,"Então os deuses realmente existem.
+Nunca vi um com meus olhos. <PART>
+---
+O que aprendemos em teologia era real...
+Que choque!",
+91,37,"Não sei dos outros, mas sempre
+achei teologia só histórias de fantasma!",
+91,38,"Se vier guerra, que venha! <PART>
+---
+Estamos acostumados a explosões nas minas,
+vamos detonar nossos inimigos!",
+91,39,"Não subestime o conhecimento de um minerador
+sobre explosivos! É melhor que arcos e flechas ruins!",
+91,40,"Vão apertar os impostos agora,
+para expandir o exército... Que desperdício.",
+91,42,"Com a influência de Dipan removida,
+a guerra engolirá o continente. <PART>
+---
+Não temos escolha a não ser reforçar
+o exército se quisermos sobreviver.",
+91,41,"O sucessor do trono de Dipan morreu
+criança. A linhagem real acabou.",
+91,44,"Meu mestre disse para não me associar com vira-latas,
+então temo que não daria certo entre nós.",
+91,45,"Você tem uma juba linda <PART> ---- <PART>
+talvez possamos passear algum dia?",
+91,46,"Não vou latir para sair!
+Um dia, vou te levar para passear!",
+91,49,"Sério? Você vai mesmo?
+Você me traz lágrimas de alegria! <PART>
+---
+Boa sorte aí fora e
+continue o bom trabalho!",
+91,50,"Ah, entendo... Você tem seus
+próprios problemas... <PART>
+---
+Esqueça que eu mencionei!
+Nós resolvemos!",
 91,55,,
-91,59,,
+91,59,"Sério, você vai mesmo?
+Você me traz lágrimas de alegria! <PART>
+---
+Boa sorte aí fora e
+continue o bom trabalho!",
 91,60,,
 91,64,,
-91,1,,not displayed by the event script
-91,2,,not displayed by the event script
-91,3,,not displayed by the event script
-91,4,,not displayed by the event script
-91,5,,not displayed by the event script
-91,6,,not displayed by the event script
-91,7,,not displayed by the event script
-91,13,,not displayed by the event script
+91,1,Taberna,not displayed by the event script
+91,2,Armaria,not displayed by the event script
+91,3,Casa,not displayed by the event script
+91,4,Saída,not displayed by the event script
+91,5,Sair de Villnore?,not displayed by the event script
+91,6,Sim,not displayed by the event script
+91,7,Não,not displayed by the event script
+91,13,"Crell Monferaigne está sedenta de sangue
+após as últimas expansões de Villnore.",not displayed by the event script
 91,27,,
 91,43,,
 91,47,,
 91,48,,
-91,52,,not displayed by the event script
-91,53,,not displayed by the event script
-91,54,,not displayed by the event script
+91,52,Vamos lá.,not displayed by the event script
+91,53,Deixar pra lá.,not displayed by the event script
+91,54,Visitar as minas de novo?,not displayed by the event script
 91,56,,
 91,57,,
 91,58,,
 91,61,,
 91,62,,
 91,63,,
-91,182,,not displayed by the event script
-91,2924,,not displayed by the event script
-91,2925,,not displayed by the event script
-91,2926,,not displayed by the event script
+91,182,Villnore,not displayed by the event script
+91,2924,Habitante,not displayed by the event script
+91,2925,Matrona,not displayed by the event script
+91,2926,Cachorro,not displayed by the event script

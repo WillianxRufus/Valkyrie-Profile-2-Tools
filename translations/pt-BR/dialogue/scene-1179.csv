@@ -87,10 +87,10 @@ resource,message_id,translated,notes
 1179,2653,,
 1179,2654,,
 1179,2658,,
-1179,2655,,not displayed by the event script
-1179,2656,,not displayed by the event script
-1179,2657,,not displayed by the event script
-1179,2659,,not displayed by the event script
+1179,2655,Realizar a materialização?,not displayed by the event script
+1179,2656,Sim,not displayed by the event script
+1179,2657,Não,not displayed by the event script
+1179,2659,Cripta do Dragão,not displayed by the event script
 1179,2741,,
 1179,2782,,
 1179,2783,,

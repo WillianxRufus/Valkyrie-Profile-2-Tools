@@ -1,50 +1,130 @@
 resource,message_id,translated,notes
-33,14,,
-33,15,,
-33,16,,
-33,17,,
-33,18,,
-33,19,,
+33,14,"Você sabia? Dipan é iluminada por uma luz mágica,
+então fica clara mesmo depois do pôr do sol. <PART>
+---
+Se eu estivesse lá, provavelmente
+só me fariam estudar até mais tarde...",
+33,15,"Eu adoraria estudar magia em Dipan. Há
+um limite para o que se pode aprender em Solde.",
+33,16,"Na verdade, eu vi de relance os caras
+invadindo os navios. <PART>
+---
+Para mim, eles pareciam mais mercenários
+do que piratas.",
+33,17,"Piratas são aqueles caras barbudos que
+usam chapéus grandes, né?",
+33,18,"Toda a carga afundou!
+Vou morrer de fome! <PART>
+---
+Será que há outro país por trás
+disso, tentando arruinar o comércio de Dipan?",
+33,19,"Preciso de um jeito de pôr comida na mesa
+até que o comércio seja retomado. Malditos piratas!",
 33,20,,
-33,21,,
-33,22,,
-33,23,,
-33,24,,
-33,25,,
-33,26,,
-33,27,,
-33,28,,
-33,29,,
-33,30,,
-33,31,,
-33,32,,
-33,33,,
-33,34,,
-33,35,,
-33,36,,
+33,21,"Solde precisa do comércio de Dipan para prosperar.
+O que faremos sem ele?",
+33,22,"Acho que já está na hora de o Dipan entrar em contato
+conosco com alguma atualização. <PART>
+---
+O que o Rei Barbarossa está fazendo?
+As pessoas de lá também devem estar preocupadas.",
+33,23,"Eles já se livraram dos piratas?
+Havia um sujeito grandalhão com uma espada enorme.",
+33,24,"Não adianta <PART> ---- <PART> eles não nos dizem nada.
+Quem dera tivéssemos uma rota terrestre, pelo menos... <PART>
+---",
+33,25,"Justo quando os navios estavam prestes a zarpar novamente,
+Dipan decretou uma moratória de viagens. <PART>
+---
+O que exatamente o Rei Barbarossa está pensando?
+Solde será arruinada!",
+33,26,"Se o comércio continuar paralisado, Solde está acabado.
+O que diabos o Dipan está pensando!?",
+33,27,"Suspenderam os transatlânticos de novo...
+...e logo agora que tinham acabado de retomar as atividades. <PART>
+---
+Talvez Dipan feche suas fronteiras.
+Ha! Até parece, eles nunca fariam isso!",
+33,28,"Por que Dipan fecharia suas fronteiras?
+Será que é... uma guerra ou algo assim?",
+33,29,"Um navio realmente partiu de Dipan recentemente,
+mas agora todos pararam novamente.",
+33,30,"É a primeira vez que Dipan proíbe viagens.
+Eles estão, essencialmente, encerrando o comércio exterior. <PART>
+---
+Esse tipo de situação no mercado é praticamente
+um sinal claro de guerra. <PART>
+---
+Mas contra quem eles lutariam?
+Ninguém em Midgard pode rivalizar com eles.",
+33,31,"Lembro-me de rumores sobre pesquisas estranhas em Dipan,
+mas será que isso tem relação com a proibição?",
+33,32,"A fumaça subindo da outra margem <PART> ---- <PART>
+é Dipan, não é? Eles estão sendo atacados?",
+33,33,"Se Dipan desaparecer,
+o que vai acontecer com Solde? <PART>
+---
+Que outra opção temos além do comércio?
+Não há como sobrevivermos!",
+33,34,"Eu vi <PART> ---- <PART> um clarão repentino sobre Dipan! Era
+o poder dos deuses... a ira dos deuses!",
+33,35,"Existia um caminho que apenas
+a família real de Dipan conhecia. <PART>
+---
+O Rei Barbarossa o revelou com
+antecedência para que o povo pudesse escapar. <PART>
+---",
+33,36,"O Rei Barbarossa foi, de fato, um grande rei,
+mas desafiar os deuses é loucura.",
 33,37,,
-33,38,,
-33,39,,
-33,40,,
-33,41,,
-33,42,,
-33,43,,
-33,44,,
-33,45,,
-33,46,,
-33,47,,
-33,48,,
-33,1,,not displayed by the event script
-33,3,,not displayed by the event script
-33,4,,not displayed by the event script
-33,5,,not displayed by the event script
-33,7,,not displayed by the event script
-33,8,,not displayed by the event script
-33,11,,not displayed by the event script
-33,12,,not displayed by the event script
-33,13,,not displayed by the event script
-33,628,,not displayed by the event script
-33,2741,,not displayed by the event script
-33,2742,,not displayed by the event script
-33,2743,,not displayed by the event script
-33,2744,,not displayed by the event script
+33,38,"Dipan já era.
+E com isso, Solde logo seguirá o mesmo caminho.",
+33,39,"Esta cidade foi construída com base no comércio com Dipan.
+Estamos literalmente no mesmo barco que eles. <PART>
+---
+Nosso comércio com outros países é insignificante.
+Não conseguiremos viver disso.",
+33,40,"Esta cidade não tem a menor chance.
+O comércio com Dipan era tudo o que ela tinha.",
+33,41,"Estou deixando Solde rumo a Villnore.
+Não acho que haja uma vida para mim aqui. <PART>
+---
+Foi bom enquanto durou,
+mas se Dipan se foi, então não há esperança.",
+33,42,"Todos estão se preparando para deixar Solde.
+Sem comércio, não há nada para nós aqui.",
+33,43,"Saia do meu caminho!
+Estou me preparando para cair fora. <PART>
+---
+Se Dipan já era, Solde também.
+Não há motivo para eu estar aqui.",
+33,44,"Todo mundo está indo embora em busca de uma vida melhor.
+Um dia, não vai sobrar nem cidade aqui.",
+33,45,"Solde existe graças ao comércio com Dipan.
+De que outra forma um porto como este poderia prosperar? <PART>
+---
+E agora chegamos a este ponto.
+O que devo fazer agora?",
+33,46,"Os jovens vão primeiro, mas logo todos partirão.
+Acho que é o fim para Solde.",
+33,47,"Os únicos que restaram na cidade agora são
+patriotas e idosos sem ter para onde ir. <PART>
+---
+Todos desapareceram tão de repente.
+É isso que acontece quando um país cai.",
+33,48,"Dipan caiu, e agora os ventos da anarquia
+sopram como se não houvesse amanhã.",
+33,1,Para o porto,not displayed by the event script
+33,3,Pousada,not displayed by the event script
+33,4,Armaria,not displayed by the event script
+33,5,Casa,not displayed by the event script
+33,7,Solde <PART> Rua das Almas,not displayed by the event script
+33,8,Saída,not displayed by the event script
+33,11,Sair de Solde?,not displayed by the event script
+33,12,Sim,not displayed by the event script
+33,13,Não,not displayed by the event script
+33,628,Solde,not displayed by the event script
+33,2741,Menino,not displayed by the event script
+33,2742,Cavalheiro,not displayed by the event script
+33,2743,Morador,not displayed by the event script
+33,2744,Dama,not displayed by the event script

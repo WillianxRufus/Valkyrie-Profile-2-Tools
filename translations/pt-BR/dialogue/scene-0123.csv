@@ -1,9 +1,10 @@
 resource,message_id,translated,notes
 123,3,,
 123,4,,
-123,5,,
-123,10,,
-123,11,,
+123,5,Parece com fome...,
+123,10,Coma bastante!,
+123,11,"Desculpe...
+Não tenho comida para você.",
 123,38,,
 123,14,,
 123,15,,
@@ -18,10 +19,10 @@ resource,message_id,translated,notes
 123,31,,
 123,32,,
 123,34,,
-123,2,,not displayed by the event script
-123,6,,not displayed by the event script
-123,7,,not displayed by the event script
-123,8,,not displayed by the event script
+123,2,Casa,not displayed by the event script
+123,6,Dar costelas?,not displayed by the event script
+123,7,Sim,not displayed by the event script
+123,8,Não,not displayed by the event script
 123,9,,
 123,23,,
 123,24,,
@@ -30,7 +31,7 @@ resource,message_id,translated,notes
 123,35,,
 123,36,,
 123,37,,
-123,2943,,not displayed by the event script
-123,2948,,not displayed by the event script
-123,2949,,not displayed by the event script
-123,2950,,not displayed by the event script
+123,2943,Crell Monferaigne,not displayed by the event script
+123,2948,Habitante,not displayed by the event script
+123,2949,Matrona,not displayed by the event script
+123,2950,Cão,not displayed by the event script

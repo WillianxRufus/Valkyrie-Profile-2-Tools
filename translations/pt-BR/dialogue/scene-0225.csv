@@ -1,11 +1,11 @@
 resource,message_id,translated,notes
 225,6,,
 225,8,,
-225,2,,not displayed by the event script
+225,2,Saída,not displayed by the event script
 225,3,,
-225,4,,not displayed by the event script
-225,5,,not displayed by the event script
-225,7,,not displayed by the event script
+225,4,Sim,not displayed by the event script
+225,5,Não,not displayed by the event script
+225,7,Ruínas do Monte Serdberg,not displayed by the event script
 225,9,,
 225,10,,
 225,11,,

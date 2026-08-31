@@ -1,16 +1,49 @@
 resource,message_id,translated,notes
-401,3,,
-401,4,,
-401,5,,
-401,6,,
-401,7,,
-401,8,,
-401,10,,
-401,12,,
-401,14,,
-401,15,,
+401,3,"É mesmo você... Princesa Alicia...
+Entendo... Estava mesmo viva... <PART>
+---
+O rei deve ter ficado tão feliz
+em vê-la uma última vez...",
+401,4,"Princesa Alicia...
+Você passou por tantas coisas... <PART>
+---
+E agora, essa reunião com seu pai...
+Desse jeito...",
+401,5,"Por favor, continue vivendo com a Rainha Malabeth.
+A senhora é nossa única esperança, Princesa Alicia.",
+401,6,"Princesa, a rainha ainda vive!
+Dallas a levou para uma sala secreta. <PART>
+---
+Por favor, pelo bem de seu povo, encontre um jeito
+de continuar com a Rainha Malabeth! <PART>
+---
+Nós permaneceremos aqui com o
+Rei Balbarossa.",
+401,7,"Princesa, este não é um lugar
+para a senhora estar agora. <PART>
+---
+Aqui foi onde o rei perdeu a vida,
+e muitos o seguiram. <PART>
+---
+Um lugar com história tão sombria
+não é digno da senhora. <PART>
+---
+Por favor, avance como a última
+esperança de Dipan...",
+401,8,"Perdoe minha presunção, mas vou
+velar pelo fim de Dipan em nome do rei.",
+401,10,"...O capitão da guarda se foi
+para estar ao lado do pai.",
+401,12,Sua lealdade não será esquecida...,
+401,14,"Princesa Alicia!
+A Rainha Malabeth, ela está... <PART>
+---
+Oh, entendo...
+Pelo menos o rei não estará sozinho...",
+401,15,"Ela não suportaria ser a única
+a sobreviver... Tão própria da rainha.",
 401,11,,
-401,13,,not displayed by the event script
-401,38,,not displayed by the event script
-401,2757,,not displayed by the event script
-401,2758,,not displayed by the event script
+401,13,Falar,not displayed by the event script
+401,38,Castelo de Dipan,not displayed by the event script
+401,2757,Habitante,not displayed by the event script
+401,2758,Capitão da Guarda de Dipan,not displayed by the event script

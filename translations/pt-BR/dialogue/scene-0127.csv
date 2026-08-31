@@ -1,27 +1,97 @@
 resource,message_id,translated,notes
-127,2,,
-127,3,,
-127,4,,
-127,5,,
-127,6,,
-127,7,,
-127,8,,
-127,9,,
-127,10,,
-127,11,,
-127,12,,
-127,13,,
-127,14,,
-127,15,,
-127,16,,
-127,17,,
-127,18,,
-127,19,,
-127,20,,
-127,21,,
-127,22,,
-127,23,,
-127,1,,not displayed by the event script
-127,73,,not displayed by the event script
-127,2813,,not displayed by the event script
-127,2814,,not displayed by the event script
+127,2,"Ouviu? Inventaram algo
+ridículo em Dipan recentemente. <PART>
+---
+Reduziram o exército pra fazer isso,
+então deve ser alguma superarma.",
+127,3,"Causou um burburim aqui.
+A pesquisa de Dipan é impressionante!",
+127,4,"Raramente sai algo bom dos
+planos da realeza. <PART>
+---
+Embora eu duvide que um grande rei como
+Barbarossa abandonaria seu país.",
+127,5,"Os relatos de Barbarossa ecoam mesmo
+nesta parte do continente. <PART>
+---
+A família real de Crell Monferaigne
+hesita em se mover contra Dipan.",
+127,6,"Ouvi falar dos Três Sábios de Dipan,
+mas me pergunto como são.",
+127,7,"Os Três Sábios são versados em magia,
+que usam para apoiar o rei.",
+127,8,"Os navios para Dipan ainda não voltaram.
+Será que estão se preparando para guerra?",
+127,9,"Odeio admitir, mas Crell Monferaigne
+não é capaz de lutar contra Dipan agora. <PART>
+---
+São mais fortes militarmente, e suas
+habilidades mágicas são avassaladoras.",
+127,10,"É verdade o que estou ouvindo?
+Dipan realmente está sob ataque? <PART>
+---
+Ha ha! Espero que seja verdade!
+Dipan prosperou tempo demais!",
+127,11,"Mas, qual país atacou eles?
+Não pode ter sido Villnore, pode?",
+127,12,"Dipan foi atacada por causa daquelas
+experiências que estavam fazendo. <PART>
+---
+Alguns dizem que tentavam encontrar
+uma forma de se opor aos deuses.",
+127,13,"A pesquisa de Dipan era perigosa demais.
+Por isso foram atacados!",
+127,14,"Quando ouvi que Dipan foi destruída,
+não acreditei nos meus ouvidos!",
+127,15,"A vida aqui vai mudar. É hora
+de mostrar do que Crell Monferaigne é capaz!",
+127,16,"Humanos não podem se opor aos deuses.
+Esse é um fato do mundo. <PART>
+---
+Barbarossa deve ter enlouquecido.
+Seu bom nome foi manchado.",
+127,17,"Então o rei lendário não passa
+de um filho de idiota.",
+127,18,"Este país está pronto para a guerra.
+Villnore também está militarizando. <PART>
+---
+A queda de Dipan enlouqueceu
+todo Midgard.",
+127,19,"Acho que é hora de eu largar essa
+vida de aventureira errante. <PART>
+---
+Quem sabe onde ou quando a guerra começa?
+Viajar é um luxo que não posso ter.",
+127,20,"Vim porque diziam que estavam
+contratando mercenários. <PART>
+---
+Mas todos os candidatos são thugs.
+Não fazem ideia do que é combate! <PART>
+---
+Muitos não dominam suas habilidades.
+Guerreiros de verdade não dependem só da força.",
+127,21,"Por habilidades, quero dizer técnicas de combate.
+Alguns thugs nem sabem disso! <PART>
+---
+Se você for entrar em luta,
+sugiro conhecer algumas habilidades!",
+127,22,"Os soldados de hoje são um desastre!
+Não acha? <PART>
+---
+Eu digo: abra os livros de história
+e aprenda com os velhos heróis! <PART>
+---
+Peguem a batalha sangrenta entre os homens do rei
+e os homens de seu irmão em Arkdain <PART> ---- <PART>
+---
+Sempre que leio sobre o duelo entre
+Fraudir dos Cavaleiros do Lírio Branco <PART>
+---
+e Aaron dos Cavaleiros da Espada Sangrenta,
+meu coração dispara!",
+127,23,"Mesmo que por pouco tempo, quero fazer
+parte de uma batalha que a história lembre.",
+127,1,Sair,not displayed by the event script
+127,73,Crell Monferaigne,not displayed by the event script
+127,2813,Habitante,not displayed by the event script
+127,2814,Aventureira,not displayed by the event script

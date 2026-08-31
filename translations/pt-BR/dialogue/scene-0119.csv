@@ -36,16 +36,16 @@ resource,message_id,translated,notes
 119,48,,
 119,49,,
 119,1,,
-119,2,,not displayed by the event script
-119,3,,not displayed by the event script
+119,2,Casa,not displayed by the event script
+119,3,Armaria,not displayed by the event script
 119,6,,
-119,7,,not displayed by the event script
-119,10,,not displayed by the event script
-119,11,,not displayed by the event script
-119,12,,not displayed by the event script
+119,7,Saída,not displayed by the event script
+119,10,Sair de Crell Monferaigne?,not displayed by the event script
+119,11,Sim,not displayed by the event script
+119,12,Não,not displayed by the event script
 119,13,,
-119,630,,not displayed by the event script
-119,2790,,not displayed by the event script
-119,2791,,not displayed by the event script
-119,2792,,not displayed by the event script
-119,2793,,not displayed by the event script
+119,630,Crell Monferaigne,not displayed by the event script
+119,2790,Garota,not displayed by the event script
+119,2791,Menino,not displayed by the event script
+119,2792,Habitante,not displayed by the event script
+119,2793,Soldado,not displayed by the event script

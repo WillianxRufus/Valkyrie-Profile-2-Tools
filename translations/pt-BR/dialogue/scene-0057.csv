@@ -1,11 +1,26 @@
 resource,message_id,translated,notes
-57,1,,
-57,2,,
-57,3,,
-57,5,,
-57,6,,
-57,7,,
-57,4,,not displayed by the event script
-57,30,,not displayed by the event script
-57,31,,not displayed by the event script
+57,1,"Esta área é restrita ao público. <PART>
+---
+Faça um pedido formal e volte de dia
+se tiver assuntos no castelo.",
+57,2,"Temos que trocar com os guardas
+do portão dos fundos em breve.",
+57,3,"Eu digo: vamos comer algo!
+Quem se importa se atrasarmos um pouco? <PART>
+---",
+57,5,"Pense bem <PART> ---- <PART> ninguém passa pelos fundos,
+então podemos tirar um descanso, certo?",
+57,6,"Antes era permitido até a pessoas comuns
+entrarem livremente. <PART>
+---
+Desde a morte da Princesa Alicia,
+os aposentos reais seguem fechados. <PART>
+---
+Normalmente não falo assim, mas você
+se parece tanto com a princesa...",
+57,7,"Só de olhar pra você, sinto como se estivesse
+conversando com a princesa já crescida.",
+57,4,Dipan <PART> Portões do Castelo de Dipan,not displayed by the event script
+57,30,Dipan,not displayed by the event script
+57,31,Soldado de Dipan,not displayed by the event script
 57,32,,

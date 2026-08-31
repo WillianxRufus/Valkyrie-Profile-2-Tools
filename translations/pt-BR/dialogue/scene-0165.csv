@@ -1,5 +1,9 @@
 resource,message_id,translated,notes
-165,2,,
-165,3,,not displayed by the event script
-165,1841,,not displayed by the event script
-165,2745,,not displayed by the event script
+165,2,"Número de ataques em batalha <PART> O número de ataques depende da arma equipada. <PART>
+Equipe armas com múltiplos ataques e os personagens poderão desferir mais técnicas. 
+ <PART>
+---
+ <PART> Número de ataques em batalha <PART> Além disso, pressione <PART> para trocar de equipamento ou usar itens a partir do menu.",
+165,3,Número de Ataques,not displayed by the event script
+165,1841,Passagem Subterrânea Real,not displayed by the event script
+165,2745,Adquirido <PART> Shamshir,not displayed by the event script

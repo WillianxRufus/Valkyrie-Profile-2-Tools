@@ -87,13 +87,13 @@ resource,message_id,translated,notes
 189,2623,,
 189,2624,,
 189,2628,,
-189,2,,not displayed by the event script
-189,2625,,not displayed by the event script
-189,2626,,not displayed by the event script
-189,2627,,not displayed by the event script
+189,2,Floresta Perdida,not displayed by the event script
+189,2625,Realizar a materialização?,not displayed by the event script
+189,2626,Sim,not displayed by the event script
+189,2627,Não,not displayed by the event script
 189,2629,,
-189,2745,,not displayed by the event script
-189,2746,,not displayed by the event script
+189,2745,Adquirido <PART> Skull Receptacle,not displayed by the event script
+189,2746,Adquirido <PART> Union Plume,not displayed by the event script
 189,2787,,
 189,2788,,
 189,2789,,

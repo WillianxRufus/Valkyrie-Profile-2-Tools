@@ -24,8 +24,8 @@ resource,message_id,translated,notes
 43,43,,
 43,44,,
 43,45,,
-43,1,,not displayed by the event script
-43,10,,not displayed by the event script
+43,1,Sair,not displayed by the event script
+43,10,Falar,not displayed by the event script
 43,14,,
 43,19,,
 43,20,,
@@ -44,6 +44,6 @@ resource,message_id,translated,notes
 43,40,,
 43,41,,
 43,42,,
-43,385,,not displayed by the event script
+43,385,Solde,not displayed by the event script
 43,2787,,
-43,2788,,not displayed by the event script
+43,2788,Aventureira,not displayed by the event script

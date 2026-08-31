@@ -1,51 +1,167 @@
 resource,message_id,translated,notes
-1015,6,,
-1015,58,,
-1015,61,,
-1015,59,,
-1015,60,,
-1015,57,,
-1015,8,,
-1015,56,,
-1015,9,,
-1015,13,,
-1015,14,,
-1015,15,,
-1015,16,,
-1015,17,,
-1015,21,,
-1015,27,,
-1015,31,,
-1015,35,,
-1015,39,,
-1015,43,,
-1015,47,,
-1015,48,,
-1015,50,,
-1015,51,,
-1015,52,,
-1015,54,,
-1015,53,,
+1015,6,"As crônicas deste mundo emanam
+deste objeto.",
+1015,58,"Bem-vindos! <PART>
+---
+Serei a guia de vocês no Portal Seráfico.
+Meu nome é Dirna Hamilton. <PART>
+---",
+1015,61,"O Portal Seráfico é para aqueles que concluíram
+a história principal, mas ainda querem jogar. <PART>
+---
+Monstros mais fortes que quaisquer outros
+da história principal aguardam vocês lá dentro. <PART>
+---
+No entanto, os acontecimentos daqui
+não têm relação alguma com a história principal. <PART>
+---
+Não me culpe se suas ilusões forem destruídas.
+Tenham isso em mente. <PART>
+---",
+1015,59,"Ah! Quase esqueci.
+Antes de começar... <PART>
+---
+Vocês precisam me mostrar que estão qualificados
+para entrar no portal. <PART>
+---
+Os fracos demais são derrotados
+uma vez após a outra. Pode ser bem estressante.",
+1015,60,Estão prontos? Então vamos!,
+1015,57,"Uau...
+Vocês estão mais que qualificados. <PART>
+---
+Muito bem. Vocês enfrentarão até
+os monstros mais fortes do Portal Seráfico. <PART>
+---
+...Embora minhas impressões costumem estar erradas... <PART>
+---
+Pois bem! Abrirei para vocês
+a porta para um novo mundo.",
+1015,8,Boa sorte!,
+1015,56,"A partir daqui há ""spoilers"".
+Se ainda não terminaram o jogo, é
+recomendado que preservem o save
+e voltem quando a história principal estiver terminada.",
+1015,9,"E então?
+Prontos para outra batalha?",
+1015,13,"Força não tem limite... <PART>
+---
+Mas alguém pode escolher o caminho fácil
+ou o mais desafiador para adquiri-la.",
+1015,14,"Se preferirem um desafio maior,
+posso ajudar com isso.",
+1015,15,"O quê? Já acabou? <PART>
+---
+Ver para crer.
+Vocês deveriam ir ver por si mesmos.",
+1015,16,"Não há limite para a força humana.
+Isso porque o homem tem ambição. <PART>
+---
+A porta para o próximo desafio está sempre aberta.
+Voltem quando quiserem.",
+1015,17,"E então?
+Aceitam enfrentar um oponente mais forte?",
+1015,21,"Estão indo bem. <PART>
+---
+Estou impressionada que chegaram até aqui.
+Dessa vez posso dar o meu melhor?",
+1015,27,"Vocês venceram! <PART>
+---
+Hmmm... <PART>
+---
+Vou me meter em encrenca com os de cima
+se deixar os oponentes mais fortes. <PART>
+---
+Querem continuar enfrentando os mesmos
+oponentes de antes?",
+1015,31,"Uau, vocês são fortes... <PART>
+---
+Bem, então... <PART>
+---
+Sinceramente, há muito mais esperando
+por vocês se quiserem continuar. <PART>
+---
+Estão prontos?
+Eles só ficam mais fortes.",
+1015,35,"Não esperava tanta força. <PART>
+---
+Provavelmente já perceberam, mas
+há um oponente ainda mais forte à espera. <PART>
+---
+O que acham?",
+1015,39,"Há um oponente ainda mais forte à espera.
+Vão aceitar?",
+1015,43,"Bem, parece que perdi. <PART>
+---
+Não sabia que havia guerreiros
+com tanta força. <PART>
+---
+Ainda querem ganhar mais força,
+ainda mais poder?",
+1015,47,"Tudo bem? <PART>
+---
+Sabem que não precisam
+segurar a onda, certo?",
+1015,48,"Se vocês insistem. <PART>
+---
+Então vamos lá.
+Espero que aguentem!",
+1015,50,"Eu estava brincando.
+Não levem tudo tão a sério!",
+1015,51,"Ah, certo. Vocês têm coisas a fazer,
+pessoas para ver... Talvez na próxima.",
+1015,52,"Bem-vindos!
+...Ah, esperem. Retiro o que disse. <PART>
+---
+Lamento informar que vocês ainda não estão
+qualificados para ver o que há adiante. <PART>
+---
+Voltem quando conhecerem melhor
+a verdade deste mundo. <PART>
+---
+Só então eu os guiarei
+por esta área. <PART>
+---",
+1015,54,Podem ir! Voltem em breve!,
+1015,53,"Ainda não posso mostrar o que há adiante.
+Voltem quando estiverem mais perto da verdade! <PART>
+---",
 1015,55,,
-1015,136,,
-1015,137,,
-1015,143,,
-1015,138,,
-1015,141,,
-1015,140,,
-1015,142,,
-1015,1,,not displayed by the event script
-1015,2,,not displayed by the event script
-1015,3,,not displayed by the event script
-1015,4,,not displayed by the event script
-1015,7,,not displayed by the event script
-1015,10,,not displayed by the event script
-1015,11,,not displayed by the event script
-1015,12,,not displayed by the event script
-1015,18,,not displayed by the event script
-1015,19,,not displayed by the event script
-1015,20,,not displayed by the event script
-1015,22,,not displayed by the event script
+1015,136,"Baús Abertos <PART> %
+ <PART> Mapa Explorado <PART> %
+ <PART> Salvamentos <PART> Encontros <PART> Monstros Derrotados",
+1015,137,"Fugas <PART> vezes
+ <PART> Mortes <PART> vezes
+ <PART> Dashes <PART> vezes
+ <PART> Dano Máximo <PART> Combo Máximo <PART> golpes",
+1015,143,"Fugas <PART> vezes
+ <PART> Mortes <PART> vezes
+ <PART> Dashes <PART> vezes
+ <PART> Dano Máximo <PART> Combo Máximo <PART> golpes",
+1015,138,Gemas Roxas Obtidas <PART> Gemas Brilhantes Obtidas <PART> Cristais Mágicos Obtidos <PART> Rebotes na Parede <PART> Rebotes no Chão,
+1015,141,"Portal Seráfico Concluído <PART> vezes
+ <PART> Jogo Concluído <PART> vezes",
+1015,140,"Tempo do Capítulo 1 <PART> 0: <PART> 1: <PART> 1
+ <PART> Tempo do Capítulo 2 <PART> 0: <PART> 1: <PART> 1
+ <PART> Tempo do Capítulo 3 <PART> 0: <PART> 1: <PART> 1
+ <PART> Tempo do Capítulo 4 <PART> 0: <PART> 1: <PART> 1
+ <PART> Tempo do Capítulo 5 <PART> 0: <PART> 1: <PART> 1",
+1015,142,"Partes Desmembradas <PART> Modo Break Ativado <PART> vezes
+ <PART> Dano Acumulado <PART> Batalha Mais Rápida <PART> 0: <PART> 1: <PART> 1
+ <PART> Batalha Mais Longa <PART> 0: <PART> 1: <PART> 1",
+1015,1,Saída,not displayed by the event script
+1015,2,"Sair do Portal Seráfico?
+(As pedras de selo voltarão às posições originais.)",not displayed by the event script
+1015,3,Sim,not displayed by the event script
+1015,4,Não,not displayed by the event script
+1015,7,Portal Seráfico,not displayed by the event script
+1015,10,Lutar novamente?,not displayed by the event script
+1015,11,Quero lutar!,not displayed by the event script
+1015,12,Já chega!,not displayed by the event script
+1015,18,Enfrentar um oponente mais forte?,not displayed by the event script
+1015,19,Quero enfrentá-lo!,not displayed by the event script
+1015,20,Me dê um tempo!,not displayed by the event script
+1015,22,Lutar?,not displayed by the event script
 1015,23,,
 1015,24,,
 1015,28,,
@@ -64,4 +180,4 @@ resource,message_id,translated,notes
 1015,45,,
 1015,46,,
 1015,149,,
-1015,150,,not displayed by the event script
+1015,150,Dirna Hamilton,not displayed by the event script

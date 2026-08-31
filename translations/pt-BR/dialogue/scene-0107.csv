@@ -41,15 +41,15 @@ resource,message_id,translated,notes
 107,49,,
 107,50,,
 107,51,,
-107,2,,not displayed by the event script
+107,2,Casa,not displayed by the event script
 107,3,,
 107,12,,
-107,13,,not displayed by the event script
-107,14,,not displayed by the event script
+107,13,Sim,not displayed by the event script
+107,14,Não,not displayed by the event script
 107,40,,
 107,43,,
 107,45,,
-107,108,,not displayed by the event script
-107,2851,,not displayed by the event script
-107,2852,,not displayed by the event script
-107,2853,,not displayed by the event script
+107,108,Kalstad,not displayed by the event script
+107,2851,Habitante,not displayed by the event script
+107,2852,Menino,not displayed by the event script
+107,2853,Garota,not displayed by the event script

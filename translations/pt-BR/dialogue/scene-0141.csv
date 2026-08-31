@@ -1,11 +1,22 @@
 resource,message_id,translated,notes
-141,2,,
-141,3,,
-141,4,,
-141,5,,
-141,6,,
-141,7,,
-141,8,,
+141,2,"O castelo foi devastado pelos emissários dos deuses.
+A cidade logo seguirá o mesmo destino...",
+141,3,"A passagem subterrânea real deve estar aberta.
+Todos os cidadãos, evacuem para Solde agora! <PART>
+---
+Esta cidade atraiu a ira dos deuses.
+Não há tempo a perder.",
+141,4,"Não há mais nada para vocês aqui em Dipan agora.
+Nossas tropas seguem seu rei até a tumba. <PART>
+---
+As ordens do rei eram para salvar o povo,
+mas cada um é livre para morrer por seu rei.",
+141,5,Está estranhamente silencioso...,
+141,6,"O que está acontecendo lá dentro?
+Maldito! Se essas pernas se movessem...!",
+141,7,"Com a Rainha Malabeth também se indo,
+o fim chegou para Dipan...",
+141,8,...Por que... por que isso... Maldição... Malditos deuses!,
 141,1,,
-141,1601,,not displayed by the event script
-141,2741,,not displayed by the event script
+141,1601,Dipan,not displayed by the event script
+141,2741,Soldado de Dipan,not displayed by the event script

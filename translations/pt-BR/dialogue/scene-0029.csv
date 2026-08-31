@@ -1,56 +1,76 @@
 resource,message_id,translated,notes
-29,41,,
-29,42,,
-29,52,,
-29,43,,
-29,49,,
-29,46,,
-29,44,,
-29,48,,
-29,51,,
-29,54,,
-29,55,,
-29,47,,
-29,50,,
-29,56,,
-29,57,,
-29,53,,
-29,45,,
-29,58,,
-29,59,,
-29,60,,
-29,61,,
-29,62,,
+29,41,"Uma cidade portuária com serviço de navios para Dipan.
+Pessoas e mercadorias enchem as ruas movimentadas.",
+29,42,"Um bosque perturbador, assombrado dia e noite.
+Seu caminho subterrâneo escondido passa sob o mar.",
+29,52,"As cinzas de um laboratório de armas biológicas.
+Seus inúmeros monstros resultantes infestam o local.",
+29,43,"O reino mais próspero de todo Midgard.
+Superior aos demais em poderio militar e mágico.",
+29,49,"Uma montanha já minerada por seu minério precioso.
+A sonda movida por veios de água é tudo o que se move.",
+29,46,"Esta bela e densa floresta já foi campo de batalha.
+Atraídos pela névoa, vários monstros se escondem ali.",
+29,44,"Um santuário onde moravam os Guardiões do Orbe.
+Seu tesouro é fortemente guardado no topo da montanha.",
+29,48,"Um santuário flutuante erguido sobre a água.
+Os restos dos guardiões do templo se alinham pelas paredes.",
+29,51,"Ruínas formadas por galerias de lava.
+Um passo em falso leva a correntes impiedosas de magma.",
+29,54,"Ruínas construídas em meio a uma floresta sombria.
+A chuva incessante cobrou seu preço da estrutura.",
+29,55,"O último santuário dos Guardiões do Orbe.
+Mesmo extinta a tribo, o santuário sobrevive a eles.",
+29,47,"Um reino em desenvolvimento no noroeste do continente.
+As indústrias de aço e comércio movem a economia.",
+29,50,"Uma estação que une o leste e o oeste do continente.
+A areia varrida do deserto sufoca a cidade.",
+29,56,"O único lugar com espíritos divinos no mundo humano.
+Dentro estão os portais de Bifrost, que levam a Asgard.",
+29,57,"O reino superior habitado pelos deuses.
+Para além da fronteira dimensional, o tempo flui eterno.",
+29,53,"Um estado militar que busca conquistar o continente.
+A opressão se esconde sob a religião do estado.",
+29,45,"Um território de Villnore entre duas montanhas.
+Os aldeões levam vidas simples.",
+29,58,Um caminho para a região de Coriander.,
+29,59,Um caminho para a região de Solde.,
+29,60,Um caminho para a região de Crell Monferaigne.,
+29,61,Um caminho para a região de Villnore.,
+29,62,"Um túnel natural sob o mar sempre enfurecido.
+O santuário das joias da coroa leva ao Palácio do Dragão.",
 29,64,,
 29,65,,
-29,70,,
-29,72,,
-29,2,,not displayed by the event script
-29,4,,not displayed by the event script
-29,5,,not displayed by the event script
-29,8,,not displayed by the event script
-29,10,,not displayed by the event script
-29,11,,not displayed by the event script
-29,12,,not displayed by the event script
-29,13,,not displayed by the event script
-29,14,,not displayed by the event script
-29,15,,not displayed by the event script
-29,16,,not displayed by the event script
-29,17,,not displayed by the event script
-29,22,,not displayed by the event script
-29,23,,not displayed by the event script
-29,24,,not displayed by the event script
-29,25,,not displayed by the event script
-29,26,,not displayed by the event script
-29,27,,not displayed by the event script
+29,70,"Uma estranha distorção paira sobre a planície.
+Outro mundo existe além da fenda no espaço.",
+29,72,"O parque de brincadeiras de divindades de outro mundo.
+Não se pode evitar o desespero em seus confins.",
+29,2,Solde,not displayed by the event script
+29,4,Floresta Perdida,not displayed by the event script
+29,5,Chateau Obsession,not displayed by the event script
+29,8,Dipan,not displayed by the event script
+29,10,Mina de Turgen,not displayed by the event script
+29,11,Floresta Antiga,not displayed by the event script
+29,12,Ruínas do Monte Serdberg,not displayed by the event script
+29,13,Villnore,not displayed by the event script
+29,14,Templo de Audoula no Lago,not displayed by the event script
+29,15,Cavernas do Vulcão Surts,not displayed by the event script
+29,16,Ruínas da Floresta Crawsus,not displayed by the event script
+29,17,Palácio do Dragão Venerado,not displayed by the event script
+29,22,Kalstad,not displayed by the event script
+29,23,Floresta dos Espíritos,not displayed by the event script
+29,24,Asgard,not displayed by the event script
+29,25,Crell Monferaigne,not displayed by the event script
+29,26,Coriander,not displayed by the event script
+29,27,Planícies de Kythena,not displayed by the event script
 29,28,,
-29,29,,not displayed by the event script
+29,29,Deserto de Sahma,not displayed by the event script
 29,30,,
-29,31,,not displayed by the event script
-29,33,,not displayed by the event script
+29,31,Cripta do Dragão,not displayed by the event script
+29,33,Desfiladeiro de Sukavia,not displayed by the event script
 29,34,,
-29,37,,not displayed by the event script
-29,73,,not displayed by the event script
+29,37,Torre de Lezard Valeth,not displayed by the event script
+29,73,Portal Seráfico,not displayed by the event script
 29,74,,
 29,75,,
 29,76,,

@@ -1,27 +1,84 @@
 resource,message_id,translated,notes
-99,3,,
-99,4,,
-99,5,,
-99,6,,
-99,7,,
-99,19,,
+99,3,"É verdade que monstros apareceram perto da cidade?
+Dizem que vieram da Mina Turgen.",
+99,4,"Mina Turgen? Foi onde descobriram
+o covil de monstros durante a mineração, certo? <PART>
+---
+Os monstros andando por aí agora devem
+ser os de lá...",
+99,5,"Avisaram, fecharam a entrada
+e ficou por isso. <PART>
+---
+Devíamos ter explodido a mina toda.
+Vista de trás é 20/20. <PART>
+---
+Nossas taxas vão para um fundo de recompensa.
+Que algum aventureiro faça o trabalho sujo!",
+99,6,"Um cara que viu um monstro na mina
+disse que era em forma de inseto gigante! <PART>
+---
+Bateram com paus e cortaram com espadas,
+mas só cuspia gosma. <PART>
+---
+Afugentaram com tocha, então acho
+que é vulnerável a fogo. <PART>
+---
+De qualquer jeito, devemos chamar profissionais
+antes que mais alguém se machuque.",
+99,7,"Olhando pra trás, foram muitos pedidos
+de aço para Dipan via Solde. <PART>
+---
+É normal para Crell Monferaigne e sua
+militarização, mas incomum para Dipan...",
+99,19,"Já pegou sua recompensa? O velho
+pode ser insistente, mas é boa gente.",
 99,9,,
-99,10,,
-99,29,,
-99,11,,
-99,12,,
-99,13,,
-99,14,,
-99,15,,
-99,16,,
-99,17,,
-99,18,,
-99,23,,
-99,24,,
+99,10,"Nada entra nem sai de Dipan.
+Enquanto isso, estou aqui perdendo tempo. <PART>
+---
+Solde confia no Barbarossa,
+mas vai levar um susto...",
+99,29,"Duvido muito que um país da
+magnitude de Dipan caia num ataque.",
+99,11,"Prosperidade excessiva convida a destruição...
+Bem, Dipan foi bom enquanto durou!",
+99,12,"Pelo que ouvi, uma Donzela de Batalha
+de preto lidera soldados contra eles.",
+99,13,"É loucura, mas aparentemente a princesa
+que se achava morta apareceu na execução do rei! <PART>
+---
+Não sei se há verdade nisso,
+só ouvi pelos corredores.",
+99,14,"Deve haver algo por trás do ataque
+a Dipan e o retorno da princesa morta.",
+99,15,"Desde que o comércio deslanchou,
+Villnore ficou bem estável. <PART>
+---
+Até a guilda de ladrões se escondeu,
+mas duvido que dure...",
+99,16,"O mundo está à beira da guerra mais uma vez...
+Por que teve que chegar a isso?",
+99,17,"Então você cuidou do nosso problema com monstros?
+Todos lhe devemos uma! <PART>
+---
+A guilda posta recompensa, sabe.
+Pode pegar com o velho. <PART>
+---
+Você o reconhece pela bandana.
+Está por aí na cidade...",
+99,18,"O velho deve estar na rua
+conversando com alguém.",
+99,23,"Um cara que viu um monstro na mina
+disse que era em forma de inseto gigante! <PART>
+---
+Devemos chamar profissionais
+antes que mais alguém se machuque.",
+99,24,"Não sei dos planos militares de Villnore,
+mas se houver recrutamento, saberei.",
 99,27,,
-99,1,,not displayed by the event script
-99,21,,not displayed by the event script
-99,146,,not displayed by the event script
-99,2886,,not displayed by the event script
-99,2887,,not displayed by the event script
-99,2888,,not displayed by the event script
+99,1,Sair,not displayed by the event script
+99,21,Ouvir,not displayed by the event script
+99,146,Villnore,not displayed by the event script
+99,2886,Ancião,not displayed by the event script
+99,2887,Mercador,not displayed by the event script
+99,2888,Habitante,not displayed by the event script

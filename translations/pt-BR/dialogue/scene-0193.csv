@@ -1,4 +1,18 @@
 resource,message_id,translated,notes
-193,2740,,
-193,2742,,not displayed by the event script
-193,2743,,not displayed by the event script
+193,2740,"Disparar Fótons <PART> Dispare fótons com <PART> . Acertar um inimigo com fótons o selará dentro de um cristal. <PART>
+Pressione <PART> ou <PART> junto com <PART> para disparar na diagonal. <PART>
+---
+ <PART> Disparar Fótons <PART> Tocar em um inimigo cristalizado não inicia uma batalha. <PART>
+Você pode empurrar inimigos ou usá-los como plataforma até o selo se quebrar. <PART>
+---
+ <PART> Teleporte   Disparar fótons em um cristal <PART> Ao acertar mais fótons em um cristal de
+fótons, você troca de lugar com o cristal. <PART>
+Com isso, você alcança locais distantes ou isolados. <PART>
+---
+ <PART> Teleporte   Disparar fótons em um cristal <PART> Dá para pular no ar logo após se transferir. <PART>
+
+Ou mantenha <PART> pressionado durante a transferência. <PART>
+---
+ <PART> Teleporte   Disparar fótons em um cristal <PART> Inimigos derrotados deixam remanescentes. Os remanescentes não se movem; os inimigos se restauram ao trocar de tela e voltar.",
+193,2742,Fótons,not displayed by the event script
+193,2743,Floresta Perdida,not displayed by the event script

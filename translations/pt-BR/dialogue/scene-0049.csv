@@ -337,7 +337,7 @@ resource,message_id,translated,notes
 49,2773,,
 49,2774,,
 49,2776,,
-49,1,,not displayed by the event script
+49,1,Sair,not displayed by the event script
 49,2,,
 49,8,,
 49,9,,
@@ -349,7 +349,7 @@ resource,message_id,translated,notes
 49,2766,,
 49,2771,,
 49,2775,,
-49,2777,,not displayed by the event script
+49,2777,Solde,not displayed by the event script
 49,2894,,
 49,2895,,
 49,2896,,

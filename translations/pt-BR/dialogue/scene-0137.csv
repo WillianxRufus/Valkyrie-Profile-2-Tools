@@ -1,19 +1,58 @@
 resource,message_id,translated,notes
-137,2,,
-137,3,,
-137,4,,
-137,5,,
-137,6,,
-137,7,,
-137,8,,
-137,9,,
-137,10,,
-137,11,,
-137,12,,
-137,13,,
-137,1,,not displayed by the event script
+137,2,"Que moça adorável! É melhor tomar
+cuidado, há monstros por toda parte! <PART>
+---
+Está cheio de monstros nas
+ruínas, ao sul nos trópicos. <PART>
+---
+Cuidado com onde pisa <PART> ---- <PART> você realmente não quer
+conhecer Hel, a rainha do submundo.",
+137,3,"Raios caem constantemente nas Ruínas da
+Floresta Crawsus. Perigoso demais pra mim! <PART>
+---
+Bem, há um jeito de passar por lá...
+Raios só atingem lugares altos. <PART>
+---
+Então se ficar abaixado, talvez consiga.
+Mas não se engane, ainda é perigoso!",
+137,4,"Achei isto um tempo atrás.
+Não tenho uso pra isso. <PART>
+---
+É uma trabalheira jogar fora,
+então se importaria de levar consigo?",
+137,5,"Os deuses sempre estão nos observando,
+então não esqueça de fazer suas orações.",
+137,6,"Ora... Eu já não teria conhecido
+em algum lugar? <PART>
+---
+Você era bem mais jovem, mas tenho certeza
+que nos encontramos...",
+137,7,"Vi as celebrações do aniversário da princesa
+um ano quando visitei Dipan. <PART>
+---
+Uma encantadora jovem acenava
+da sacada...",
+137,8,"Qual é a agitação lá fora? Os soldados
+voltaram da campanha?",
+137,9,"Houve um clarão lá fora da janela.
+O que será que foi...",
+137,10,"Nunca fiquei táo chocado na vida
+como quando soube da queda de Dipan.",
+137,11,"Todos falam sobre uma guerra começando.
+Espero que deixem os idosos fora disso.",
+137,12,"Agora me lembro de quem você se parece... A
+princesa de Dipan, que supostamente morreu! <PART>
+---
+Só a vi por um instante, mas
+você é a cara dela!",
+137,13,"Não dê ouvidos ao velho que diz
+que você se parece com a princesa de Dipan. <PART>
+---
+Peço desculpas pelo comportamento rude dele.
+Aquele país pobre e infeliz...",
+137,1,Sair,not displayed by the event script
 137,14,,
 137,15,,
-137,91,,not displayed by the event script
-137,2807,,not displayed by the event script
-137,2808,,not displayed by the event script
+137,91,Crell Monferaigne,not displayed by the event script
+137,2807,Ancião,not displayed by the event script
+137,2808,Matrona,not displayed by the event script

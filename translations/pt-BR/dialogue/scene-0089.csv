@@ -1,66 +1,168 @@
 resource,message_id,translated,notes
-89,12,,
-89,14,,
-89,15,,
-89,16,,
-89,17,,
-89,18,,
-89,20,,
-89,21,,
-89,22,,
-89,23,,
-89,24,,
-89,27,,
-89,29,,
-89,30,,
-89,31,,
-89,32,,
-89,33,,
-89,34,,
+89,12,"Bem-vindo a Villnore, lar do aço e do comércio!
+Que tal uma flor para celebrar a ocasião?",
+89,14,Receio que... não é o suficiente...,
+89,15,"Ah, então tá...",
+89,16,"Saudações <PART> ---- <PART> quer dizer, olá <PART> ---- <PART> quer dizer...
+Uh... O que eu queria? Certo, uh...",
+89,17,"Você aí! Voltou para comprar flores hoje?
+Homens que apreciam flores são raros!",
+89,18,"Uh... certo. Sim... vim comprar flores?
+Claro! Vim comprar flores! Haha!",
+89,20,"Uh... Estava ouvindo aquilo?
+Isso fica entre nós.",
+89,21,"Aquela florista é a personificação da beleza.
+Tem que conhecê-la enquanto estiver em Villnore!",
+89,22,"Quer saber sobre ruínas por aqui?
+Hmm... Tem aquele santuário na água. <PART>
+---
+Mas vou dizer uma coisa, moça <PART> ---- <PART>
+não iria lá perto se fosse você. <PART>
+---
+Muitos foram em busca de tesouros,
+mas nenhum voltou.",
+89,23,"As ruínas próximas eram chamadas
+de templo da água. <PART>
+---
+Mas um tsunami enorme levou metade do
+santuário para o mar. <PART>
+---
+Talvez consiga drenar a água
+abrindo a comporta... <PART>
+---
+Mas provavelmente os monstros lá
+pegariam você antes.",
+89,24,"Ora, é a moça de antes!
+Você não visitou as ruínas, visitou?",
+89,27,"Você saiu de lá viva?
+Isso não é pouca coisa! <PART>
+---
+Você é adorável e resistente, ao que parece.
+Aqui está uma pequena recompensa...",
+89,29,"Claro, como fui tolo de pensar que uma
+coisa delicada como você iria tão perto.",
+89,30,"Parece que o navio de Solde ainda não voltou.
+Acho que vou negociar com Crell Monferaigne.",
+89,31,"A florista não é um amor?
+Como eu queria me aproximar dela...",
+89,32,"As importações de Dipan ficaram raras.
+Os rumores sobre os navios devem ser verdade. <PART>
+---
+Se algo aconteceu a Dipan, Artolia e
+Crell Monferaigne farão movimentos. <PART>
+---
+Espero que Villnore fique de fora,
+mas não contaria com isso.",
+89,33,"Quando os nervos estão à flor da pele por estresse,
+uma xícara de chá de camomila resolve.",
+89,34,"Flores acalmam a alma atribulada.
+Gostaria de uma?",
 89,38,,
-89,39,,
-89,40,,
-89,41,,
-89,42,,
+89,39,"Não acredito... Dipan...
+Um boletim foi posto no castelo...",
+89,40,"Os rumores eram verdade, Dipan está...
+Aquele tolo do Barbarossa...",
+89,41,"Meu amigo que trabalha no castelo me disse que
+Dipan está sob ataque ou algo assim! <PART>
+---
+Viram fumaça subindo na direção de
+Dipan pelo telescópio.",
+89,42,"Que país teria a audácia de atacar
+uma superpotência como Dipan?",
 89,43,,
-89,44,,
-89,45,,
-89,46,,
-89,47,,
-89,48,,
-89,49,,
-89,50,,
-89,51,,
-89,52,,
-89,56,,
-89,60,,
-89,61,,
-89,62,,
-89,63,,
-89,64,,
-89,65,,
-89,66,,
-89,67,,
-89,68,,
-89,73,,
-89,78,,
-89,81,,
+89,44,"Suspeito que este ataque a Dipan foi em resposta
+às pesquisas suspeitas deles.",
+89,45,"Meu pai foi convocado ao castelo de repente,
+mesmo estando de folga... <PART>
+---
+Acho que houve reunião de emergência para
+todos que trabalham no castelo.",
+89,46,"O que em nome dos deuses aconteceu com Dipan?
+Tem o castelo de Villnore todo em alerta...",
+89,47,"É difícil acreditar que uma cidade como Dipan
+foi destruída numa noite... <PART>
+---
+É como se os deuses dessem um exemplo para
+qualquer um que se opusesse a eles...",
+89,48,"Fazem reunião no castelo de Villnore
+desde a queda de Dipan. <PART>
+---
+O que esperar desta cidade?
+Sei que as coisas vão mudar...",
+89,49,"Onde um rei reverenciado como Barbarossa
+teria errado?",
+89,50,"Espero que não venham guerras com Dipan <PART> ---- <PART>
+não duraria muito em batalha na minha idade.",
+89,51,"Em momentos assim eu quero
+estar lá para ela... <PART>
+---
+Mas não consigo dar o primeiro passo.",
+89,52,"É importante ter flores para distrair
+de todas as notícias tristes ultimamente.",
+89,56,"Quer uma flor? Deixe o aroma
+levar embora suas tristezas!",
+89,60,"Ah, então tá...",
+89,61,"Me perguntam o que fazer, mas
+eu mesmo não sei!",
+89,62,"O governo tomou conta do comércio.
+Isso vai acabar com meu lucro!",
+89,63,"Tudo ia tão bem, e agora
+o castelo se mete no meu negócio!?",
+89,64,"O castelo anunciou que vai assumir
+o aço e o comércio... <PART>
+---
+Tudo por causa da queda de Dipan.
+Adeus comércio livre em Villnore!",
+89,65,"O castelo quer militarização.
+Alguns sugerem recrutamento.",
+89,66,"Depois de voltar do castelo,
+meu pai estava terrivelmente triste. <PART>
+---
+As coisas não serão como antes e
+a guerra pode vir a qualquer momento, disse ele.",
+89,67,"Se houver guerra,
+Eu lutarei pela florista! <PART>
+---",
+89,68,"As flores vendidas na loja mudam
+conforme a estação.",
+89,73,Parece com fome...,
+89,78,Coma bastante!,
+89,81,"Hmm...
+Certo... Obrigada.",
 89,84,,
 89,86,,
 89,88,,
-89,89,,
-89,91,,
-89,92,,
-89,97,,
-89,98,,
+89,89,"Desculpe...
+Não tenho comida para você.",
+89,91,"Ora! Você entende o que eu digo?
+Que espécime humano notável! <PART>
+---
+Vivi entre humanos por um bom tempo,
+mas essa é a primeira vez! <PART>
+---
+Bem, se você me entende, não preciso
+dar voltas... <PART>
+---
+A questão é <PART> ---- <PART> quero comida.
+As mudanças tornaram todos mesquinhos.",
+89,92,"Olha só você! Pode me dar umas costelas?
+Não posso pagar, estou só com fome.",
+89,97,Toma aqui!,
+89,98,"Valeu, agradeço mesmo.
+Para um humano, você é legal.",
 89,100,,
-89,101,,
-89,102,,
-89,106,,
-89,107,,
-89,110,,
-89,113,,
-89,116,,
+89,101,"Bem... não há o que fazer...
+Desculpe por pedir.",
+89,102,Não acho que gosto muito de você.,
+89,106,"Obrigada! Por favor, cuide bem dela.",
+89,107,"Ah, desculpe! Não tenho flores
+para vender agora...",
+89,110,"Obrigada! Hmm... Não sei como
+você está, mas ânimo!",
+89,113,"Obrigada! A flor está feliz que
+você a comprou <PART> ---- <PART> confie em mim!",
+89,116,"Obrigada! Estou sempre aqui para quando
+precisar de flores!",
 89,2885,,
 89,2886,,
 89,2887,,
@@ -73,33 +175,33 @@ resource,message_id,translated,notes
 89,2482,,
 89,2483,,
 89,2484,,
-89,1,,not displayed by the event script
-89,2,,not displayed by the event script
+89,1,Pousada,not displayed by the event script
+89,2,Casa,not displayed by the event script
 89,3,,
-89,5,,not displayed by the event script
-89,6,,not displayed by the event script
-89,7,,not displayed by the event script
-89,8,,not displayed by the event script
-89,9,,not displayed by the event script
-89,10,,not displayed by the event script
-89,11,,not displayed by the event script
-89,13,,not displayed by the event script
-89,19,,not displayed by the event script
-89,25,,not displayed by the event script
-89,26,,not displayed by the event script
+89,5,Villnore,not displayed by the event script
+89,6,Saída,not displayed by the event script
+89,7,Sair de Villnore?,not displayed by the event script
+89,8,Sim,not displayed by the event script
+89,9,Não,not displayed by the event script
+89,10,Eu compro.,not displayed by the event script
+89,11,Adeus.,not displayed by the event script
+89,13,Flor pequena: 10 OTH,not displayed by the event script
+89,19,Ouvir,not displayed by the event script
+89,25,Fui lá.,not displayed by the event script
+89,26,Não fui.,not displayed by the event script
 89,28,,
-89,35,,not displayed by the event script
+89,35,Lírio: 10 OTH,not displayed by the event script
 89,36,,
 89,37,,
-89,53,,not displayed by the event script
+89,53,Lírio-do-Vale: 10 OTH,not displayed by the event script
 89,54,,
 89,55,,
-89,57,,not displayed by the event script
+89,57,Gladíolo: 10 OTH,not displayed by the event script
 89,58,,
 89,59,,
-89,74,,not displayed by the event script
-89,75,,not displayed by the event script
-89,76,,not displayed by the event script
+89,74,Dar costelas?,not displayed by the event script
+89,75,Sim.,not displayed by the event script
+89,76,Não.,not displayed by the event script
 89,77,,
 89,79,,
 89,80,,
@@ -127,9 +229,9 @@ resource,message_id,translated,notes
 89,122,,
 89,123,,
 89,2488,,
-89,2879,,not displayed by the event script
-89,2880,,not displayed by the event script
-89,2881,,not displayed by the event script
-89,2882,,not displayed by the event script
-89,2883,,not displayed by the event script
-89,2884,,not displayed by the event script
+89,2879,Garota,not displayed by the event script
+89,2880,Garoto,not displayed by the event script
+89,2881,Moça,not displayed by the event script
+89,2882,Cavalheiro,not displayed by the event script
+89,2883,Habitante,not displayed by the event script
+89,2884,Cachorro,not displayed by the event script

@@ -5,11 +5,11 @@ resource,message_id,translated,notes
 403,5,,
 403,7,,
 403,3,,
-403,8,,not displayed by the event script
+403,8,Saída,not displayed by the event script
 403,9,,
-403,10,,not displayed by the event script
-403,11,,not displayed by the event script
-403,12,,not displayed by the event script
+403,10,Sim,not displayed by the event script
+403,11,Não,not displayed by the event script
+403,12,Castelo de Dipan,not displayed by the event script
 403,35,,
-403,2754,,not displayed by the event script
-403,2755,,not displayed by the event script
+403,2754,Soldado de Dipan,not displayed by the event script
+403,2755,Menino,not displayed by the event script

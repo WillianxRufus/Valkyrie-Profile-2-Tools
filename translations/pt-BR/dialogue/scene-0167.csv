@@ -1,15 +1,25 @@
 resource,message_id,translated,notes
-167,4,,
+167,4,"Sobre os Einherjar <PART> Vários einherjar que nunca foram levados para Valhalla habitam o corpo de Alicia. Suas psiques enfraqueceram, mas eles podem ser materializados ao tocarem relíquias espalhadas. <PART>
+---
+ <PART> Sobre os Einherjar <PART> A alma de um corpo recém-materializado é instável e se dissipa se ficar longe de sua hospedeira, Alicia. <PART>
+---
+ <PART> Sobre os Einherjar <PART> Para serem revividos como humanos, os einherjar precisam alcançar um nível que permita sua libertação. 
+<PART>
+Verifique a tela de status para saber em que nível um einherjar pode ser libertado. <PART>
+---
+ <PART> Sobre os Einherjar <PART> Após devolverem seu poder a Alicia, os einherjar libertados começam uma nova vida como humanos. 
+ <PART>
+Se tiver sorte, você poderá vê-los novamente algum dia.",
 167,2340,,
 167,2343,,
 167,2344,,
 167,2746,,
-167,2747,,
-167,2748,,
+167,2747,Jessica <PART> entrou para o grupo.,
+167,2748,Richelle <PART> entrou para o grupo.,
 167,2749,,
 167,2750,,
 167,2751,,
-167,2752,,
+167,2752,Sylphide <PART> entrou para o grupo.,
 167,2753,,
 167,2754,,
 167,2755,,
@@ -44,12 +54,13 @@ resource,message_id,translated,notes
 167,2784,,
 167,2785,,
 167,2586,,
-167,2587,,
-167,2588,,
+167,2587,"Se houver alguma maneira de lhe ser útil,
+será um prazer.",
+167,2588,"Enquanto eu viver, você terá a minha espada.",
 167,2589,,
 167,2590,,
 167,2591,,
-167,2592,,
+167,2592,Eu daria a minha vida pela paz neste mundo.,
 167,2593,,
 167,2594,,
 167,2595,,
@@ -83,16 +94,16 @@ resource,message_id,translated,notes
 167,2623,,
 167,2624,,
 167,2625,,
-167,2626,,
+167,2626,A alma de um guerreiro leve emana da espada.,
 167,2627,,
 167,2628,,
 167,2629,,
 167,2633,,
 167,3,,
-167,2630,,not displayed by the event script
-167,2631,,not displayed by the event script
-167,2632,,not displayed by the event script
-167,2634,,not displayed by the event script
+167,2630,Realizar a materialização?,not displayed by the event script
+167,2631,Sim,not displayed by the event script
+167,2632,Não,not displayed by the event script
+167,2634,Passagem Subterrânea Real,not displayed by the event script
 167,2786,,
 167,2787,,
 167,2788,,

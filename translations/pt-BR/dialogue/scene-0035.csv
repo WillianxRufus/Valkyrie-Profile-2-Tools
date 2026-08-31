@@ -1,51 +1,138 @@
 resource,message_id,translated,notes
-35,3,,
-35,4,,
-35,5,,
-35,6,,
-35,7,,
-35,8,,
-35,9,,
-35,10,,
-35,11,,
-35,12,,
-35,13,,
-35,14,,
-35,15,,
-35,16,,
-35,17,,
-35,18,,
-35,19,,
-35,20,,
-35,21,,
-35,22,,
-35,23,,
-35,24,,
-35,25,,
-35,26,,
-35,27,,
-35,28,,
-35,29,,
-35,30,,
-35,31,,
-35,32,,
-35,33,,
-35,35,,
-35,36,,
-35,37,,
-35,38,,
-35,39,,
-35,40,,
-35,41,,
-35,55,,
-35,56,,
-35,1,,not displayed by the event script
-35,2,,not displayed by the event script
-35,34,,not displayed by the event script
+35,3,"Cadê os piratas? Vim ver eles!
+Será que já foram embora?",
+35,4,"Nenhuma partida até que seja totalmente seguro <PART> ---- <PART>
+não quero ser afundado logo na saída do porto. <PART>
+---
+Seria bom se o Rei Barbarossa de
+Dipan fizesse algo a respeito.",
+35,5,"Inacreditável. Eu naveguei em Solde por muito tempo, mas nunca tinha sido afundado por piratas até agora!",
+35,6,"Ei, ouviu falar dos piratas?
+Primeira vez que aparecem por aqui! <PART>
+---
+Parte de mim quer descobrir se eles são
+moços bonitões ou velhos babões.",
+35,7,"Talvez veja os piratas se navegar perto do
+porto. Mas se me virem, estou perdida.",
+35,8,"Está esperando os navios partirem?
+Desista! Não vão a lugar nenhum. <PART>
+---
+Ouvi que os piratas estão queimando navios.
+Se realmente precisa ir, tente fazer uma jangada!",
+35,9,"Estou preso! Minha carga é toda alimentícia.
+Se os navios não partirem logo, tudo estraga.",
+35,10,"Dessa vez foi longe demais!
+O único jeito de chegar a Dipan é de barco. <PART>
+---
+Meu negócio foi à falência!
+Piratas inúteis!",
+35,11,"Ataque pirata? Foi só um cara!
+Não levou nada. Estranho.",
+35,12,"Adquiri todo esse aço de Villnore,
+mas a situação não mudou nada! <PART>
+---
+Recebi muitos pedidos de aço ultimamente.
+Bem, não é como se fossem começar uma guerra.",
+35,13,"Fazem bom aço em Villnore.
+É de lá que Crell Monferaigne obtém o seu.",
+35,14,"Li todos os meus livros.
+Queria pegar alguns novos, <PART>
+---
+mas pelo jeito vai demorar.
+Acho que vou pedir de outro lugar.",
+35,15,"Só dá pra fazer até certo ponto em Solde.
+Queria um lugar para pessoas comuns aprenderem magia.",
+35,16,"Primeiro os piratas, agora essa proibição!
+O que ganham fechando o país?",
+35,17,"A proibição de Dipan sobre viagens
+deixou toda a cidade preocupada. <PART>
+---
+E não somos só nós <PART> ---- <PART> outros
+países estão preocupados com as ações de Dipan.",
+35,18,"Pessoas que voltaram no último barco me disseram
+que sentiram tensão no ar em Dipan. <PART>
+---
+Enquanto tiverem o Rei Barbarossa e
+os Três Sábios, ficarão bem. Ainda assim...",
+35,19,"O que será que vai acontecer em Dipan?
+Espero que não machuque Solde mais.",
+35,20,"Se eu fosse você, não ficaria por aí
+tagarelando que quer ver os piratas.",
+35,21,"Não é que nunca mais vamos poder
+ir a Dipan... ou é?",
+35,22,"Me diz, o que aconteceu em Dipan?
+Todo mundo lá está bem?",
+35,23,"Dipan tem os Três Sábios, então tenho certeza
+que têm alguma magia na manga.",
+35,24,"É suicídio atravessar para Dipan agora!
+Ninguém navega! <PART>
+---
+Se você realmente quer ir lá,
+melhor começar a nadar. Eu passo!",
+35,25,"Se isso é a ira dos deuses,
+tremo só de pensar no destino de Dipan.",
+35,26,"Estou saindo da cidade. Toma este livro.
+Não sei se vai gostar ou não.",
+35,27,"Obrigada! Não leio tão bem,
+mas vou tentar!",
+35,28,"Olha, se você ler tudo inteiro,
+vou te mandar um novo. Eu garanto!",
+35,29,Boa! Vou esperar!,
+35,30,"Me avisa quando achar um lugar pra morar.
+Vou aprender a escrever e te mandar uma carta!",
+35,31,"Vou ficar esperando.
+Escreve direitinho pra eu ler!",
+35,32,"Todos os empregos surgiram e desapareceram. O que eu faço agora? Eu não tenho a menor ideia. <PART>
+---
+Tudo o que fiz foi trabalhar para Dipan. Não consigo aprender um novo ofício na minha idade.",
+35,33,"Vou ter que me desfazer deste navio.
+Não tenho como mantê-lo.",
+35,35,"Dipan sofreu a ira dos deuses,
+mas nós também estamos sofrendo.",
+35,36,"Os deuses realmente puniram o rei
+e a rainha de Dipan?",
+35,37,"Papai disse que se Dipan cair, não
+conseguimos viver em Solde, então vamos embora.",
+35,38,"Todo mundo diz que sem Dipan,
+provavelmente vai haver uma guerra. <PART>
+---
+Dizem que em Solde não há meios de
+viver, quanto mais de lutar, então é hora de ir. <PART>
+---
+Mas e as pessoas sem
+dinheiro e sem lugar pra ir?",
+35,39,"Todo mundo saiu da cidade.
+O que será de Solde?",
+35,40,"Sei que mesmo ficando,
+não haverá trabalho. <PART>
+---
+Mas por mais triste que seja, fora de navegar,
+não há nada que eu possa fazer.",
+35,41,"Talvez eu vá para Crell Monferaigne.
+Ouvi que eles têm uma marinha!",
+35,55,"Maravilindo!
+Gato sabe o que eu digo!? <PART>
+---
+Que pessoa interessante!
+Como você faz? <PART>
+---
+Minha dona anda triste
+com toda a gente saindo da cidade. <PART>
+---
+Foi um golpe forte pra ela quando
+aquele garoto desapareceu.",
+35,56,"É bom ser jovem!
+O amor está em toda parte! <PART>
+---
+Você devia achar alguém!
+Só não se perca no momento!",
+35,1,Sala de Espera,not displayed by the event script
+35,2,Solde <PART> Porto de Logun,not displayed by the event script
+35,34,Falar,not displayed by the event script
 35,42,,
-35,2739,,not displayed by the event script
-35,2742,,not displayed by the event script
-35,2743,,not displayed by the event script
-35,2744,,not displayed by the event script
-35,2745,,not displayed by the event script
-35,2746,,not displayed by the event script
+35,2739,Solde,not displayed by the event script
+35,2742,Garota,not displayed by the event script
+35,2743,Marinheiro,not displayed by the event script
+35,2744,Habitante,not displayed by the event script
+35,2745,Garoto,not displayed by the event script
+35,2746,Gato,not displayed by the event script

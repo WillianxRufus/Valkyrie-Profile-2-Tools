@@ -1,40 +1,43 @@
 resource,message_id,translated,notes
-1291,23,,
-1291,20,,1
-1291,21,,
-1291,1,,3
-1291,2,,4
-1291,36,,
-1291,29,,6
-1291,3,,
-1291,4,,
-1291,5,,
-1291,6,,
-1291,7,,11
-1291,8,,
-1291,9,,
-1291,10,,14
-1291,11,,15
-1291,24,,
-1291,25,,17
-1291,30,,
-1291,31,,19
-1291,12,,
-1291,13,,
-1291,33,,
-1291,14,,23
-1291,15,,
-1291,26,,25
-1291,27,,
-1291,16,,
-1291,17,,
-1291,34,,
-1291,18,,
-1291,35,,
-1291,32,,
-1291,22,,
-1291,28,,
-1291,19,,
+1291,23,Você deve ficar seguro aqui por um tempo.,
+1291,20,Mas não pode ficar para sempre. Quando tiver descansado saia da floresta.,1
+1291,21,Você... sabe quem eu sou?,
+1291,1,Você é o meio-elfo não? Aquele que Heimdall caça com tanta gana?,3
+1291,2,...Se sabe por que ajuda?,4
+1291,36,Acho que tive pena de vocês...,
+1291,29,Rufus depois do que ela fez por nós seja educado.,6
+1291,3,Duvido.,
+1291,4,Talvez só esteja tentando se livrar do intruso educadamente...,
+1291,5,Para com isso!,
+1291,6,...Que direito uma elfa tem de ter pena de mim!,
+1291,7,Por favor não se ofenda...,11
+1291,8,...Obrigada.,
+1291,9,...E você?,
+1291,10,Sou Alicia do Ducado de Dipan.,14
+1291,11,Uma humana então?,15
+1291,24,Não me entenda mal. Só quero saber o que trouxe vocês dois aqui...,
+1291,25,Vamos atravessar os portões de Bifrost para chegar a Yggdrasil,17
+1291,30,e depois a Valhalla.,
+1291,31,Ei Alicia!,19
+1291,12,Mas isso é impossível para uma humana.,
+1291,13,A menos que seja escolhida como einherjar. Ou que se torne uma morta-viva.,
+1291,33,Morto-vivo...,
+1291,14,Se eu me tornar uma morta-viva consigo atravessar os portões de Bifrost?,23
+1291,15,"Se estiver disposta a abrir mão do seu corpo físico
+é isso que significa.",
+1291,26,Mas se o coração também se tornar demoníaco não adianta nada.,25
+1291,27,Tome o pó de necromante e pare a decomposição antes que atinja o espírito...,
+1291,16,"Se você usar este anel, o tempo do hospedeiro para.",
+1291,17,Tanto o crescimento quanto a decomposição são parados...,
+1291,34,"Mas Rufus, se você tirar o anel...",
+1291,18,"A alma só desaparece em Midgard. Depois que atravessarmos os portões de Bifrost,
+não precisarei mais dele.",
+1291,35,"Pode haver restos do pó de necromante que os Daless e outros
+pegaram no laboratório do Castelo de Dipan...",
+1291,32,Alicia... o que acha?,
+1291,22,...Vocês dois falam sério!?,
+1291,28,É...,
+1291,19,Vamos para Dipan.,
 1291,2755,,
 1291,2756,,
 1291,2757,,
@@ -53,6 +56,6 @@ resource,message_id,translated,notes
 1291,42,,
 1291,43,,
 1291,2372,,
-1291,2752,,not displayed by the event script
+1291,2752,Roussalier,not displayed by the event script
 1291,2753,,
 1291,2754,,

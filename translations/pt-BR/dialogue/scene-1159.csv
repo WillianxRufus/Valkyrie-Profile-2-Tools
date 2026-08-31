@@ -1,6 +1,17 @@
 resource,message_id,translated,notes
-1159,6,,
-1159,7,,
+1159,6,"Há monstros além daqui. Se não quiser lutar, melhor evitar o contato. <PART>
+---
+Há várias formas de fazer isso, mas cada tipo de monstro tem seu truque. <PART>
+---
+Por exemplo, cronometre um salto para passar por cima dos monstros que rastejam no chão. <PART>
+---
+Os monstros espirituais voadores vêm chegando ao sumir e reaparecer, então fique atento! <PART>
+---
+Você não pode saltar sobre os que têm asas, então terá que se esgueirar por baixo deles. <PART>
+---
+Claro, o melhor a fazer é pará-los onde estiverem...",
+1159,7,"Lutar não tem nada de errado<PART> ---- <PART>
+é que às vezes é melhor poupar suas energias.",
 1159,8,,
 1159,10,,
 1159,13,,
@@ -327,15 +338,15 @@ resource,message_id,translated,notes
 1159,382,,
 1159,383,,
 1159,384,,
-1159,1,,not displayed by the event script
+1159,1,Saída,not displayed by the event script
 1159,2,,
-1159,3,,not displayed by the event script
-1159,4,,not displayed by the event script
-1159,5,,not displayed by the event script
+1159,3,Sim,not displayed by the event script
+1159,4,Não,not displayed by the event script
+1159,5,Planícies de Kythena,not displayed by the event script
 1159,387,,
 1159,388,,
 1159,389,,
-1159,390,,not displayed by the event script
+1159,390,Aventureira,not displayed by the event script
 1159,391,,
 1159,392,,
 1159,393,,

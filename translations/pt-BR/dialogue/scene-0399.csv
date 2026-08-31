@@ -1,27 +1,59 @@
 resource,message_id,translated,notes
-399,3,,
-399,4,,
-399,5,,
-399,6,,
-399,7,,
-399,8,,
-399,9,,
-399,10,,
-399,11,,
-399,21,,
-399,12,,
-399,13,,
-399,15,,
-399,16,,
-399,17,,
-399,18,,
-399,19,,
-399,23,,
-399,22,,not displayed by the event script
-399,757,,not displayed by the event script
-399,2741,,not displayed by the event script
-399,2742,,not displayed by the event script
-399,2743,,not displayed by the event script
-399,2744,,not displayed by the event script
-399,2745,,not displayed by the event script
-399,2746,,not displayed by the event script
+399,3,"Apenas Dallas permanece ao lado do rei.
+Jurou lealdade até a morte. <PART>
+---
+Não que a morte do rei seja certa
+ou algo assim... <PART>
+---
+Mas sejamos honestos.
+As coisas não estão boas.",
+399,4,"Os mais próximos do rei foram os
+responsáveis pela máquina do tempo. <PART>
+---
+Walther é quem deveria ser punido,
+não o Rei Barbarossa!",
+399,5,"Se continuar assim, o Rei Barbarossa será executado...!
+Alguém... por favor, alguém o ajude...!!",
+399,6,"Walther e Gyne se aliaram
+a Odin... <PART>
+---
+Reverenciávamos eles e é assim que nos pagam?
+O que será de nós...!?",
+399,7,...Rei... Barbarossa...,
+399,8,"Lá na guilhotina... ficou silencioso...
+Acabou...",
+399,9,"Antigamente... a Princesa Alicia e Dallas
+brincavam aqui como verdadeiros irmãos... <PART>
+---
+Com o rei morto, Dipan vai perecer
+e este lugar também... eventualmente...",
+399,10,"Até pouco tempo atrás, tudo era normal...
+Como isso pôde acontecer...?",
+399,11,O Rei Barbarossa... morreu...?,
+399,21,Que Deus te proteja...,
+399,12,"Aproveitei a confusão para vir a Dipan
+e está tudo um caos... <PART>
+---
+Se pretende lutar,
+melhor se preparar adequadamente.",
+399,13,"Em tempos assim, não há nada
+mais importante do que estar bem preparado.",
+399,15,"Pouco atrás... levaram o corpo do rei
+junto com o da Rainha Malabeth...",
+399,16,"Me deixem em paz... Não há esperança
+de salvação. Viver assim... não adianta...",
+399,17,"É... desafiar os deuses foi o erro...
+Se não tivéssemos... não estaria assim...",
+399,18,"A Rainha Malabeth também faleceu...
+Que sua alma descanse ao lado do rei...",
+399,19,Eu odeio... Odeio os deuses...!,
+399,23,"Matam todos que resistem <PART> ---- <PART>
+Os deuses não são melhores que monstros!!",
+399,22,Falar,not displayed by the event script
+399,757,Castelo de Dipan,not displayed by the event script
+399,2741,Soldado de Dipan,not displayed by the event script
+399,2742,Garota,not displayed by the event script
+399,2743,Senhora,not displayed by the event script
+399,2744,Habitante,not displayed by the event script
+399,2745,Mercador,not displayed by the event script
+399,2746,Cavalheiro,not displayed by the event script

@@ -1,38 +1,96 @@
 resource,message_id,translated,notes
-81,7,,
-81,8,,
-81,9,,
-81,10,,
-81,14,,
-81,17,,
-81,18,,
-81,20,,
-81,21,,
-81,22,,
-81,23,,
-81,24,,
-81,25,,
-81,26,,
-81,28,,
-81,29,,
-81,30,,
-81,42,,
-81,31,,
-81,62,,
-81,36,,
-81,37,,
-81,39,,
-81,40,,
-81,41,,
-81,47,,
-81,50,,
+81,7,"O que faz nesta vila?
+Não há muito para ver aqui. <PART>
+---
+Só aquelas ruínas nas montanhas próximas.
+Um perdido as descobriu há anos. <PART>
+---
+Tem algo vivo lá,
+então ninguém da vila chega perto.",
+81,8,"Uma estrutura tão grande nas montanhas?
+É para proteger um tesouro incrível, <PART>
+---
+ou assim o avô diz. Aventureiros que vão
+sempre voltam vencidos pelos monstros.",
+81,9,"Você veio por causa dos rumores de
+tesouro? <PART>
+---
+Aventureiros visitam às vezes, mas
+saem decepcionados. Olhe este lugar.",
+81,10,"Deixe-me dizer uma coisa <PART> ---- <PART>
+qualquer idiota pode atacar de frente. <PART>
+---
+O truque é tentar ângulos diferentes
+e facilitar para si. <PART>
+---
+Eu enfrentei minha cota de monstros
+no meu tempo.",
+81,14,"Ei, te vi outro dia! Como foram
+as ruínas? Achou o tesouro?",
+81,17,"Então realmente existia! Ninguém aqui
+jamais tinha visto... Você é demais!",
+81,18,"Que pena...
+Você foi até lá à toa. <PART>
+---
+Não desanime! Eu te dou isto!
+Achei nas montanhas.",
+81,20,"Quando crescer, vou ser aventureira!
+Vou juntar tesouros e ajudar a vila crescer!",
+81,21,"Sente a tensão no ar? Parece
+como quando um monstro te domina.",
+81,22,"Todos os animais estão petrificados!
+O que está acontecendo?",
+81,23,"Os viajantes todos dizem que Dipan foi destruída.
+É verdade?",
+81,24,"Mamãe disse que vai ficar difícil.
+Disse que temos que soltar o cachorro...",
+81,25,"Só más notícias desde a queda de Dipan.
+Villnore aumentando impostos e militarizando. <PART>
+---
+Hora de eu pegar minhas economias e
+ir para um lugar seguro. <PART>
+---
+O problema é que lugar seguro hoje em dia
+não existe mais...",
+81,26,"O mundo desestabilizou tão de repente,
+só pode ser obra dos deuses.",
+81,28,"Alguém nas montanhas disse que viu
+uma luz estranha na direção de Dipan.",
+81,29,"Já ouviu falar de bater na porta? Eu estava escondendo
+tesouro em <PART> ---- <PART> quer dizer, não há nada para ver aqui!",
+81,30,"As galinhas aqui botam ovos dourados, mas
+sabem igual. Valem alguma coisa?",
+81,42,Parece com fome...,
+81,31,"Olha a porcaria que me dão para comer!
+Esta vila está toda errada, toda errada! <PART>
+---
+Cocoricó! Um humano que fala! <PART>
+---
+Impossível, impossível! Como você faz?
+O anel? O anel! O anel de Salomão! <PART>
+---
+Então é assim que funciona...
+Por favor, me alimente.",
+81,62,"Um humano que fala!?
+Quero comida, me dá comida!",
+81,36,Aqui está.,
+81,37,Hmmm! Eu amo humanos!,
+81,39,"Desculpe...
+Não tenho comida para você.",
+81,40,"Cocoricó!
+Minha barriga está vazia!",
+81,41,"Valeu por nada, humano.",
+81,47,Coma bastante!,
+81,50,"Hmm...
+Certo... Obrigada.",
 81,55,,
 81,57,,
 81,59,,
 81,60,,
-81,64,,
-81,67,,
-81,69,,
+81,64,"Por que meu dono faz careta?
+Como faço ele sorrir?",
+81,67,QUERO!,
+81,69,CHEGA!,
 81,2896,,
 81,2897,,
 81,2898,,
@@ -45,19 +103,19 @@ resource,message_id,translated,notes
 81,2306,,
 81,2307,,
 81,2308,,
-81,1,,not displayed by the event script
-81,2,,not displayed by the event script
-81,3,,not displayed by the event script
-81,4,,not displayed by the event script
-81,5,,not displayed by the event script
-81,6,,not displayed by the event script
-81,15,,not displayed by the event script
-81,16,,not displayed by the event script
+81,1,Pousada,not displayed by the event script
+81,2,Casa,not displayed by the event script
+81,3,Saída,not displayed by the event script
+81,4,Sair de Coriander?,not displayed by the event script
+81,5,Sim,not displayed by the event script
+81,6,Não,not displayed by the event script
+81,15,Encontrei.,not displayed by the event script
+81,16,Não desta vez.,not displayed by the event script
 81,19,,
 81,27,,
-81,32,,not displayed by the event script
-81,33,,not displayed by the event script
-81,34,,not displayed by the event script
+81,32,Dar farelo de osso?,not displayed by the event script
+81,33,Sim.,not displayed by the event script
+81,34,Não.,not displayed by the event script
 81,35,,
 81,38,,
 81,43,,
@@ -79,9 +137,9 @@ resource,message_id,translated,notes
 81,200,,
 81,201,,
 81,202,,
-81,2312,,not displayed by the event script
-81,2891,,not displayed by the event script
-81,2892,,not displayed by the event script
-81,2893,,not displayed by the event script
-81,2894,,not displayed by the event script
-81,2895,,not displayed by the event script
+81,2312,Coriander,not displayed by the event script
+81,2891,Garota,not displayed by the event script
+81,2892,Habitante,not displayed by the event script
+81,2893,Aventureira,not displayed by the event script
+81,2894,Galinha,not displayed by the event script
+81,2895,Cão,not displayed by the event script

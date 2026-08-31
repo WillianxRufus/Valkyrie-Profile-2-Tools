@@ -340,7 +340,7 @@ resource,message_id,translated,notes
 87,2907,,
 87,2908,,
 87,2910,,
-87,1,,not displayed by the event script
+87,1,Sair,not displayed by the event script
 87,2,,
 87,17,,
 87,18,,
@@ -355,7 +355,7 @@ resource,message_id,translated,notes
 87,2900,,
 87,2905,,
 87,2909,,
-87,2911,,not displayed by the event script
+87,2911,Coriander,not displayed by the event script
 87,3028,,
 87,3029,,
 87,3030,,

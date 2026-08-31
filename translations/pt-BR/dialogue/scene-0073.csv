@@ -10,7 +10,7 @@ resource,message_id,translated,notes
 73,17,,
 73,18,,
 73,16,,
-73,1,,not displayed by the event script
+73,1,Sair,not displayed by the event script
 73,2,,
 73,8,,
 73,11,,
@@ -18,5 +18,5 @@ resource,message_id,translated,notes
 73,13,,
 73,14,,
 73,15,,
-73,50,,not displayed by the event script
-73,84,,not displayed by the event script
+73,50,Dipan,not displayed by the event script
+73,84,Ancião,not displayed by the event script

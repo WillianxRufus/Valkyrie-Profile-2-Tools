@@ -11,41 +11,61 @@ resource,message_id,translated,notes
 41,15,,
 41,16,,
 41,17,,
-41,2760,,
-41,2761,,
-41,2762,,
-41,2763,,
-41,2764,,
-41,2765,,
-41,2766,,
-41,2767,,
-41,2768,,
-41,2769,,
-41,2770,,
-41,2771,,
-41,2772,,
-41,2773,,
-41,2774,,
-41,2775,,
-41,2776,,
-41,2777,,
-41,2778,,
-41,2779,,
-41,2780,,
-41,2781,,
-41,2782,,
-41,2783,,
-41,2784,,
-41,2785,,
-41,2786,,
-41,2787,,
-41,2788,,
-41,2789,,
-41,1,,not displayed by the event script
-41,5,,not displayed by the event script
-41,2757,,not displayed by the event script
-41,2758,,not displayed by the event script
-41,2759,,not displayed by the event script
-41,2790,,not displayed by the event script
-41,2791,,not displayed by the event script
-41,2792,,not displayed by the event script
+41,2760,"Vai ficar?
+Temos um quarto com vista disponível.",
+41,2761,Bem-vindo. Gostaria de um quarto?,
+41,2762,"Ora, hóspedes procurando quarto?",
+41,2763,"Vocês são viajantes, certo? Vão ficar?",
+41,2764,"Saudações. Vocês parecem
+estar procurando quarto. Acertou?",
+41,2765,"É uma honra recebê-los.
+Reservo seu quarto?",
+41,2766,"Que pena.
+Volte se mudar de ideia.",
+41,2767,"Por favor, visitem-nos novamente
+quando tiverem chance.",
+41,2768,Droga. E eu já estava animado.,
+41,2769,"Sigam seu caminho, sem vadiagem.",
+41,2770,"Bem, é sua perda.
+Está perdendo um ótimo serviço.",
+41,2771,"Se a oportunidade surgir,
+volte a nos honrar.",
+41,2772,"Deixe a canção das ondas
+ser seu convite ao sono.",
+41,2773,"Por favor, aproveite a estadia.",
+41,2774,"Então vai ficar mesmo?
+Descanse!",
+41,2775,"Acabei de trocar os lençóis.
+Vai dormir como um bebê!",
+41,2776,"Café da manhã equilibrado por nossa conta!
+Durma bem.",
+41,2777,"Devem estar exaustos.
+Por favor, fiquem à vontade.",
+41,2778,"Volte em breve!
+Que as bênçãos do mar estejam com vocês.",
+41,2779,"Obrigada pela preferência.
+Se cuidem.",
+41,2780,Passem aqui quando estiverem pela área.,
+41,2781,"Descansou bem, não é?
+Cuidado lá fora!",
+41,2782,"Hehe, dormiu bem? Volte sempre!",
+41,2783,"Confio que descansaram bem.
+Esperamos servi-los de novo em breve.",
+41,2784,"Ahn, parece que falta dinheiro.",
+41,2785,"Receio que seria impossível permitir
+que fiquem sem pagar a taxa devida.",
+41,2786,"Ora, isso não serve. Vocês não podem pagar.",
+41,2787,"Não é o bastante! Que história é essa?
+Isso é um negócio, sabiam!",
+41,2788,"Hmm... Parece que falta um pouco.
+Voltem quando tiverem o dinheiro!",
+41,2789,"Receio que precisamos do pagamento total
+para alocar os quartos.",
+41,1,Sair,not displayed by the event script
+41,5,Falar,not displayed by the event script
+41,2757,Diária: <PART> OTH,not displayed by the event script
+41,2758,Sim,not displayed by the event script
+41,2759,Não,not displayed by the event script
+41,2790,Solde,not displayed by the event script
+41,2791,Aventureira,not displayed by the event script
+41,2792,Dono da Pousada,not displayed by the event script

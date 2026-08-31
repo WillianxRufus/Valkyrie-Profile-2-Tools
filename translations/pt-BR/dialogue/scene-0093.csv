@@ -4,41 +4,61 @@ resource,message_id,translated,notes
 93,5,,
 93,6,,
 93,7,,
-93,2866,,
-93,2867,,
-93,2868,,
-93,2869,,
-93,2870,,
-93,2871,,
-93,2872,,
-93,2873,,
-93,2874,,
-93,2875,,
-93,2876,,
-93,2877,,
-93,2878,,
-93,2879,,
-93,2880,,
-93,2881,,
-93,2882,,
-93,2883,,
-93,2884,,
-93,2885,,
-93,2886,,
-93,2887,,
-93,2888,,
-93,2889,,
-93,2890,,
-93,2891,,
-93,2892,,
-93,2893,,
-93,2894,,
-93,2895,,
-93,1,,not displayed by the event script
-93,2863,,not displayed by the event script
-93,2864,,not displayed by the event script
-93,2865,,not displayed by the event script
-93,2896,,not displayed by the event script
-93,2897,,not displayed by the event script
-93,2898,,not displayed by the event script
-93,2899,,not displayed by the event script
+93,2866,"Vai ficar?
+Temos um quarto com vista disponível.",
+93,2867,Bem-vindo. Gostaria de um quarto?,
+93,2868,"Ora, hóspedes procurando quarto?",
+93,2869,"Vocês são viajantes, certo? Vão ficar?",
+93,2870,"Saudações. Vocês parecem
+estar procurando quarto. Acertou?",
+93,2871,"É uma honra recebê-los.
+Reservo seu quarto?",
+93,2872,"Que pena.
+Volte se mudar de ideia.",
+93,2873,"Por favor, visitem-nos novamente
+quando tiverem chance.",
+93,2874,Droga. E eu já estava animado.,
+93,2875,"Sigam seu caminho, sem vadiagem.",
+93,2876,"Bem, é sua perda.
+Está perdendo um ótimo serviço.",
+93,2877,"Se a oportunidade surgir,
+volte a nos honrar.",
+93,2878,"Deixe a canção das ondas
+ser seu convite ao sono.",
+93,2879,"Por favor, aproveite a estadia.",
+93,2880,"Então vai ficar mesmo?
+Descanse!",
+93,2881,"Acabei de trocar os lençóis.
+Vai dormir como um bebê!",
+93,2882,"Café da manhã equilibrado por nossa conta!
+Durma bem.",
+93,2883,"Devem estar exaustos.
+Por favor, fiquem à vontade.",
+93,2884,"Volte em breve!
+Que as bênçãos do mar estejam com vocês.",
+93,2885,"Obrigada pela preferência.
+Se cuidem.",
+93,2886,Passem aqui quando estiverem pela área.,
+93,2887,"Descansou bem, não é?
+Cuidado lá fora!",
+93,2888,"Hehe, dormiu bem? Volte sempre!",
+93,2889,"Confio que descansaram bem.
+Esperamos servi-los de novo em breve.",
+93,2890,"Ahn, parece que falta dinheiro.",
+93,2891,"Receio que seria impossível permitir
+que fiquem sem pagar a taxa devida.",
+93,2892,"Ora, isso não serve. Vocês não podem pagar.",
+93,2893,"Não é o bastante! Que história é essa?
+Isso é um negócio, sabiam!",
+93,2894,"Hmm... Parece que falta um pouco.
+Voltem quando tiverem o dinheiro!",
+93,2895,"Receio que precisamos do pagamento total
+para alocar os quartos.",
+93,1,Sair,not displayed by the event script
+93,2863,Diária: <PART> OTH,not displayed by the event script
+93,2864,Sim,not displayed by the event script
+93,2865,Não,not displayed by the event script
+93,2896,Villnore,not displayed by the event script
+93,2897,Aventureira,not displayed by the event script
+93,2898,Dama,not displayed by the event script
+93,2899,Dono da Pousada,not displayed by the event script

@@ -326,45 +326,65 @@ resource,message_id,translated,notes
 83,2612,,
 83,2613,,
 83,2614,,
-83,2809,,
-83,2810,,
-83,2811,,
-83,2812,,
-83,2813,,
-83,2814,,
-83,2815,,
-83,2816,,
-83,2817,,
-83,2818,,
-83,2819,,
-83,2820,,
-83,2821,,
-83,2822,,
-83,2823,,
-83,2824,,
-83,2825,,
-83,2826,,
-83,2827,,
-83,2828,,
-83,2829,,
-83,2830,,
-83,2831,,
-83,2832,,
-83,2833,,
-83,2834,,
-83,2835,,
-83,2836,,
-83,2837,,
-83,2838,,
-83,1,,not displayed by the event script
-83,3,,not displayed by the event script
-83,2806,,not displayed by the event script
-83,2807,,not displayed by the event script
-83,2808,,not displayed by the event script
-83,2839,,not displayed by the event script
+83,2809,"Vai ficar?
+Temos um quarto com vista disponível.",
+83,2810,Bem-vindo. Gostaria de um quarto?,
+83,2811,"Ora, hóspedes procurando quarto?",
+83,2812,"Vocês são viajantes, certo? Vão ficar?",
+83,2813,"Saudações. Vocês parecem
+estar procurando quarto. Acertou?",
+83,2814,"É uma honra recebê-los.
+Reservo seu quarto?",
+83,2815,"Que pena.
+Volte se mudar de ideia.",
+83,2816,"Por favor, visitem-nos novamente
+quando tiverem chance.",
+83,2817,Droga. E eu já estava animado.,
+83,2818,"Sigam seu caminho, sem vadiagem.",
+83,2819,"Bem, é sua perda.
+Está perdendo um ótimo serviço.",
+83,2820,"Se a oportunidade surgir,
+volte a nos honrar.",
+83,2821,"Deixe a canção das ondas
+ser seu convite ao sono.",
+83,2822,"Por favor, aproveite a estadia.",
+83,2823,"Então vai ficar mesmo?
+Descanse!",
+83,2824,"Acabei de trocar os lençóis.
+Vai dormir como um bebê!",
+83,2825,"Café da manhã equilibrado por nossa conta!
+Durma bem.",
+83,2826,"Devem estar exaustos.
+Por favor, fiquem à vontade.",
+83,2827,"Volte em breve!
+Que as bênçãos do mar estejam com vocês.",
+83,2828,"Obrigada pela preferência.
+Se cuidem.",
+83,2829,Passem aqui quando estiverem pela área.,
+83,2830,"Descansou bem, não é?
+Cuidado lá fora!",
+83,2831,"Hehe, dormiu bem? Volte sempre!",
+83,2832,"Confio que descansaram bem.
+Esperamos servi-los de novo em breve.",
+83,2833,"Ahn, parece que falta dinheiro.",
+83,2834,"Receio que seria impossível permitir
+que fiquem sem pagar a taxa devida.",
+83,2835,"Ora, isso não serve. Vocês não podem pagar.",
+83,2836,"Não é o bastante! Que história é essa?
+Isso é um negócio, sabiam!",
+83,2837,"Hmm... Parece que falta um pouco.
+Voltem quando tiverem o dinheiro!",
+83,2838,"Receio que precisamos do pagamento total
+para alocar os quartos.",
+83,1,Sair,not displayed by the event script
+83,3,Falar,not displayed by the event script
+83,2806,Diária: <PART> OTH,not displayed by the event script
+83,2807,Sim,not displayed by the event script
+83,2808,Não,not displayed by the event script
+83,2839,Coriander,not displayed by the event script
 83,2956,,
 83,2957,,
-83,2958,,not displayed by the event script
+83,2958,Dono da Pousada,not displayed by the event script
 83,2959,,
 83,2960,,
 83,2961,,

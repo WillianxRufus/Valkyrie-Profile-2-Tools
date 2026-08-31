@@ -4,22 +4,24 @@ resource,message_id,translated,notes
 37,8,,
 37,9,,
 37,10,,
-37,29,,
-37,13,,
-37,30,,
-37,15,,
+37,29,Parece com fome...,
+37,13,Coma bastante!,
+37,30,"Desculpe...
+Não tenho comida para você.",
+37,15,"Hmm...
+Certo... Obrigada.",
 37,17,,
 37,19,,
 37,21,,
 37,32,,
 37,33,,
 37,43,,
-37,38,,
+37,38,Toma aqui!,
 37,40,,
 37,41,,
 37,42,,
 37,2,,
-37,3,,not displayed by the event script
+37,3,Casa,not displayed by the event script
 37,4,,
 37,5,,
 37,11,,
@@ -29,8 +31,8 @@ resource,message_id,translated,notes
 37,18,,
 37,20,,
 37,22,,
-37,23,,not displayed by the event script
-37,24,,not displayed by the event script
+37,23,Sim.,not displayed by the event script
+37,24,Não.,not displayed by the event script
 37,34,,
 37,35,,
 37,36,,
@@ -38,6 +40,6 @@ resource,message_id,translated,notes
 37,39,,
 37,44,,
 37,45,,
-37,384,,not displayed by the event script
-37,2792,,not displayed by the event script
-37,2793,,not displayed by the event script
+37,384,Solde,not displayed by the event script
+37,2792,Matrona,not displayed by the event script
+37,2793,Gato,not displayed by the event script

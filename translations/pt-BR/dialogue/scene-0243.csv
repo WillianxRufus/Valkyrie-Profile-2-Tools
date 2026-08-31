@@ -87,10 +87,10 @@ resource,message_id,translated,notes
 243,301,,
 243,302,,
 243,306,,
-243,303,,not displayed by the event script
-243,304,,not displayed by the event script
-243,305,,not displayed by the event script
-243,307,,not displayed by the event script
+243,303,Realizar a materialização?,not displayed by the event script
+243,304,Sim,not displayed by the event script
+243,305,Não,not displayed by the event script
+243,307,Ruínas do Monte Serdberg,not displayed by the event script
 243,433,,
 243,434,,
 243,435,,

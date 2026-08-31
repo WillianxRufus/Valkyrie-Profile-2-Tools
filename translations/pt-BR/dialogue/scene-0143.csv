@@ -1,22 +1,48 @@
 resource,message_id,translated,notes
-143,4,,
-143,5,,
-143,6,,
-143,7,,
-143,8,,
-143,9,,
-143,10,,
-143,13,,
-143,11,,
-143,12,,
-143,14,,
-143,15,,
-143,16,,
-143,17,,
-143,18,,
+143,4,"Quero saber a verdade! O Rei Barbarossa
+vai realmente ser executado?",
+143,5,"...Apenas pegue a passagem subterrânea
+e vá para refúio em Solde! <PART>
+---
+As ordens do rei são pela segurança
+de seus cidadãos!",
+143,6,"Após a morte da princesa, o rei mudou.
+Quis punir os deuses e construir um paraíso. <PART>
+---
+Mas veja onde isso o levou...
+O que a princesa diria?",
+143,7,"É absolutamente aterrorizante.
+O que será de nós? <PART>
+---",
+143,8,"Ouvi vozes... gritos...
+Não pode ser! Não pode ser!",
+143,9,"...Devemos obedecer às ordens do rei,
+e guiar o povo para a segurança!",
+143,10,"O que aconteceu com o Rei Barbarossa?
+E a Rainha Malabeth está bem?",
+143,13,Aguardo ansiosamente sua próxima visita!,
+143,11,"É notável como está vazio aqui.
+Dipan não é nada além de uma cidade perdida agora. <PART>
+---
+E você aparece como um salvador!
+Por favor, dê uma olhada.",
+143,12,"Venham, venham todos!
+O vendedor ambulante está aqui para servir!",
+143,14,"Não é real... Estou imaginando coisas.
+É um pesadelo... Sim, deve ser isso...",
+143,15,"O que vai acontecer com Dipan?
+O que se supõe que façamos agora!?",
+143,16,"...Devemos priorizar a vontade do rei...
+guiar o povo em segurança.",
+143,17,Então este é o preço por desafiar os deuses...,
+143,18,"Nos é proibido partir daqui
+por ordem do rei. <PART>
+---
+Até que a segurança do povo seja garantida,
+devemos cumprir as ordens do rei...",
 143,3,,
-143,1601,,not displayed by the event script
-143,2741,,not displayed by the event script
-143,2742,,not displayed by the event script
-143,2743,,not displayed by the event script
-143,2744,,not displayed by the event script
+143,1601,Dipan,not displayed by the event script
+143,2741,Mãe do Garoto,not displayed by the event script
+143,2742,Soldado de Dipan,not displayed by the event script
+143,2743,Matrona,not displayed by the event script
+143,2744,Mercador,not displayed by the event script

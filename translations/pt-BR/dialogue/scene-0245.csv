@@ -1,11 +1,19 @@
 resource,message_id,translated,notes
-245,2,,
-245,5,,
-245,6,,
-245,1,,not displayed by the event script
-245,3,,not displayed by the event script
-245,4,,not displayed by the event script
-245,353,,not displayed by the event script
+245,2,Uma presença mortal espreita lá dentro...,
+245,5,"Fontes <PART> Fontes são onde se pode retirar selos
+guardados nas raízes da terra de Yggdrasil. <PART>
+Guardar um selo custa cristais mágicos e
+requer que seja restaurado à fonte.
+Porém, uma vez guardado, um selo pode
+ser retirado de qualquer fonte do mundo.",
+245,6,"Os efeitos do selo são enormes.
+Restaurar selos conforme seu estilo
+e o calabouço afrontado é a chave da
+estratégia geral do jogo.",
+245,1,Avançar,not displayed by the event script
+245,3,Continuar.,not displayed by the event script
+245,4,Sair.,not displayed by the event script
+245,353,Ruínas do Monte Serdberg,not displayed by the event script
 245,2741,,
 245,2742,,
 245,2743,,

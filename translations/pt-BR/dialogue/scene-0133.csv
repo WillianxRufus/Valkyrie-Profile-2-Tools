@@ -1,51 +1,91 @@
 resource,message_id,translated,notes
-133,3,,
-133,4,,
-133,5,,
-133,6,,
-133,7,,
-133,8,,
-133,12,,
-133,13,,
-133,14,,
-133,2807,,
-133,2808,,
-133,2809,,
-133,2810,,
-133,2811,,
-133,2812,,
-133,2813,,
-133,2814,,
-133,2815,,
-133,2816,,
-133,2817,,
-133,2818,,
-133,2819,,
-133,2820,,
-133,2821,,
-133,2822,,
-133,2823,,
-133,2824,,
-133,2825,,
-133,2826,,
-133,2827,,
-133,2828,,
-133,2829,,
-133,2830,,
-133,2831,,
-133,2832,,
-133,2833,,
-133,2834,,
-133,2835,,
-133,2836,,
-133,1,,not displayed by the event script
-133,9,,not displayed by the event script
-133,10,,not displayed by the event script
-133,11,,not displayed by the event script
+133,3,"Não fale dessas coisas aos clientes.
+É só mais um monstro ou algo assim.",
+133,4,"Um soldado da campanha falou de um
+ex-campo de prisioneiros ao sul. <PART>
+---
+Embora esteja completamente abandonado, ele
+oviu uma mulher rindo estranho à noite.",
+133,5,"Se estiver interessado, por que não vai
+dar uma olhada?",
+133,6,"Claro, é um poltergeist!
+Poltergeist... Pol...ter...geis. <PART>
+---
+Algo me deu arrepios!
+E-E-Eu não estou com medo nenhum...",
+133,7,"Quer dizer que era só um monstro?
+Quero dizer, monstros podem assustar, mas ainda... <PART>
+---
+Enfim, obrigado por verificar pra mim.
+Que tal eu te dar isso?",
+133,8,"Você esteve em outro lugar mal-assombrado?
+O que viu? Fantasmas? Monstros?",
+133,12,"A lenda diz que uma alquimista morava
+no castelo. <PART>
+---
+Imersa em sua pesquisa, ela deve ter
+se apartado do mundo humano.",
+133,13,"Lá vamos nós. Ele adora esse tipo de
+conversa, mesmo sendo um covarde.",
+133,14,"Tenho a sensação de que Midgard caminha
+por um caminho sombrio e perigoso.",
+133,2807,"Vai ficar?
+Temos um quarto com vista disponível.",
+133,2808,Bem-vindo. Gostaria de um quarto?,
+133,2809,"Ora, hóspedes procurando quarto?",
+133,2810,"Vocês são viajantes, certo? Vão ficar?",
+133,2811,"Saudações. Vocês parecem
+estar procurando quarto. Acertou?",
+133,2812,"É uma honra recebê-los.
+Reservo seu quarto?",
+133,2813,"Que pena.
+Volte se mudar de ideia.",
+133,2814,"Por favor, visitem-nos novamente
+quando tiverem chance.",
+133,2815,Droga. E eu já estava animado.,
+133,2816,"Sigam seu caminho, sem vadiagem.",
+133,2817,"Bem, é sua perda.
+Está perdendo um ótimo serviço.",
+133,2818,"Se a oportunidade aparecerular,volte a nos honrar.",
+133,2819,"Deixe a canção das ondas
+ser seu convite ao sono.",
+133,2820,"Por favor, aproveite a estadia.",
+133,2821,"Então vai ficar mesmo?
+Descanse!",
+133,2822,"Acabei de trocar os lençóis.
+Vai dormir como um bebê!",
+133,2823,"Café da manhã equilibrado por nossa conta!
+Durma bem.",
+133,2824,"Devem estar exaustos.
+Por favor, fiquem à vontade.",
+133,2825,"Volte em breve!
+Que as bênçãos do mar estejam com vocês.",
+133,2826,"Obrigada pela preferência.
+Se cuidem.",
+133,2827,Passem aqui quando estiverem pela área.,
+133,2828,"Descansou bem, não é?
+Cuidado lá fora!",
+133,2829,"Hehe, dormiu bem? Volte sempre!",
+133,2830,"Confio que descansaram bem.
+Esperamos servi-los de novo em breve.",
+133,2831,"Ahn, parece que falta dinheiro.",
+133,2832,"Receio que seria impossível permitir
+que fiquem sem pagar a taxa devida.",
+133,2833,"Ora, isso não serve. Voc não vocês não podem pagar.",
+133,2834,"Não é o bastante! Que história é essa?
+Isso é um negócio, sabiam!",
+133,2835,"Hmm... Parece que falta um pouco.
+Voltem quando tiverem o dinheiro!",
+133,2836,"Receio que precisamos do pagamento total
+para alocar os quartos.",
+133,1,Sair,not displayed by the event script
+133,9,O mestre da Mansão da Obsessão era um...,not displayed by the event script
+133,10,Fantasma.,not displayed by the event script
+133,11,Monstro.,not displayed by the event script
 133,15,,
-133,2804,,not displayed by the event script
-133,2805,,not displayed by the event script
-133,2806,,not displayed by the event script
-133,2837,,not displayed by the event script
-133,2839,,not displayed by the event script
-133,2840,,not displayed by the event script
+133,2804,Diária: <PART> OTH,not displayed by the event script
+133,2805,Sim,not displayed by the event script
+133,2806,Não,not displayed by the event script
+133,2837,Crell Monferaigne,not displayed by the event script
+133,2839,Dono da Pousada,not displayed by the event script
+133,2840,Habitante,not displayed by the event script

@@ -1,16 +1,21 @@
 resource,message_id,translated,notes
-1229,1,,
-1229,10,,
-1229,2,,
-1229,3,,
-1229,4,,
-1229,5,,
-1229,6,,
-1229,7,,
-1229,8,,
-1229,11,,
-1229,12,,
-1229,14,,
+1229,1,"Por que essa cara, minha cara?",
+1229,10,"Só precisa esperar um pouco
+até terminarmos nossa pesquisa.",
+1229,2,"Mas é direto para a guilhotina
+pra vocês dois!",
+1229,3,Você não vai machucá-la.,
+1229,4,Saia!,
+1229,5,"Asas da providência, me carreguem para a segurança!",
+1229,6,Grande corvo de Odin!,
+1229,7,"Foi um feitiço de teletransporte.
+Aquele traidor Dallas <PART> ----",
+1229,8,"Dallas está preso com segurança
+na masmorra.",
+1229,11,O que aconteceu!?,
+1229,12,O novo aprendiz!,
+1229,14,"Quem além dos Três Sábios seria
+capaz de lançar tal feitiço?",
 1229,2758,,
 1229,2759,,
 1229,2760,,
@@ -20,27 +25,38 @@ resource,message_id,translated,notes
 1229,2764,,
 1229,2765,,
 1229,2766,,
-1229,139,,
-1229,140,,
-1229,141,,
-1229,142,,
-1229,143,,
-1229,154,,
-1229,144,,
-1229,145,,
-1229,146,,
-1229,147,,
-1229,148,,
-1229,160,,
-1229,149,,
-1229,150,,
-1229,156,,
-1229,155,,
-1229,151,,
-1229,152,,
-1229,153,,
-1229,158,,
-1229,159,,
+1229,139,"Bem, então.",
+1229,140,"Sim, mas eu não sei como.",
+1229,141,"Ei! A Silmeria Valquíria
+está dormindo aí em cima!?",
+1229,142,Não sei. Ela não me responde.,
+1229,143,"Talvez ela tenha sentido a Hrist e esteja
+se escondendo.",
+1229,154,Estamos sendo seguidos?,
+1229,144,...Dallas.,
+1229,145,Quem é esse?,
+1229,146,Se Dallas estivesse aqui...,
+1229,147,"É um amigo de infância. Ouvi que ele
+se tornou um dos Três Sábios.",
+1229,148,Os Três Sábios?,
+1229,160,Vamos procurá-lo.,
+1229,149,"Espero que possamos achá-los.
+Vamos ficar juntos.",
+1229,150,"Por favor, fale comigo. Preciso da sua ajuda...",
+1229,156,"Antes de encontrar Sua Majestade, o plano
+era avaliar a situação de Dipan, lembra?",
+1229,155,"Ei, ninguém falou nada disso!
+Isso tá saindo do controle.",
+1229,151,"Não resta nenhum servo leal
+no castelo, resta?",
+1229,152,"Tenho certeza que o laboratório dos Três Sábios
+é subterrâneo.",
+1229,153,"Mas isso é só o que eu ouvi <PART> ---- <PART> nunca
+fui lá de fato.",
+1229,158,"Eu lembro de câmaras subterrâneas, mas
+na minha época eram usadas como masmorras.",
+1229,159,"Acha que vão saber o que Dipan
+está tramando?",
 1229,2292,,
 1229,2293,,
 1229,2294,,

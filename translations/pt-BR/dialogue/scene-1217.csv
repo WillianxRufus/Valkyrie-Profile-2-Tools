@@ -1,15 +1,19 @@
 resource,message_id,translated,notes
-1217,7,,
-1217,8,,
-1217,9,,
-1217,10,,
-1217,11,,
-1217,1,,
-1217,2,,
-1217,3,,
-1217,4,,
-1217,5,,
-1217,6,,
+1217,7,Vamos encontrar mais deles adiante.,
+1217,8,Fique atento.,
+1217,9,...Sim.,
+1217,10,( Alicia. Você também deve ter isso em mente. ),
+1217,11,Certo...,
+1217,1,"Hmm, parece que sobrou algo.",
+1217,2,O corpo que abrigava a energia psíquica do inimigo.,
+1217,3,"Geralmente desaparece depois que a energia
+psíquica é purificada.",
+1217,4,Então o que exatamente lutamos?,
+1217,5,"Algo não natural daquele corpo.
+Lutar era a única forma de revelar
+sua verdadeira forma.",
+1217,6,"A energia psíquica possui o corpo
+e o usa como uma espécie de vaso.",
 1217,2755,,
 1217,2756,,
 1217,2757,,
@@ -19,20 +23,24 @@ resource,message_id,translated,notes
 1217,2761,,
 1217,2762,,
 1217,2763,,
-1217,1894,,
-1217,1883,,
-1217,1884,,
-1217,1885,,
-1217,1886,,
-1217,1887,,
-1217,1888,,
-1217,1889,,
-1217,1890,,
-1217,1891,,
-1217,1892,,
-1217,1893,,
-1217,1882,,
-1217,1895,,
+1217,1894,Temos companhia!,
+1217,1883,"Ei, o que você fez?",
+1217,1884,"Atingi o monstro com luz sagrada. Está
+preso em um cristal... temporariamente.",
+1217,1885,"Luz sagrada, hein?",
+1217,1886,Curioso?,
+1217,1887,Sim.,
+1217,1888,"Absorvo a energia que flui das raízes da
+árvore-mundo, Yggdrasil, e converto em
+luz.",
+1217,1889,Que poder.,
+1217,1890,Acho que você não é uma princesa qualquer.,
+1217,1891,O que foi?,
+1217,1892,"Parece que precisamos lutar para
+purificá-lo.",
+1217,1893,"Ah é, funcionou bem mesmo.",
+1217,1882,( Não entre em pânico. Posso usar meu poder aqui. ),
+1217,1895,"Não estava ouvindo? Eu disse ""temporariamente"".",
 1217,2337,,
 1217,2338,,
 1217,2339,,
@@ -41,9 +49,9 @@ resource,message_id,translated,notes
 1217,16,,
 1217,17,,
 1217,18,,
-1217,1896,,not displayed by the event script
-1217,1897,,not displayed by the event script
-1217,1898,,not displayed by the event script
+1217,1896,Ver tutorial de batalha?,not displayed by the event script
+1217,1897,Sim,not displayed by the event script
+1217,1898,Não,not displayed by the event script
 1217,2734,,
 1217,2752,,
 1217,2753,,

@@ -25,82 +25,102 @@ resource,message_id,translated,notes
 1337,1365,,
 1337,1366,,
 1337,1367,,
-1337,1454,,
-1337,1455,,
+1337,1454,Agora!,
+1337,1455,O quê-!?,
 1337,1456,,
-1337,1457,,
-1337,1458,,
-1337,1459,,
-1337,1460,,
-1337,1461,,
-1337,1462,,
-1337,1463,,
-1337,1464,,
-1337,1465,,
+1337,1457,O que foi?,
+1337,1458,O Rito Soberano!,
+1337,1459,O Senhor dos Mortos Vivos!?,
+1337,1460,Brahms!?,
+1337,1461,Os humanos... como puderam?,
+1337,1462,De que lado ficará o Senhor dos Mortos Vivos?,
+1337,1463,Minha vez de te salvar!,
+1337,1464,Atrás de você!,
+1337,1465,O quê!?,
 1337,1466,,
 1337,1467,,
-1337,1468,,
-1337,1567,,
-1337,1570,,
-1337,1568,,
+1337,1468,Essa distorção... esse circulo mágico?,
+1337,1567,Ugh!,
+1337,1570,"---
+Senhor Odin!",
+1337,1568,A distorção que senti <PART> ---- <PART> é ele!,
 1337,1571,,
-1337,1569,,
+1337,1569,Freya!,
 1337,1583,,
-1337,1582,,
-1337,1581,,
-1337,1580,,
-1337,1579,,
-1337,1572,,
-1337,1573,,
-1337,1574,,
-1337,1575,,
+1337,1582,Transferência de alma...,
+1337,1581,Como um simples mago empunha o poder de um deus?,
+1337,1580,Este não é um mero mago...,
+1337,1579,Silmeria!?,
+1337,1572,"Deus tolo, cego pelo brilho do Orbe do Dragão!
+Seu dominio sobre Gungnir se enfraquece.",
+1337,1573,"O que não cresce, cai em decadência.",
+1337,1574,A mão digna de empunhar esta lança divina...,
+1337,1575,...é minha.,
 1337,2256,,
 1337,2257,,
 1337,2258,,
-1337,1,,not displayed by the event script
-1337,2,,not displayed by the event script
-1337,4,,not displayed by the event script
-1337,7,,not displayed by the event script
-1337,8,,not displayed by the event script
-1337,9,,not displayed by the event script
-1337,10,,not displayed by the event script
-1337,11,,not displayed by the event script
-1337,12,,not displayed by the event script
-1337,13,,not displayed by the event script
-1337,14,,not displayed by the event script
-1337,15,,not displayed by the event script
-1337,16,,not displayed by the event script
-1337,17,,not displayed by the event script
-1337,19,,not displayed by the event script
-1337,21,,not displayed by the event script
-1337,22,,not displayed by the event script
+1337,1,"Não temam. Vocês me serviram bem.
+Não tenho rancor de vocês.",not displayed by the event script
+1337,2,Façam esse depois do rei.,not displayed by the event script
+1337,4,A rainha... está segura...,not displayed by the event script
+1337,7,Dallas...,not displayed by the event script
+1337,8,"Dois deles cederam, mas o mais novo
+quer morrer com seu rei.",not displayed by the event script
+1337,9,E a rainha?,not displayed by the event script
+1337,10,"O mais novo a escondeu em algum lugar, mas
+ele prefere morrer a revelar o esconderijo.",not displayed by the event script
+1337,11,Então tirem a vida dele.,not displayed by the event script
+1337,12,Tem certeza?,not displayed by the event script
+1337,13,Olhem enquanto podem e testemunhem.,not displayed by the event script
+1337,14,"Testemunhem o fim do seu ""rei"" que
+traiu os deuses e profanou
+a providência da natureza!!",not displayed by the event script
+1337,15,Então veio se despedir.,not displayed by the event script
+1337,16,Pai!,not displayed by the event script
+1337,17,Alicia?,not displayed by the event script
+1337,19,Que interessante.,not displayed by the event script
+1337,21,O rei disse que nos perdoa.,not displayed by the event script
+1337,22,"A sorte favorece quem está vivo e respirando!
+Ainda não é tarde pra você, Dallas.",not displayed by the event script
 1337,24,,
-1337,25,,not displayed by the event script
-1337,26,,not displayed by the event script
-1337,28,,not displayed by the event script
+1337,25,Não se aproxime... Não pode chegar perto!,not displayed by the event script
+1337,26,"A chance de provar sua lealdade acabou
+de chegar.",not displayed by the event script
+1337,28,"Cortem minhas pernas, e mesmo assim
+ficarei ao lado do meu rei!",not displayed by the event script
 1337,31,,
 1337,32,,not displayed by the event script
 1337,33,,
 1337,34,,
 1337,35,,
-1337,1255,,not displayed by the event script
-1337,1256,,not displayed by the event script
-1337,1257,,not displayed by the event script
-1337,1258,,not displayed by the event script
-1337,1259,,not displayed by the event script
-1337,1260,,not displayed by the event script
-1337,1261,,not displayed by the event script
-1337,1262,,not displayed by the event script
-1337,1263,,not displayed by the event script
-1337,1264,,not displayed by the event script
-1337,1265,,not displayed by the event script
-1337,1266,,not displayed by the event script
-1337,1267,,not displayed by the event script
-1337,1268,,not displayed by the event script
-1337,1271,,not displayed by the event script
-1337,1273,,not displayed by the event script
-1337,1274,,not displayed by the event script
-1337,1276,,not displayed by the event script
+1337,1255,"Lenneth, minha Valquiria...",not displayed by the event script
+1337,1256,por que você me atormenta assim?,not displayed by the event script
+1337,1257,"Eu so quis criar este novo mundo para
+escapar da angustia do meu coração...",not displayed by the event script
+1337,1258,Essa é a razão?,not displayed by the event script
+1337,1259,"Nosso mundo foi destruido, nossas vidas destroçadas...
+por causa dos seus desejos egoistas?",not displayed by the event script
+1337,1260,"Não fui eu quem destruiu sua vida.
+Foi Odin!",not displayed by the event script
+1337,1261,"E a sua! E a sua! Todas as suas vidas!
+Odin afligiu todos vocês!",not displayed by the event script
+1337,1262,"Não percebem que eu os livrei
+de seus destinos miseráveis?",not displayed by the event script
+1337,1263,Ninguém te pediu pra fazer isso.,not displayed by the event script
+1337,1264,Que seja...,not displayed by the event script
+1337,1265,"Se nenhum de vocês se interessa em abraçar
+o futuro que minha divindade traz...",not displayed by the event script
+1337,1266,"Se vocês cometem tal loucura, então tudo
+será como eu desejo!",not displayed by the event script
+1337,1267,O Rito Soberano de novo!?,not displayed by the event script
+1337,1268,"O que vai acontecer sem um lugar para as
+valquirias renascidas ou convocadas!?",not displayed by the event script
+1337,1271,me tornar um com você.,not displayed by the event script
+1337,1273,Pare!,not displayed by the event script
+1337,1274,"Isso não significa nada pra mim. Eu sou o
+criador deste mundo. E hora de vocês
+perceberem isso.",not displayed by the event script
+1337,1276,Finalmente! Agora meu ultimo desejo se realiza <PART> ----,not displayed by the event script
 1337,2668,,
 1337,2761,,
 1337,2762,,

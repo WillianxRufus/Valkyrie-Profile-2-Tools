@@ -87,10 +87,10 @@ resource,message_id,translated,notes
 253,319,,
 253,320,,
 253,324,,
-253,321,,not displayed by the event script
-253,322,,not displayed by the event script
-253,323,,not displayed by the event script
-253,325,,not displayed by the event script
+253,321,Realizar a materialização?,not displayed by the event script
+253,322,Sim,not displayed by the event script
+253,323,Não,not displayed by the event script
+253,325,Templo de Audoula no Lago,not displayed by the event script
 253,411,,
 253,412,,
 253,413,,
