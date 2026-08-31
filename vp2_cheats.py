@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Valkyrie Profile 2 Translation Tools contributors
 # SPDX-License-Identifier: GPL-3.0-only
-"""GUI and command-line launcher for the VP2 cheat patcher."""
+"""Command-line interface for the VP2 cheat patcher."""
 
 import argparse
 import sys
@@ -35,8 +35,7 @@ from tools.cheat_patcher.catalog import required_with
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", nargs="?",
-                        help="path to a clean Valkyrie Profile 2 ISO; "
-                             "omit it to open the window")
+                        help="path to a clean Valkyrie Profile 2 USA ISO")
     parser.add_argument(
         "-o", "--output",
         help="output path (default: beside the tool, named after the source)",
@@ -60,27 +59,7 @@ def self_check(stream=None):
     frozen = getattr(sys, "frozen", False)
     notes.append("frozen            : %s" % bool(frozen))
 
-    from tools.cheat_patcher import gui
-    notes.append("payload root      : %s" % gui.PROJECT_ROOT)
     notes.append("iso written to    : %s" % default_output_path("Example.iso").parent)
-
-    artwork = [name for name in (gui.ICON_ICO, gui.ICON_PNG, gui.BACKDROP_PNG)
-               if gui.asset_path(name)]
-    notes.append("window artwork    : " + (", ".join(artwork) or "none"))
-    for name in (gui.ICON_ICO, gui.ICON_PNG, gui.BACKDROP_PNG):
-        if name not in artwork:
-            problems.append("missing window artwork: %s" % name)
-
-    try:
-        import tkinter
-        notes.append("window runtime    : Tcl %s"
-                     % tkinter.Tcl().eval("info patchlevel"))
-        if frozen:
-            for relative in ("_tcl_data/init.tcl", "_tk_data/tk.tcl"):
-                if not (gui.PROJECT_ROOT / relative).is_file():
-                    problems.append("missing window runtime file: %s" % relative)
-    except Exception as exc:                     # pragma: no cover - packaging
-        problems.append("the Tk window runtime does not initialize: %r" % exc)
 
     try:
         from tools.cheat_patcher import catalog
@@ -110,8 +89,8 @@ def main(argv=None):
     if args.self_check:
         return self_check()
     if args.source is None:
-        from tools.cheat_patcher.gui import run_gui
-        return run_gui()
+        print("error: give a source ISO (use --help for usage)", file=sys.stderr)
+        return 2
     output = args.output or default_output_path(args.source)
     selected = (required_with(args.patch) if args.patch else tuple(PATCHERS))
     print("Validating and recompressing: %s..." % ", ".join(selected))

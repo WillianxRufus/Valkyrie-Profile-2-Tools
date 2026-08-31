@@ -152,10 +152,11 @@ class ChildProcessTests(unittest.TestCase):
     def test_the_window_stops_the_child_before_it_closes(self):
         """The close handler must call it, not merely ask about it."""
         import inspect
-        import vp2_translate as launcher
-        source = inspect.getsource(launcher.App._on_close)
-        self.assertIn("terminate_active_builds()", source)
-        self.assertIn("self.root.destroy()", source)
+        from tools import translate_gui as launcher
+        guard = inspect.getsource(launcher.App.request_close)
+        close = inspect.getsource(launcher.App._on_close)
+        self.assertIn("terminate_active_builds()", guard)
+        self.assertIn("self.root.destroy()", close)
 
 
 class AutomaticWorkspaceTests(unittest.TestCase):

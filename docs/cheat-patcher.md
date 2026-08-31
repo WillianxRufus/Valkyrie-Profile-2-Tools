@@ -1,16 +1,17 @@
 # Cheat-patcher guide
 
-ValkyrieProfile2-CheatPatcher writes selected cheats directly into a copy of
-the USA game image. The resulting ISO does not need a PCSX2 PNACH file for
-those cheats to work. The source image is only read and is never modified.
+The Cheats page in ValkyrieProfile2-Tools writes selected cheats directly into
+a copy of the USA game image. The resulting ISO does not need a PCSX2 PNACH
+file for those cheats to work. The source image is only read and is never
+modified.
 
 ## Using the window
 
-Open `ValkyrieProfile2-CheatPatcher` from a downloaded release, or run this
+Open `ValkyrieProfile2-Tools` from a downloaded release, or run this
 from a source checkout:
 
 ```bash
-python vp2_cheats.py
+python vp2_tools.py
 ```
 
 Select a clean USA image (`SLUS_214.52`), choose an output folder, select the

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # -*- mode: python ; coding: utf-8 -*-
 
-"""One-file GUI build of the translator, for people who do not have Python.
+"""One-file GUI build of all three VP2 tools.
 
 What goes in is the runtime plus the source-free tables a build reads: the
 build profile, the structural tables, and every language pack. What stays out
@@ -13,10 +13,10 @@ they already own, which is what keeps this file publishable.
 The result is a few megabytes. If it ever is not, something game-derived has
 been added to the payload and should be taken back out.
 
-    pyinstaller data/vp2_release.spec \
+    pyinstaller data/vp2_tools.spec \
         --workpath workspace/internal/build \
         --clean --noconfirm
-    ./dist/ValkyrieProfile2-Translator --self-check
+    ./dist/ValkyrieProfile2-Tools --self-check
 """
 import os
 import sys
@@ -33,7 +33,7 @@ ROOT = Path(SPECPATH).parent
 sys.path.insert(0, os.fspath(ROOT))
 from tools.scripts.public_release import payload_members          # noqa: E402
 
-APP_NAME = "ValkyrieProfile2-Translator"
+APP_NAME = "ValkyrieProfile2-Tools"
 ICON = ROOT / "images" / "vp2_release.ico"
 ARTWORK = (
     "images/vp2_release.ico",
@@ -51,7 +51,7 @@ print("payload: %d file(s), %.1f MB"
       % (len(members), sum(s.stat().st_size for s, _ in members) / 1e6))
 
 a = Analysis(
-    [os.fspath(ROOT / "vp2_translate.py")],
+    [os.fspath(ROOT / "vp2_tools.py")],
     pathex=[os.fspath(ROOT)],
     binaries=[],
     datas=datas,

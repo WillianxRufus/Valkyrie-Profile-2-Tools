@@ -36,30 +36,20 @@ RUN python -m unittest discover -s tests -q \
     && for pack in translations/*/; do \
     python vp2_translate.py check-pack "$pack"; \
     done \
-    && pyinstaller data/vp2_release.spec \
+    && pyinstaller data/vp2_tools.spec \
     --workpath workspace/internal/build \
     --clean --noconfirm \
-    && ./dist/ValkyrieProfile2-Translator --self-check \
-    && pyinstaller data/vp2_cheats.spec \
-    --workpath workspace/internal/build \
-    --clean --noconfirm \
-    && ./dist/ValkyrieProfile2-CheatPatcher --self-check \
-    && pyinstaller data/vp2_voices.spec \
-    --workpath workspace/internal/build \
-    --clean --noconfirm \
-    && ./dist/ValkyrieProfile2-VoiceTool --self-check
+    && ./dist/ValkyrieProfile2-Tools --self-check
 
 RUN set -eux; \
     mkdir roundtrip; \
-    for binary in ValkyrieProfile2-Translator ValkyrieProfile2-CheatPatcher ValkyrieProfile2-VoiceTool; do \
-    name="${binary}-${VERSION}-linux-x64"; \
-    mv "dist/${binary}" "dist/${name}"; \
+    name="ValkyrieProfile2-Tools-${VERSION}-linux-x64"; \
+    mv "dist/ValkyrieProfile2-Tools" "dist/${name}"; \
     chmod +x "dist/${name}"; \
     tar -czf "${name}.tar.gz" -C dist "${name}"; \
     tar -xzf "${name}.tar.gz" -C roundtrip; \
     test -x "roundtrip/${name}"; \
-    "roundtrip/${name}" --self-check; \
-    done
+    "roundtrip/${name}" --self-check
 
 FROM scratch AS artifact
 COPY --from=build /src/ValkyrieProfile2-*.tar.gz /

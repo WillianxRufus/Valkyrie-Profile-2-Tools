@@ -1,34 +1,27 @@
+#!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Valkyrie Profile 2 Translation Tools contributors
 # SPDX-License-Identifier: GPL-3.0-only
-"""The cheat patcher's window.
 
-Deliberately the same window as the translation builder: same palette, same
-fonts, same backdrop and icon, same card-over-canvas layout, so the two tools
-read as one pair rather than two projects, and both load their chrome from
-`images/`.
-
-The chrome below is still a copy of the builder's rather than an import of
-it. The two ship as separate executables, and a shared window module would
-put the whole of one launcher's import graph inside the other's binary for
-the sake of a colour table.
-"""
+"""Tk interface for the VP2 translation builder."""
 
 from __future__ import annotations
 
 import ctypes
+import json
 import os
 import queue
 import re
 import sys
 import threading
 import time
+import tomllib
 import traceback
 from pathlib import Path
+from typing import NamedTuple
 
-from .build import PATCHERS, build_iso, default_output_path
-from .catalog import ANTI_CHEAT, CHEATS, required_with
-from ..app_meta import VERSION as __version__
-from ..scripts import disc_identity
+from tools.scripts.public_build import build_iso, terminate_active_builds
+from tools.scripts.paths import PROJECT_ROOT, WORKSPACE_DIR
+from tools.app_meta import VERSION as __version__
 
 try:
     from tkinter import (
@@ -46,14 +39,15 @@ else:
     TK_IMPORT_ERROR = None
 
 
-APP_NAME = "Valkyrie Profile 2 Cheat Patcher"
-SHORT_NAME = "VP2 Cheat Patcher"
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SUPPORTED_BOOT = "SLUS_214.52"
+APP_NAME = "Valkyrie Profile 2 Translation Builder"
+SHORT_NAME = "VP2 Translation Builder"
+DEFAULT_WORKSPACE = str(WORKSPACE_DIR)
 ICON_ICO = "images/vp2_release.ico"
 ICON_PNG = "images/vp2_release.png"
 BACKDROP_PNG = "images/vp2_release_bg.png"
+UNUSED_TCL_TREES = ("_tcl_data/tzdata", "_tcl_data/msgs", "_tk_data/msgs")
 
+STEP_LINE = re.compile(r"^\[(\d+)/(\d+)\]\s+(\S+)\s+(\S+)")
 COPY_LINE = re.compile(r"^copy:\s+(\d+)%")
 
 DARK = {
@@ -72,35 +66,85 @@ DARK = {
 }
 
 
-def asset_path(name):
-    path = PROJECT_ROOT / name
+class LanguagePack(NamedTuple):
+    label: str
+    locale: str
+    path: Path
+
+
+def bundle_root() -> Path:
+    return PROJECT_ROOT
+
+
+def asset_path(name: str) -> Path | None:
+    path = bundle_root() / name
     return path if path.is_file() else None
 
 
-def output_path_for(source, directory):
-    return Path(directory) / default_output_path(source).name
+def real_exe_dir() -> Path:
+    """Directory containing the executable the user launched."""
+    if sys.platform == "win32" and getattr(sys, "frozen", False):
+        buffer = ctypes.create_unicode_buffer(32768)
+        ctypes.windll.kernel32.GetModuleFileNameW(None, buffer, len(buffer))
+        return Path(buffer.value).parent
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return PROJECT_ROOT / "build"
 
 
-def describe_disc(path):
-    """Recognise the one game release whose addresses this patcher owns."""
-    path = Path(path)
+def output_path_for(source: Path, pack: LanguagePack, directory: Path) -> Path:
+    return directory / f"{source.stem}.{pack.locale}.iso"
+
+
+def language_packs(root: Path = PROJECT_ROOT) -> list[LanguagePack]:
+    packs = []
+    directory = root / "translations"
+    for path in sorted(directory.iterdir() if directory.is_dir() else ()):
+        metadata = path / "pack.toml"
+        if not metadata.is_file():
+            continue
+        try:
+            values = tomllib.loads(metadata.read_text(encoding="utf-8"))
+            locale = str(values["locale"])
+            name = str(values.get("name") or locale)
+        except (OSError, ValueError, KeyError, tomllib.TOMLDecodeError):
+            continue
+        packs.append(LanguagePack(f"{name}  ·  {locale}", locale, path))
+    return packs
+
+
+def workspace_summary(workspace: Path = WORKSPACE_DIR) -> tuple[bool, str]:
+    stamp = workspace / "internal" / "generation.json"
+    try:
+        details = json.loads(stamp.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False, ("Workspace not prepared · the first build reads "
+                       "your disc, which takes a few minutes")
+    rows = details.get("reference_rows")
+    if not isinstance(rows, int):
+        rows = sum(int(details.get(name, 0)) for name in
+                   ("scene_lines", "container_lines", "chapter_lines"))
+    japanese = "English + Japanese" if details.get("japanese") else "English"
+    return True, f"Workspace ready · {rows:,} reference rows · {japanese}"
+
+
+def describe_disc(path: Path, expected_region: str) -> tuple[str, str]:
     if not path.is_file():
         return "error", "File does not exist."
     try:
-        boot, region = disc_identity.identify(path)
-    except disc_identity.DiscError as exc:
+        from tools.scripts.disc_identity import identify
+        boot, region = identify(path)
+    except Exception as exc:
         return "error", str(exc)
-    if boot == SUPPORTED_BOOT:
-        return "ok", "USA source recognised (%s)." % boot
-    return (
-        "error",
-        "This is %s (%s), not the supported USA image (%s)."
-        % (boot, region, SUPPORTED_BOOT),
-    )
+    if region == expected_region:
+        role = "USA source" if region == "usa" else "Japanese reference"
+        return "ok", f"{role} recognised ({boot})."
+    expected = "USA" if expected_region == "usa" else "Japanese"
+    return "error", f"This is {boot} ({region}), not the {expected} image."
 
 
 class _QueueStream:
-    def __init__(self, target):
+    def __init__(self, target: queue.Queue):
         self.target = target
 
     def write(self, value):
@@ -113,7 +157,7 @@ class _QueueStream:
 
 
 class TaskRunner:
-    """Run the patch off the Tk thread and stream its output back."""
+    """Run disc work off the Tk thread and stream its output back."""
 
     def __init__(self, root, on_line, on_done):
         self.root = root
@@ -215,20 +259,12 @@ def apply_dpi_scaling(root) -> float:
 
 
 def initial_window_geometry(root, width, height) -> str:
-    """Centred, and never taller than the screen it opens on.
-
-    The cheat list makes this window tall, and a 200% display is exactly
-    where 1320 logical pixels stop fitting -- with the Patch button below
-    the bottom edge, which is the one control the tool exists for.
-    """
     width, height = max(1, int(width)), max(1, int(height))
     try:
         screen_width = max(1, int(root.winfo_screenwidth()))
         screen_height = max(1, int(root.winfo_screenheight()))
     except Exception:
         screen_width, screen_height = width, height
-    width = min(width, screen_width)
-    height = min(height, max(1, screen_height - 80))
     x = max(0, (screen_width - width) // 2)
     y = max(0, (screen_height - height) // 2)
     return f"{width}x{height}+{x}+{y}"
@@ -243,6 +279,16 @@ def apply_dark_theme(root, scale=1.0):
         "small": (ui, 10), "button": (ui, 11, "bold"),
         "mono": (mono_font_family(), 10),
     }
+    for option, value in {
+        "background": DARK["surface_hi"],
+        "foreground": DARK["text"],
+        "selectBackground": DARK["accent_dim"],
+        "selectForeground": DARK["text"],
+        "borderWidth": 0,
+        "relief": "flat",
+        "font": fonts["body"],
+    }.items():
+        root.option_add(f"*TCombobox*Listbox.{option}", value)
     root.configure(bg=DARK["bg"])
     style.configure(".", background=DARK["bg"], foreground=DARK["text"],
                     fieldbackground=DARK["surface"], font=fonts["body"],
@@ -260,18 +306,24 @@ def apply_dark_theme(root, scale=1.0):
                     foreground=DARK["text"], insertcolor=DARK["text"],
                     bordercolor=DARK["border"], padding=6)
     style.map("TEntry", bordercolor=[("focus", DARK["accent"])])
+    style.configure("TCombobox", fieldbackground=DARK["surface_hi"],
+                    background=DARK["surface_hi"], foreground=DARK["text"],
+                    arrowcolor=DARK["muted"], padding=5)
+    style.map("TCombobox", fieldbackground=[("readonly", DARK["surface_hi"])],
+              selectbackground=[("readonly", DARK["surface_hi"])],
+              selectforeground=[("readonly", DARK["text"])])
     style.configure("TButton", background=DARK["surface_hi"],
                     foreground=DARK["text"], padding=(14, 7))
     style.map("TButton", background=[("pressed", DARK["border"]),
-                                     ("active", DARK["border"]),
-                                     ("disabled", DARK["surface"])],
+                                      ("active", DARK["border"]),
+                                      ("disabled", DARK["surface"])],
               foreground=[("disabled", DARK["muted"])])
     style.configure("Accent.TButton", background=DARK["accent"],
                     foreground="#0d1017", font=fonts["button"],
                     padding=(22, 9))
     style.map("Accent.TButton", background=[("pressed", DARK["accent_dim"]),
-                                            ("active", DARK["accent_hi"]),
-                                            ("disabled", DARK["surface_hi"])],
+                                             ("active", DARK["accent_hi"]),
+                                             ("disabled", DARK["surface_hi"])],
               foreground=[("disabled", DARK["muted"])])
     indicator = max(14, int(13 * scale))
     style.configure("Chip.TCheckbutton", background=DARK["surface"],
@@ -286,19 +338,6 @@ def apply_dark_theme(root, scale=1.0):
                                    ("active", DARK["border"])],
               foreground=[("active", DARK["text"]),
                           ("disabled", DARK["muted"])])
-    # The cheat list sits on a card and needs the full-strength label colour;
-    # the chip style above is deliberately muted for a lone toggle.
-    style.configure("Cheat.TCheckbutton", background=DARK["surface"],
-                    foreground=DARK["text"], font=fonts["body"],
-                    indicatorbackground=DARK["surface_hi"],
-                    indicatorforeground=DARK["bg"], indicatorsize=indicator,
-                    padding=(0, int(4 * scale)))
-    style.map("Cheat.TCheckbutton",
-              background=[("active", DARK["surface"]),
-                          ("selected", DARK["surface"])],
-              indicatorbackground=[("selected", DARK["accent"]),
-                                   ("active", DARK["border"])],
-              foreground=[("disabled", DARK["muted"])])
     style.configure("Horizontal.TProgressbar", background=DARK["accent"],
                     troughcolor=DARK["surface_hi"], borderwidth=0,
                     thickness=max(8, int(8 * scale)))
@@ -358,22 +397,29 @@ class App:
         self.host = parent or root
         self.embedded = parent is not None
         self.on_busy_change = on_busy_change or (lambda _busy: None)
-        self.source_var = StringVar()
-        self.output_var = StringVar(value=str(PROJECT_ROOT / "build"))
+        self.packs = language_packs()
+        if not self.packs:
+            raise RuntimeError("no language packs are installed")
+        self.pack_by_label = {pack.label: pack for pack in self.packs}
+        self.usa_var = StringVar()
+        self.jp_var = StringVar()
+        self.pack_var = StringVar(value=self.packs[0].label)
+        self.output_var = StringVar(value=str(real_exe_dir()))
+        self.verify_var = BooleanVar(value=False)
         self.log_shown = BooleanVar(value=False)
-        self.cheat_vars = {
-            cheat.name: BooleanVar(value=cheat.name == ANTI_CHEAT)
-                           for cheat in CHEATS}
-        self.cheat_boxes = {}
-        self.status_var = StringVar(
-            value="Choose a clean USA disc image, then pick your cheats.")
+        ready, note = workspace_summary()
+        self.workspace_ready = ready
+        self.workspace_var = StringVar(value=note)
+        self.status_var = StringVar(value="Choose the USA disc image to build.")
         self.detail_var = StringVar()
         self.started_at = None
+        self.last_output = None
+
         self.locked = []
 
         self.scale = apply_dpi_scaling(root)
-        self.compact_height = int(684 * self.scale)
-        self.expanded_height = int(904 * self.scale)
+        self.compact_height = int(570 * self.scale)
+        self.expanded_height = int(790 * self.scale)
         width = int(900 * self.scale)
         if not self.embedded:
             root.title(SHORT_NAME)
@@ -390,23 +436,9 @@ class App:
         self.runner = TaskRunner(root, self._on_line, self._on_done)
         if not self.embedded:
             root.protocol("WM_DELETE_WINDOW", self._on_close)
-        for name in self.cheat_vars:
-            self.cheat_vars[name].trace_add("write", self._sync_dependency)
-        self._sync_dependency()
 
     def _px(self, value):
         return int(value * self.scale)
-
-    def _lockable(self, widget):
-        self.locked.append((widget, str(widget.cget("state")) or NORMAL))
-        return widget
-
-    def _card(self, title):
-        frame = ttk.Frame(self.canvas, style="Card.TFrame", padding=(14, 12))
-        frame.columnconfigure(1, weight=1)
-        ttk.Label(frame, text=title, style="CardMuted.TLabel").grid(
-            row=0, column=0, sticky="w", pady=(0, 8))
-        return frame
 
     def _build_ui(self):
         self.canvas = Canvas(self.host, highlightthickness=0, bd=0,
@@ -421,14 +453,17 @@ class App:
             fill=DARK["text"], font=self.fonts["title"])
         self.subtitle_item = self.canvas.create_text(
             0, 0, anchor="nw", fill=DARK["muted"], font=self.fonts["small"],
-            text="Cheat patcher — write chosen cheats into a copy of "
-                 "your disc, so they need no emulator to run.")
+            text="Translation patch builder — prepare source-free build data "
+                 "from your disc, then create a translated copy.")
 
-        self.disc_card = self._build_disc_card()
-        self.cheat_card = self._build_cheat_card()
-        self.patch_btn = self._lockable(ttk.Button(
-            self.canvas, text="Patch ISO", style="Accent.TButton",
-            command=self._start_patch))
+        self.discs_card = self._build_discs_card()
+        self.build_card = self._build_settings_card()
+        self.build_btn = self._lockable(ttk.Button(
+            self.canvas, text="Build translated ISO", style="Accent.TButton",
+            command=self._start_build))
+        self.verify_chk = self._lockable(ttk.Checkbutton(
+            self.canvas, text="Thorough verification",
+            style="Chip.TCheckbutton", variable=self.verify_var))
         self.log_btn = ttk.Button(
             self.canvas, text="Show details", command=self._toggle_log)
         self.progress = ttk.Progressbar(
@@ -457,204 +492,77 @@ class App:
         self.log_frame.rowconfigure(0, weight=1)
 
         widgets = (
-            ("disc", self.disc_card), ("cheats", self.cheat_card),
-            ("patch", self.patch_btn), ("log_btn", self.log_btn),
+            ("discs", self.discs_card), ("settings", self.build_card),
+            ("build", self.build_btn),
+            ("verify", self.verify_chk), ("log_btn", self.log_btn),
             ("progress", self.progress), ("log", self.log_frame),
         )
         self.items = {name: self.canvas.create_window(
             0, 0, anchor="nw", window=widget) for name, widget in widgets}
         self.canvas.itemconfigure(self.items["log"], state="hidden")
         self.canvas.bind("<Configure>", self._reflow)
-        self.root.bind("<MouseWheel>", self._scroll_cheats)
-        self.root.bind("<Button-4>", self._scroll_cheats)
-        self.root.bind("<Button-5>", self._scroll_cheats)
-        self._append_log(f"{APP_NAME} {__version__}\n")
+        self._append_log(f"{APP_NAME} {__version__}\n"
+                         f"workspace: {WORKSPACE_DIR}\n")
 
-    def _scroll_cheats(self, event):
-        widget = event.widget
-        while widget is not None and widget is not self.root:
-            if widget is self.cheat_canvas or widget is self.cheat_content:
-                break
-            widget = getattr(widget, "master", None)
-        else:
-            return
-        if getattr(event, "num", None) == 4:
-            units = -3
-        elif getattr(event, "num", None) == 5:
-            units = 3
-        else:
-            units = -int(getattr(event, "delta", 0) / 120) * 3
-        if units:
-            self.cheat_canvas.yview_scroll(units, "units")
+    def _card(self, title):
+        frame = ttk.Frame(self.canvas, style="Card.TFrame", padding=(14, 12))
+        frame.columnconfigure(1, weight=1)
+        ttk.Label(frame, text=title, style="CardMuted.TLabel").grid(
+            row=0, column=0, columnspan=3, sticky="w", pady=(0, 8))
+        return frame
 
-    def _build_disc_card(self):
-        card = self._card("DISC IMAGE")
-        ttk.Label(card, text="Source", style="Card.TLabel").grid(
+    def _build_discs_card(self):
+        card = self._card("DISC IMAGES")
+        ttk.Label(card, text="USA", style="Card.TLabel").grid(
             row=1, column=0, sticky="w", padx=(0, 10))
-        self._lockable(ttk.Entry(card, textvariable=self.source_var)).grid(
+        self._lockable(ttk.Entry(card, textvariable=self.usa_var)).grid(
             row=1, column=1, sticky="ew", padx=(0, 10))
         self._lockable(ttk.Button(
-            card, text="Browse…", command=self._pick_source)).grid(
-            row=1, column=2, sticky="e")
-        ttk.Label(card, text="A clean USA image · never modified, only read",
+            card, text="Browse…",
+            command=lambda: self._pick_disc("usa"))).grid(row=1, column=2,
+                                                          sticky="e")
+        ttk.Label(card, text="Required · clean USA image used for every build",
                   style="CardMuted.TLabel").grid(
             row=2, column=1, columnspan=2, sticky="w", pady=(5, 10))
-        ttk.Label(card, text="Output", style="Card.TLabel").grid(
+        ttk.Label(card, text="Japanese", style="Card.TLabel").grid(
             row=3, column=0, sticky="w", padx=(0, 10))
-        self._lockable(ttk.Entry(card, textvariable=self.output_var)).grid(
+        self._lockable(ttk.Entry(card, textvariable=self.jp_var)).grid(
             row=3, column=1, sticky="ew", padx=(0, 10))
         self._lockable(ttk.Button(
+            card, text="Browse…",
+            command=lambda: self._pick_disc("japan"))).grid(row=3, column=2,
+                                                            sticky="e")
+        ttk.Label(card, text="Optional · adds the original script to reference tables",
+                  style="CardMuted.TLabel").grid(
+            row=4, column=1, columnspan=2, sticky="w", pady=(5, 0))
+        return card
+
+    def _build_settings_card(self):
+        card = self._card("BUILD SETTINGS")
+        ttk.Label(card, text="Language", style="Card.TLabel").grid(
+            row=1, column=0, sticky="w", padx=(0, 10))
+        self.language_combo = self._lockable(ttk.Combobox(
+            card, textvariable=self.pack_var,
+            values=[pack.label for pack in self.packs], state="readonly"))
+        self.language_combo.grid(
+            row=1, column=1, columnspan=2, sticky="ew")
+        ttk.Label(card, text="Output", style="Card.TLabel").grid(
+            row=2, column=0, sticky="w", padx=(0, 10), pady=(10, 0))
+        self._lockable(ttk.Entry(card, textvariable=self.output_var)).grid(
+            row=2, column=1, sticky="ew", padx=(0, 10), pady=(10, 0))
+        self._lockable(ttk.Button(
             card, text="Change…", command=self._pick_output)).grid(
-            row=3, column=2, sticky="e")
-        self.output_label = ttk.Label(
-            card, text="", style="CardMuted.TLabel")
-        self.output_label.grid(row=4, column=1, columnspan=2, sticky="w",
-                               pady=(5, 0))
-        self.source_var.trace_add("write", self._sync_output_name)
-        self.output_var.trace_add("write", self._sync_output_name)
+            row=2, column=2, sticky="e", pady=(10, 0))
+        self.workspace_label = ttk.Label(
+            card, textvariable=self.workspace_var,
+            style="Ok.TLabel" if self.workspace_ready else "Warn.TLabel")
+        self.workspace_label.grid(row=3, column=0, columnspan=3, sticky="w",
+                                  pady=(10, 0))
         return card
-
-    def _build_cheat_card(self):
-        card = self._card("CHEATS")
-        card.columnconfigure(0, weight=1)
-        card.rowconfigure(1, weight=1)
-        self.toggle_all_cheats_btn = self._lockable(ttk.Button(
-            card, text="Disable all cheats", command=self._toggle_all_cheats
-        ))
-        self.toggle_all_cheats_btn.grid(
-            row=0, column=2, columnspan=2, sticky="e", pady=(0, 8)
-        )
-        self.cheat_canvas = Canvas(
-            card, highlightthickness=0, bd=0,
-            background=DARK["surface"], takefocus=0
-        )
-        self.cheat_scroll = ttk.Scrollbar(
-            card, orient="vertical", command=self.cheat_canvas.yview
-        )
-        self.cheat_canvas.configure(yscrollcommand=self.cheat_scroll.set)
-        self.cheat_canvas.grid(row=1, column=0, columnspan=3, sticky="nsew")
-        self.cheat_scroll.grid(row=1, column=3, sticky="ns", padx=(8, 0))
-        self.cheat_content = ttk.Frame(
-            self.cheat_canvas, style="Card.TFrame"
-        )
-        self.cheat_content.columnconfigure(0, weight=1)
-        self.cheat_window = self.cheat_canvas.create_window(
-            0, 0, anchor="nw", window=self.cheat_content
-        )
-        self.cheat_summaries = []
-        for index, cheat in enumerate(CHEATS):
-            row = index * 2
-            box = self._lockable(ttk.Checkbutton(
-                self.cheat_content, text=cheat.title,
-                style="Cheat.TCheckbutton",
-                variable=self.cheat_vars[cheat.name]))
-            box.grid(row=row, column=0, sticky="w")
-            self.cheat_boxes[cheat.name] = box
-            summary = ttk.Label(
-                self.cheat_content, text=cheat.summary,
-                style="CardMuted.TLabel", wraplength=self._px(720),
-                justify="left"
-            )
-            summary.grid(
-                row=row + 1, column=0, sticky="w",
-                padx=(self._px(24), 0),
-                pady=(0, self._px(9) if index < len(CHEATS) - 1 else 0))
-            self.cheat_summaries.append(summary)
-        self.dependency_label = ttk.Label(
-            self.cheat_content, text="", style="Warn.TLabel",
-            wraplength=self._px(720),
-            justify="left")
-        self.dependency_label.grid(row=len(CHEATS) * 2, column=0, sticky="w",
-                                   pady=(self._px(10), 0))
-        self.cheat_content.bind("<Configure>", self._sync_cheat_scrollregion)
-        self.cheat_canvas.bind("<Configure>", self._resize_cheat_content)
-        return card
-
-    def _sync_cheat_scrollregion(self, _event=None):
-        bounds = self.cheat_canvas.bbox("all")
-        if bounds:
-            self.cheat_canvas.configure(scrollregion=bounds)
-
-    def _resize_cheat_content(self, event):
-        width = max(1, event.width)
-        self.cheat_canvas.itemconfigure(self.cheat_window, width=width)
-        wrap = max(self._px(280), width - self._px(24))
-        for label in (*self.cheat_summaries, self.dependency_label):
-            label.configure(wraplength=wrap)
-
-    def _sync_output_name(self, *_args):
-        source = self.source_var.get().strip()
-        folder = self.output_var.get().strip()
-        if not source or not folder:
-            self.output_label.configure(text="")
-            return
-        self.output_label.configure(
-            text="Writes %s" % output_path_for(Path(source), folder).name)
-
-    def _sync_dependency(self, *_args):
-        """A (!) cheat without the anti-cheat patch is a frozen game.
-
-        Rather than let that ISO be built, the anti-cheat box follows the
-        selection and locks while anything needs it.
-        """
-        needed = [cheat for cheat in CHEATS
-                  if cheat.requires_anti_cheat
-                  and self.cheat_vars[cheat.name].get()]
-        anti = self.cheat_vars[ANTI_CHEAT]
-        if needed:
-            if not anti.get():
-                anti.set(True)
-            self.dependency_label.configure(
-                text="%s needs Disable Anti-Cheat Systems, so it stays on."
-                     % needed[0].title)
-        else:
-            self.dependency_label.configure(text="")
-        self.toggle_all_cheats_btn.configure(
-            text=("Disable all cheats"
-                  if any(variable.get() for variable in self.cheat_vars.values())
-                  else "Enable all cheats")
-        )
-        if not self.runner.busy if hasattr(self, "runner") else True:
-            self._set_anti_cheat_state(DISABLED if needed else NORMAL)
-
-    def _toggle_all_cheats(self):
-        if any(variable.get() for variable in self.cheat_vars.values()):
-            for name, variable in self.cheat_vars.items():
-                if name != ANTI_CHEAT:
-                    variable.set(False)
-            self.cheat_vars[ANTI_CHEAT].set(False)
-        else:
-            self.cheat_vars[ANTI_CHEAT].set(True)
-            for name, variable in self.cheat_vars.items():
-                if name != ANTI_CHEAT:
-                    variable.set(True)
-
-    def _set_anti_cheat_state(self, state):
-        for widget, _idle in self.locked:
-            if str(widget.cget("style") or "") == "Cheat.TCheckbutton" and \
-                    str(widget.cget("text")) == CHEATS[0].title:
-                widget.configure(state=state)
-
-    def _sync_status(self, *_args):
-        self.canvas.itemconfigure(self.status_item, text=self.status_var.get())
-        self.canvas.itemconfigure(self.detail_item, text=self.detail_var.get())
 
     def _bottom(self, item, fallback):
         box = self.canvas.bbox(item)
         return box[3] if box else fallback
-
-    def _cheat_panel_height(self, window_height, top, row_height):
-        """Give the middle panel space without displacing fixed controls."""
-        gap = self._px(14)
-        reserved = (
-            gap + row_height + gap + self.progress.winfo_reqheight() +
-            self._px(8) + self.line_heights["body"] + self._px(2) +
-            2 * self.line_heights["small"] + self._px(2) + self._px(16)
-        )
-        if self.log_shown.get():
-            reserved += gap + self._px(90)
-        available = window_height - top - reserved
-        return max(self._px(180), min(self._px(300), available))
 
     def _reflow(self, _event=None):
         width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
@@ -670,20 +578,19 @@ class App:
         self.canvas.itemconfigure(self.subtitle_item, width=inner)
         self.canvas.coords(self.subtitle_item, pad, y)
         y = self._bottom(self.subtitle_item, y) + gap
-        self.canvas.coords(self.items["disc"], pad, y)
-        self.canvas.itemconfigure(self.items["disc"], width=inner)
-        y += self.disc_card.winfo_reqheight() + gap
-        row = (self.patch_btn, self.log_btn)
+        for name, card in (("discs", self.discs_card),
+                           ("settings", self.build_card)):
+            self.canvas.coords(self.items[name], pad, y)
+            self.canvas.itemconfigure(self.items[name], width=inner)
+            y += card.winfo_reqheight() + gap
+        row = (self.build_btn, self.verify_chk, self.log_btn)
         row_height = max(widget.winfo_reqheight() for widget in row)
-        cheat_height = self._cheat_panel_height(height, y, row_height)
-        self.canvas.coords(self.items["cheats"], pad, y)
-        self.canvas.itemconfigure(
-            self.items["cheats"], width=inner, height=cheat_height
-        )
-        y += cheat_height + gap
         positions = (
-            ("patch", self.patch_btn, pad),
-            ("log_btn", self.log_btn, width - pad - self.log_btn.winfo_reqwidth()),
+            ("build", self.build_btn, pad),
+            ("verify", self.verify_chk,
+             pad + self.build_btn.winfo_reqwidth() + self._px(10)),
+            ("log_btn", self.log_btn,
+             width - pad - self.log_btn.winfo_reqwidth()),
         )
         for name, widget, x in positions:
             self.canvas.coords(self.items[name], x,
@@ -701,21 +608,33 @@ class App:
         if self.log_shown.get():
             top = y + gap
             self.canvas.coords(self.items["log"], pad, top)
-            log_height = max(self._px(90), height - top - bottom)
             self.canvas.itemconfigure(
                 self.items["log"], width=inner,
-                height=log_height)
+                height=max(self._px(80), height - top - bottom))
+        else:
+            needed = y + bottom
+            if needed > self.compact_height:
+                self.compact_height = needed
+                if not self.embedded:
+                    self.root.minsize(self._px(760), needed)
+                    if height < needed:
+                        self.root.geometry(f"{width}x{needed}")
 
-    def _pick_source(self):
+    def _sync_status(self, *_args):
+        self.canvas.itemconfigure(self.status_item, text=self.status_var.get())
+        self.canvas.itemconfigure(self.detail_item, text=self.detail_var.get())
+
+    def _pick_disc(self, region):
+        title = ("Select the USA Valkyrie Profile 2 ISO" if region == "usa"
+                 else "Select the Japanese Valkyrie Profile 2 ISO")
         path = filedialog.askopenfilename(
-            title="Select the USA Valkyrie Profile 2 ISO",
-            filetypes=[("Disc images", "*.iso"), ("All files", "*.*")])
+            title=title, filetypes=[("Disc images", "*.iso"),
+                                   ("All files", "*.*")])
         if path:
-            self.source_var.set(path)
-            level, note = describe_disc(Path(path))
-            size = Path(path).stat().st_size / (1 << 30)
+            (self.usa_var if region == "usa" else self.jp_var).set(path)
+            level, note = describe_disc(Path(path), region)
             self.status_var.set(note)
-            self.detail_var.set(f"{size:.2f} GB")
+            self.detail_var.set(f"{Path(path).stat().st_size / (1 << 30):.2f} GB")
             if level == "error":
                 messagebox.showerror("Unexpected disc image", note)
 
@@ -724,68 +643,95 @@ class App:
         if path:
             self.output_var.set(path)
 
-    def selected_cheats(self):
-        return required_with(
-            [name for name, var in self.cheat_vars.items() if var.get()])
-
-    def _validated_source(self):
-        raw = self.source_var.get().strip()
+    def _validated_usa(self):
+        raw = self.usa_var.get().strip()
         if not raw:
             messagebox.showinfo("Pick an ISO", "Choose the USA ISO first.")
             return None
-        source = Path(raw)
-        level, note = describe_disc(source)
+        path = Path(raw)
+        level, note = describe_disc(path, "usa")
         if level != "ok":
             messagebox.showerror("Unusable image", note)
             return None
-        return source
+        return path
 
-    def _start_patch(self):
+    def _images(self, usa):
+        """The discs to read, if this build has to read them.
+
+        The Japanese image is optional and only adds the original script to
+        the reference tables, so a bad one is worth saying out loud rather
+        than quietly building without it.
+        """
+        images = [usa]
+        jp = self.jp_var.get().strip()
+        if jp:
+            japanese = Path(jp)
+            level, note = describe_disc(japanese, "japan")
+            if level != "ok":
+                messagebox.showerror("Unusable image", note)
+                return None
+            images.append(japanese)
+        return images
+
+    def _start_build(self):
         if self.runner.busy:
             return
-        source = self._validated_source()
-        if source is None:
+        usa = self._validated_usa()
+        if usa is None:
             return
-        selected = self.selected_cheats()
-        if not selected:
-            messagebox.showinfo("Pick a cheat", "Choose at least one cheat.")
+        images = self._images(usa)
+        if images is None:
             return
-        folder = Path(self.output_var.get().strip() or (PROJECT_ROOT / "build"))
+        pack = self.pack_by_label[self.pack_var.get()]
+        folder = Path(self.output_var.get().strip() or real_exe_dir())
         try:
             folder.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
             messagebox.showerror("Output folder", str(exc))
             return
-        output = output_path_for(source, folder)
-        if output.exists():
-            if not messagebox.askyesno(
-                    "Overwrite?",
-                    f"Output already exists:\n{output}\n\nReplace it?"):
-                return
-            try:
-                output.unlink()
-            except OSError as exc:
-                messagebox.showerror("Output folder", str(exc))
-                return
-
+        output = output_path_for(usa, pack, folder)
+        if output.exists() and not messagebox.askyesno(
+                "Overwrite?", f"Output already exists:\n{output}\n\nOverwrite?"):
+            return
+        self.last_output = output
         self.started_at = time.time()
         self._set_busy(True)
-        self.progress.stop()
-        self.progress.configure(mode="determinate", value=0)
-        self.status_var.set("Reading the disc and rebuilding the patches…")
-        self.detail_var.set("%d cheat(s)" % len(selected))
-        self._append_log(
-            "\n=== patch: %s -> %s ===\n" % (source.name, output.name))
-        for name in selected:
-            self._append_log("  %s\n" % name)
-        self.runner.start("patch", build_iso, source, output,
-                          selected=selected, progress=print)
+        ready, _note = workspace_summary()
+        if ready:
+            self.progress.stop()
+            self.progress.configure(mode="determinate", value=0)
+            self.status_var.set("Preparing the translation build…")
+        else:
+            # No step count to count against until the disc has been read,
+            # and a bar sitting at zero for minutes reads as a hung window.
+            self.progress.configure(mode="indeterminate", value=0)
+            self.progress.start(12)
+            self.status_var.set("Reading your disc for the first time…")
+        self.detail_var.set(pack.label)
+        self._append_log(f"\n=== build: {usa.name} -> {output.name} ===\n")
+        self.runner.start("build", build_iso, usa, pack.path,
+                          workspace=DEFAULT_WORKSPACE, output=output,
+                          no_verify=not self.verify_var.get(), images=images)
+
+    def _lockable(self, widget):
+        """Register a control that a running job takes away.
+
+        Its state before the first job is the state it comes back to, so a
+        combobox returns to `readonly` rather than becoming typable.
+        """
+        self.locked.append((widget, str(widget.cget("state")) or NORMAL))
+        return widget
 
     def _set_busy(self, busy):
+        """Nothing a job read at its start may be changed while it runs.
+
+        Every one of these is settled before the thread starts, so editing
+        one mid-run cannot reach the job -- it only tells the user something
+        untrue about what is being built. Browsing for a disc is worse than
+        untrue: its handler writes over the live progress line.
+        """
         for widget, idle in self.locked:
             widget.configure(state=DISABLED if busy else idle)
-        if not busy:
-            self._sync_dependency()
         self.on_busy_change(bool(busy))
 
     def _on_line(self, text):
@@ -793,27 +739,56 @@ class App:
         for line in text.splitlines():
             self._track_progress(line.strip())
 
+    def _measured(self, value):
+        """First real percentage ends the sweep the unread disc started."""
+        if str(self.progress.cget("mode")) != "determinate":
+            self.progress.stop()
+            self.progress.configure(mode="determinate")
+        self.progress.configure(value=value)
+
     def _track_progress(self, line):
+        if line.startswith("workspace: prepared"):
+            self._refresh_workspace()
+            return
+        phases = {
+            "inventory:": "Scanning disc inventory…",
+            "glyphs:": "Indexing font glyphs…",
+            "tables:": "Exporting text records…",
+            "reference:": "Arranging translator reference tables…",
+        }
+        for prefix, status in phases.items():
+            if line.startswith(prefix):
+                self.status_var.set(status)
+                self.detail_var.set(line)
+                return
         copied = COPY_LINE.match(line)
         if copied:
             percent = int(copied.group(1))
-            self.progress.configure(value=percent * 0.9)
+            self._measured(percent * 0.2)
             self.status_var.set(f"Copying the source image… {percent}%")
-            self.detail_var.set(f"{self._elapsed()} elapsed")
             return
-        if line.startswith("patch: "):
-            self.status_var.set("Reading the disc and rebuilding the patches…")
-            self.detail_var.set(line[len("patch: "):])
-        elif line.startswith("write: "):
-            self.progress.configure(value=92)
-            self.status_var.set("Writing the patched regions…")
-        elif line.startswith("verify: "):
-            self.progress.configure(value=96)
-            self.status_var.set("Verifying every patched byte from disk…")
+        step = STEP_LINE.match(line)
+        if step:
+            index, total = int(step.group(1)), int(step.group(2))
+            self._measured(20 + index * 80 / total)
+            self.status_var.set(f"Patching resource {index} of {total}")
+            self.detail_var.set(
+                f"{step.group(3)} {step.group(4)} · {self._elapsed()} elapsed")
+        elif line.startswith("writing to"):
+            self.status_var.set("Preparing build data…")
+        elif line.startswith("wrote output"):
+            self.status_var.set("Finishing…")
 
     def _elapsed(self):
         seconds = int(time.time() - (self.started_at or time.time()))
         return f"{seconds}s" if seconds < 60 else f"{seconds // 60}m {seconds % 60:02d}s"
+
+    def _refresh_workspace(self):
+        """A build may have generated it, so the line has to be re-read."""
+        self.workspace_ready, note = workspace_summary()
+        self.workspace_var.set(note)
+        self.workspace_label.configure(
+            style="Ok.TLabel" if self.workspace_ready else "Warn.TLabel")
 
     def _on_done(self, kind, result, error):
         self.progress.stop()
@@ -821,21 +796,27 @@ class App:
         self._set_busy(False)
         if error is not None:
             self.progress.configure(value=0)
-            self.status_var.set("Patch failed.")
+            self.status_var.set(f"{kind.capitalize()} failed.")
             self.detail_var.set(str(error))
             if not self.log_shown.get():
                 self._toggle_log()
-            messagebox.showerror("Patch failed", str(error))
+            messagebox.showerror(f"{kind.capitalize()} failed", str(error))
             return
-        self.progress.configure(value=100)
-        self.status_var.set(f"Patched ISO written in {self._elapsed()}.")
-        self.detail_var.set(str(result.output))
-        self._append_log("=== done ===\n")
-        if messagebox.askyesno(
-                "Patch complete",
-                f"Patched ISO written to:\n{result.output}\n\n"
-                "Open the output folder?"):
-            self._open_output_folder(Path(result.output).parent)
+        self._refresh_workspace()
+        if kind == "generate":
+            self.progress.configure(value=100)
+            self.status_var.set(f"Workspace ready in {self._elapsed()}.")
+            self.detail_var.set(self.workspace_var.get())
+            self._append_log("=== workspace ready ===\n")
+        else:
+            self.progress.configure(value=100)
+            self.status_var.set(f"Build complete in {self._elapsed()}.")
+            self.detail_var.set(str(result))
+            self._append_log("=== build complete ===\n")
+            if messagebox.askyesno(
+                    "Build complete",
+                    f"Translated ISO written to:\n{result}\n\nOpen the output folder?"):
+                self._open_output_folder(Path(result).parent)
 
     def _append_log(self, text):
         self.log.configure(state=NORMAL)
@@ -858,12 +839,20 @@ class App:
         self._reflow()
 
     def request_close(self):
-        if self.runner.busy and not messagebox.askyesno(
-                "Still working",
-                "A patch is still running. Closing now abandons it; the "
-                "unfinished .partial file is removed on the next run."
-                "\n\nClose anyway?"):
-            return False
+        """Closing the window has to stop the work, not just hide it.
+
+        The worker is a daemon thread and dies with the interpreter, but a
+        build's real work happens in a child process that does not. Closing
+        used to leave it writing the ISO with nothing on screen.
+        """
+        if self.runner.busy:
+            if not messagebox.askyesno(
+                    "Still working",
+                    "A job is still running. Closing now stops it, and the "
+                    "unfinished file it was writing stays on disk.\n\n"
+                    "Close anyway?"):
+                return False
+            terminate_active_builds()
         return True
 
     def _on_close(self):
@@ -883,16 +872,3 @@ class App:
             messagebox.showerror("Could not open folder", str(exc))
 
 
-def run_gui() -> int:
-    if TK_IMPORT_ERROR is not None:
-        print(f"this build has no Tk, so the window cannot open: "
-              f"{TK_IMPORT_ERROR}", file=sys.stderr)
-        return 3
-    enable_dpi_awareness()
-    root = Tk()
-    root.withdraw()
-    App(root)
-    use_dark_titlebar(root)
-    root.deiconify()
-    root.mainloop()
-    return 0

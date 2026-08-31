@@ -1,9 +1,9 @@
 # Voice tool
 
-ValkyrieProfile2-VoiceTool extracts cutscene, battle, and other voice audio
-from a USA or Japanese _Valkyrie Profile 2_ image, and can put replacement
-WAVs back into a new image. It never modifies the source image and does not
-include game audio.
+The Voices page in ValkyrieProfile2-Tools extracts cutscene, battle, and other
+voice audio from a USA or Japanese _Valkyrie Profile 2_ image, and can put
+replacement WAVs back into a new image. It never modifies the source image and
+does not include game audio.
 
 ## Extract voices
 

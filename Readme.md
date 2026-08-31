@@ -2,15 +2,17 @@
 
 Tools for _Valkyrie Profile 2: Silmeria_ on PlayStation 2. [Project Showcase](https://trulio2.github.io/Valkyrie-Profile-2-Tools/)
 
-Current applications:
+The downloadable **ValkyrieProfile2-Tools** application contains three tools:
 
-- **ValkyrieProfile2-Translator** builds a translated copy of the game.
-- **ValkyrieProfile2-CheatPatcher** writes selected cheats into a copy of the game so they work without an emulator cheat file. Can be used to create a new iso with the game's Anti-Cheat functions patched out.
-- **ValkyrieProfile2-VoiceTool** extracts the English or Japanese voices and
+- **Translate** builds a translated copy of the game.
+- **Cheats** writes selected cheats into a copy of the game so they work
+  without an emulator cheat file. It can create an ISO with the game's
+  anti-cheat functions patched out.
+- **Voices** extracts the English or Japanese voices and
   patches identified replacement WAV files into a copy of either release. It
   can also create a Japanese-audio edition of the USA and PAL releases.
 
-Neither application modifies the source disc image.
+The application never modifies a source disc image.
 
 ## Requirements
 
@@ -24,9 +26,10 @@ Neither application modifies the source disc image.
 - Optionally, a Japanese disc image (`SLPM_664.19`) if you want Japanese text
   in the translator's local reference files.
 
-The downloadable Windows and Linux applications include their runtime and do
+The downloadable Windows and Linux application includes its runtime and does
 not require Python. Download the archive for your platform, unpack it, and
-open the application you want to use.
+open `ValkyrieProfile2-Tools`. Its left sidebar switches between Translate,
+Voices, and Cheats.
 
 To run from source, install Python 3.11 or newer with pip and Tkinter/Tcl-Tk,
 then run:
@@ -45,14 +48,15 @@ python -c "import tkinter; tkinter.Tcl()"
 
 ## Translator
 
-Open `ValkyrieProfile2-Translator`, select your clean USA image and a
-language, then choose **Build translated ISO**. The first build prepares a
-local workspace and takes longer; later builds reuse it.
+Open `ValkyrieProfile2-Tools` and leave the default **Translate** page
+selected. Choose your clean USA image and a language, then choose **Build
+translated ISO**. The first build prepares a local workspace and takes longer;
+later builds reuse it.
 
 From a source checkout:
 
 ```bash
-python vp2_translate.py
+python vp2_tools.py
 python vp2_translate.py build <usa-image.iso>
 ```
 
@@ -60,18 +64,15 @@ Portuguese (`pt-BR`) is selected when no language is specified. See the
 [translator guide](docs/translator.md) for every command, output locations,
 the optional Japanese reference, and language-pack usage.
 
-![Translator window](images/gui.jpg)
-
 ## Cheat Patcher
 
-Open `ValkyrieProfile2-CheatPatcher`, select your clean USA image, choose the
-cheats, then select **Patch ISO**. Only **Disable Anti-Cheat Systems** is
-enabled by default in the window.
+Open `ValkyrieProfile2-Tools`, select **Cheats** in the sidebar, choose your
+clean USA image and cheats, then select **Patch ISO**. Only **Disable
+Anti-Cheat Systems** is enabled by default.
 
 From a source checkout:
 
 ```bash
-python vp2_cheats.py
 python vp2_cheats.py <usa-image.iso>
 python vp2_cheats.py <usa-image.iso> --patch angel-slayer
 ```
@@ -83,7 +84,7 @@ dependencies, output behavior, and safety checks.
 
 ## Voice Tool
 
-Open `ValkyrieProfile2-VoiceTool`, select a USA or Japanese image, then choose
+Open `ValkyrieProfile2-Tools`, select **Voices** in the sidebar, and choose
 either **Extract every voice** or a folder of replacement WAVs and **Patch
 ISO**. To create an undub, open **Japanese Audio / Undub**, select the target
 USA or PAL image and the Japanese image, then choose **Create Japanese-audio
@@ -92,7 +93,6 @@ ISO**. Source images are only read.
 From a source checkout:
 
 ```bash
-python vp2_voices.py
 python vp2_voices.py extract <usa-or-japan-image.iso>
 python vp2_voices.py patch <base-image.iso> <replacement-wav-folder>
 python vp2_voices.py import-japanese <usa-or-pal-image.iso> <japan-image.iso>

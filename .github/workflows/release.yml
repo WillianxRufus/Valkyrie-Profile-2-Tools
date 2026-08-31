@@ -76,23 +76,18 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          python -m PyInstaller data/vp2_release.spec \
-            --workpath workspace/internal/build --clean --noconfirm
-          python -m PyInstaller data/vp2_cheats.spec \
-            --workpath workspace/internal/build --clean --noconfirm
-          python -m PyInstaller data/vp2_voices.spec \
+          python -m PyInstaller data/vp2_tools.spec \
             --workpath workspace/internal/build --clean --noconfirm
 
       - name: Package Windows
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          for binary in ValkyrieProfile2-Translator ValkyrieProfile2-CheatPatcher ValkyrieProfile2-VoiceTool; do
-            ./dist/"${binary}.exe" --self-check
-            name="${binary}-${{ steps.package.outputs.version }}-${{ matrix.suffix }}"
-            mv "dist/${binary}.exe" "dist/${name}.exe"
-            7z a -tzip "${name}.zip" "./dist/${name}.exe" > /dev/null
-          done
+          binary="ValkyrieProfile2-Tools"
+          ./dist/"${binary}.exe" --self-check
+          name="${binary}-${{ steps.package.outputs.version }}-${{ matrix.suffix }}"
+          mv "dist/${binary}.exe" "dist/${name}.exe"
+          7z a -tzip "${name}.zip" "./dist/${name}.exe" > /dev/null
 
       - name: Build and package Linux through the release container
         if: runner.os == 'Linux'
@@ -116,7 +111,7 @@ jobs:
             7z x "$archive" > /dev/null
           done
           binaries=(./*.exe)
-          test "${#binaries[@]}" -eq 3
+          test "${#binaries[@]}" -eq 1
           for binary in "${binaries[@]}"; do
             "$binary" --self-check
           done

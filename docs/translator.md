@@ -1,16 +1,16 @@
 # Translator guide
 
-ValkyrieProfile2-Translator builds a translated copy of the USA release of
-_Valkyrie Profile 2: Silmeria_. It reads the source disc image and writes a
-separate ISO; it never changes the source.
+The Translate page in ValkyrieProfile2-Tools builds a translated copy of the
+USA release of _Valkyrie Profile 2: Silmeria_. It reads the source disc image
+and writes a separate ISO; it never changes the source.
 
 ## Using the window
 
-Open `ValkyrieProfile2-Translator` from a downloaded release, or run this from
+Open `ValkyrieProfile2-Tools` from a downloaded release, or run this from
 a source checkout:
 
 ```bash
-python vp2_translate.py
+python vp2_tools.py
 ```
 
 Then:
@@ -26,13 +26,12 @@ several minutes. Later builds reuse that workspace.
 
 ## Command line
 
-| Command                                                    | Purpose                                                                    |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `python vp2_translate.py`                                  | Open the window.                                                           |
-| `python vp2_translate.py generate <image>...`              | Prepare the local workspace and reference files.                           |
-| `python vp2_translate.py build <usa-image.iso> [language]` | Build a translated ISO.                                                    |
-| `python vp2_translate.py check-pack <language>`            | Validate a language pack.                                                  |
-| `python vp2_translate.py --self-check`                     | Check that an installation contains its required files and window runtime. |
+| Command                                                    | Purpose                                                        |
+| ---------------------------------------------------------- | -------------------------------------------------------------- |
+| `python vp2_translate.py generate <image>...`              | Prepare the local workspace and reference files.               |
+| `python vp2_translate.py build <usa-image.iso> [language]` | Build a translated ISO.                                        |
+| `python vp2_translate.py check-pack <language>`            | Validate a language pack.                                      |
+| `python vp2_translate.py --self-check`                     | Check that the translation CLI runtime and data are available. |
 
 `generate` is optional because `build` runs it automatically when the
 workspace has not been prepared. To include both English and Japanese in the

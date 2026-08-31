@@ -10,14 +10,36 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-import vp2_translate as launcher  # noqa: E402
+import vp2_tools as tools_launcher  # noqa: E402
+from tools import translate_gui as launcher  # noqa: E402
 from tools.scripts import public_build  # noqa: E402
 
 
 class LauncherLogicTests(unittest.TestCase):
     def test_no_arguments_selects_the_gui(self):
-        args = launcher._parser().parse_args([])
-        self.assertIsNone(args.command)
+        args = tools_launcher._parser().parse_args([])
+        self.assertFalse(args.self_check)
+
+    def test_legacy_launchers_are_command_line_only(self):
+        import contextlib
+        import io
+        import vp2_cheats
+        import vp2_translate
+        import vp2_voices
+
+        for module in (vp2_translate, vp2_cheats, vp2_voices):
+            with self.subTest(module=module.__name__), \
+                    contextlib.redirect_stderr(io.StringIO()):
+                try:
+                    status = module.main([])
+                except SystemExit as exc:
+                    status = exc.code
+                self.assertEqual(2, status)
+            source = (ROOT / (module.__name__ + ".py")).read_text(
+                encoding="utf-8")
+            self.assertNotIn("tkinter", source)
+            self.assertNotIn("run_gui", source)
+            self.assertNotIn(".gui import", source)
 
     def test_language_packs_are_named_for_people(self):
         packs = launcher.language_packs(ROOT)
@@ -67,22 +89,24 @@ class FrozenRuntimeTests(unittest.TestCase):
 
 class ReleaseSpecTests(unittest.TestCase):
     def setUp(self):
-        self.spec_path = ROOT / "data" / "vp2_release.spec"
+        self.spec_path = ROOT / "data" / "vp2_tools.spec"
         self.spec = self.spec_path.read_text(encoding="utf-8")
 
     def test_spec_and_pyinstaller_work_tree_use_internal_build_storage(self):
-        """Both tools ship, and neither scratches outside the workspace."""
+        """Only the unified GUI ships and it scratches inside the workspace."""
         self.assertTrue(self.spec_path.is_file())
-        self.assertTrue((ROOT / "data" / "vp2_cheats.spec").is_file())
-        self.assertTrue((ROOT / "data" / "vp2_voices.spec").is_file())
+        self.assertFalse((ROOT / "data" / "vp2_release.spec").exists())
+        self.assertFalse((ROOT / "data" / "vp2_cheats.spec").exists())
+        self.assertFalse((ROOT / "data" / "vp2_voices.spec").exists())
         expected_workpath = "--workpath workspace/internal/build"
         for path in (
                 ROOT / "Dockerfile",
                 ROOT / ".github" / "workflows" / "release.yml"):
             source = path.read_text(encoding="utf-8")
-            for spec in ("data/vp2_release.spec", "data/vp2_cheats.spec",
-                         "data/vp2_voices.spec"):
-                self.assertIn(spec, source, "%s: %s" % (path, spec))
+            self.assertIn("data/vp2_tools.spec", source, path)
+            for old in ("data/vp2_release.spec", "data/vp2_cheats.spec",
+                        "data/vp2_voices.spec"):
+                self.assertNotIn(old, source, "%s: %s" % (path, old))
             self.assertIn(expected_workpath, source, path)
             self.assertNotIn(
                 "--workpath workspace/internal/build/vp2_release", source,
@@ -128,6 +152,65 @@ class ReleaseSpecTests(unittest.TestCase):
 
 
 class WindowSmokeTests(unittest.TestCase):
+    def test_unified_window_owns_navigation_and_footer(self):
+        try:
+            import tkinter
+            root = tkinter.Tk()
+        except Exception as exc:
+            self.skipTest(f"no usable Tk display: {exc}")
+        root.withdraw()
+        try:
+            app = tools_launcher.App(root)
+            self.assertEqual("translate", app.current)
+            self.assertEqual(
+                tools_launcher.translate_gui.SHORT_NAME,
+                app.apps["translate"].canvas.itemcget(
+                    app.apps["translate"].title_item, "text"),
+            )
+            self.assertEqual(
+                ["translate", "voices", "cheats"],
+                [item[0] for item in tools_launcher.NAVIGATION],
+            )
+            self.assertIn("v" + tools_launcher.app_meta.VERSION,
+                          app.footer_link.master.winfo_children()[0].cget("text"))
+            self.assertNotIn(tools_launcher.app_meta.VERSION, root.title())
+
+            for item in app.nav_buttons.values():
+                self.assertEqual(0, int(item.icon_label.grid_info()["column"]))
+                self.assertEqual(1, int(item.text_label.grid_info()["column"]))
+                self.assertEqual(3, int(item.icon_label.cget("width")))
+            root.update_idletasks()
+            self.assertEqual(1, len({item.icon_label.winfo_rootx()
+                                     for item in app.nav_buttons.values()}))
+            self.assertEqual(1, len({item.text_label.winfo_rootx()
+                                     for item in app.nav_buttons.values()}))
+
+            app.apps["translate"]._set_busy(True)
+            self.assertTrue(all(item.disabled
+                                for item in app.nav_buttons.values()))
+            self.assertFalse(app.show("voices"))
+            self.assertEqual("translate", app.current)
+
+            app.apps["translate"]._set_busy(False)
+            self.assertFalse(any(item.disabled
+                                 for item in app.nav_buttons.values()))
+            app.nav_buttons["voices"].invoke()
+            self.assertEqual("voices", app.current)
+            self.assertEqual(
+                tools_launcher.voice_gui.SHORT_NAME,
+                app.apps["voices"].canvas.itemcget(
+                    app.apps["voices"].title_item, "text"),
+            )
+            app.show("cheats")
+            self.assertEqual("cheats", app.current)
+            self.assertEqual(
+                tools_launcher.cheat_gui.SHORT_NAME,
+                app.apps["cheats"].canvas.itemcget(
+                    app.apps["cheats"].title_item, "text"),
+            )
+        finally:
+            root.destroy()
+
     def test_window_constructs(self):
         try:
             import tkinter

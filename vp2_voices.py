@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Valkyrie Profile 2 Translation Tools contributors
 # SPDX-License-Identifier: GPL-3.0-only
-"""GUI and command-line launcher for the VP2 voice tool."""
+"""Command-line interface for the VP2 voice tool."""
 
 from __future__ import annotations
 
@@ -55,8 +55,7 @@ def _parser():
 def self_check(stream=None):
     output = stream or sys.stdout
     notes, problems = [], []
-    frozen = bool(getattr(sys, "frozen", False))
-    notes.append("frozen            : %s" % frozen)
+    notes.append("frozen            : %s" % bool(getattr(sys, "frozen", False)))
     try:
         owners = load_bank_map()
         alternates = sum(owner.category == "alternate"
@@ -79,24 +78,6 @@ def self_check(stream=None):
         notes.append("audio codec       : %d Hz PCM/PS-ADPCM" % audio.SAMPLE_RATE)
     except Exception as exc:
         problems.append("audio codec self-test failed: %r" % exc)
-    try:
-        from tools.voice_patcher import gui
-        artwork = [name for name in (
-            gui.ICON_ICO, gui.ICON_PNG, gui.BACKDROP_PNG
-        ) if gui.asset_path(name)]
-        notes.append("window artwork    : " + (", ".join(artwork) or "none"))
-        for name in (gui.ICON_ICO, gui.ICON_PNG, gui.BACKDROP_PNG):
-            if name not in artwork:
-                problems.append("missing window artwork: %s" % name)
-        import tkinter
-        notes.append("window runtime    : Tcl %s"
-                     % tkinter.Tcl().eval("info patchlevel"))
-        if frozen:
-            for relative in ("_tcl_data/init.tcl", "_tk_data/tk.tcl"):
-                if not (gui.PROJECT_ROOT / relative).is_file():
-                    problems.append("missing window runtime file: %s" % relative)
-    except Exception as exc:  # pragma: no cover - packaging environment
-        problems.append("the Tk window runtime does not initialize: %r" % exc)
     for note in notes:
         print(note, file=output)
     for problem in problems:
@@ -114,8 +95,8 @@ def main(argv=None):
     if args.self_check:
         return self_check()
     if args.command is None:
-        from tools.voice_patcher.gui import run_gui
-        return run_gui()
+        _parser().print_help(sys.stderr)
+        return 2
     try:
         if args.command == "extract":
             result = extract_voices(

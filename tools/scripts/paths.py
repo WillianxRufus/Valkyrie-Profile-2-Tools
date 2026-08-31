@@ -27,6 +27,8 @@ else:
 # Source-free structural tables live directly under ``data/``.
 DATA_DIR = PROJECT_ROOT / "data"
 
+# Keep the established directory so upgrading to the unified executable reuses
+# existing generated workspaces and compression state.
 APP_DIR_NAME = "ValkyrieProfile2-Translator"
 
 

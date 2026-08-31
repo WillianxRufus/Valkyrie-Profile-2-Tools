@@ -21,6 +21,7 @@ from .build import (
 from .layout import (
     JAPAN_BOOT, JAPANESE_AUDIO_TARGET_BOOTS, VOICE_SOURCE_BOOTS,
 )
+from ..app_meta import VERSION as __version__
 
 try:
     from tkinter import (
@@ -38,7 +39,6 @@ else:
     TK_IMPORT_ERROR = None
 
 
-__version__ = "0.0.6"
 APP_NAME = "Valkyrie Profile 2 Voice Tool"
 SHORT_NAME = "VP2 Voice Tool"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -290,8 +290,11 @@ class TaskRunner:
 
 
 class App:
-    def __init__(self, root):
+    def __init__(self, root, parent=None, on_busy_change=None):
         self.root = root
+        self.host = parent or root
+        self.embedded = parent is not None
+        self.on_busy_change = on_busy_change or (lambda _busy: None)
         self.source_var = StringVar()
         self.undub_base_var = StringVar()
         self.japan_var = StringVar()
@@ -311,18 +314,21 @@ class App:
         self.allow_overlong_var = BooleanVar(value=False)
         self.locked = []
         self.started_at = None
-        root.title("%s %s" % (SHORT_NAME, __version__))
         self.scale = apply_dpi_scaling(root)
         self.fonts = apply_dark_theme(root)
         self.compact_height = int(790 * self.scale)
         self.expanded_height = int(970 * self.scale)
         width = int(900 * self.scale)
-        root.minsize(int(760 * self.scale), self.compact_height)
-        root.geometry(initial_window_geometry(root, width, self.compact_height))
-        apply_window_icon(root)
+        if not self.embedded:
+            root.title(SHORT_NAME)
+            root.minsize(int(760 * self.scale), self.compact_height)
+            root.geometry(initial_window_geometry(
+                root, width, self.compact_height))
+            apply_window_icon(root)
         self._build_ui()
         self.runner = TaskRunner(root, self._on_line, self._on_done)
-        root.protocol("WM_DELETE_WINDOW", self._on_close)
+        if not self.embedded:
+            root.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _px(self, value):
         return int(value * self.scale)
@@ -351,7 +357,7 @@ class App:
         )
 
     def _build_ui(self):
-        self.canvas = Canvas(self.root, highlightthickness=0, bd=0,
+        self.canvas = Canvas(self.host, highlightthickness=0, bd=0,
                              background=DARK["bg"])
         self.canvas.pack(fill="both", expand=True)
         backdrop_path = asset_path(BACKDROP_PNG)
@@ -362,7 +368,7 @@ class App:
             0, 0, anchor="se", image=self.backdrop
         ) if self.backdrop else None)
         self.title_item = self.canvas.create_text(
-            0, 0, anchor="nw", text="Valkyrie Profile 2",
+            0, 0, anchor="nw", text=SHORT_NAME,
             fill=DARK["text"], font=self.fonts["title"]
         )
         self.subtitle_item = self.canvas.create_text(
@@ -838,6 +844,7 @@ class App:
     def _set_busy(self, busy):
         for widget, idle in self.locked:
             widget.configure(state=DISABLED if busy else idle)
+        self.on_busy_change(bool(busy))
 
     def _on_line(self, text):
         self._append_log(text)
@@ -906,15 +913,21 @@ class App:
             self.items["log"], state="normal" if shown else "hidden"
         )
         self.log_btn.configure(text="Hide details" if shown else "Show details")
-        width = self.root.winfo_width()
-        self.root.geometry("%dx%d" % (
-            width, self.expanded_height if shown else self.compact_height
-        ))
+        if not self.embedded:
+            width = self.root.winfo_width()
+            self.root.geometry("%dx%d" % (
+                width, self.expanded_height if shown else self.compact_height
+            ))
         self._reflow()
 
-    def _on_close(self):
+    def request_close(self):
         if self.runner.busy and not messagebox.askyesno(
                 "Still working", "A voice operation is still running. Close anyway?"):
+            return False
+        return True
+
+    def _on_close(self):
+        if not self.request_close():
             return
         self.root.destroy()
 
