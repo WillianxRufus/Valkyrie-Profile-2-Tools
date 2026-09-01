@@ -431,10 +431,13 @@ def read_scene_rows(path, resource=None, *, primary_lookup=None):
                                      kind=sheet_kind(path))
     rows = [row for row in rows
             if row.get("message_id") and row.get("translated", "").strip()]
+    from .vp2_title_face import CHAPTER_RECORDS
     out = []
     for row in rows:
         index = int(row["resource"])
         if resource is not None and index != resource:
+            continue
+        if (index, int(row["message_id"])) in CHAPTER_RECORDS:
             continue
         out.append({
             "resource_index": str(index),

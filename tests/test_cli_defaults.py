@@ -1,17 +1,5 @@
 # SPDX-FileCopyrightText: 2026 Valkyrie Profile 2 Translation Tools contributors
 # SPDX-License-Identifier: GPL-3.0-only
-
-"""Every path default belongs to the installation, not to the caller.
-
-`generate` writes a workspace and `build` reads it back. When those defaults
-were relative, the two commands could each be right about a different
-directory: run `generate` from somewhere else and it made a workspace there,
-then `build` looked beside itself and reported one missing. Nothing failed
-loudly, and the message named the wrong problem.
-
-These tests run the parser from an unrelated working directory, which is the
-only place the bug was ever visible.
-"""
 import importlib.util
 import os
 import sys

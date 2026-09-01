@@ -269,7 +269,7 @@ def _export_chapters(
                 "message_id": str(message_id),
                 "message_index": "",
                 "original_en": vp2_title_face.decode_title(
-                    iso, resource, message_id, face),
+                    iso, resource, message_id, face=face),
                 "original_jp": "",
                 "translated": "",
                 "notes": "",

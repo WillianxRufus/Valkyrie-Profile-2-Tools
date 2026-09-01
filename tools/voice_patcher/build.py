@@ -706,11 +706,6 @@ def _streamed_audio_hybrids(base_handle, base_values, donor_handle,
 
 def _canonical_archive_layout(base_values, donor_values, total,
                               donor_resources, sector_overrides=None):
-    """Repack the complete archive in the physical order its readers use.
-
-    Active entries are stored as one contiguous, entry-ordered stream;
-    relocating only selected entries is not compatible with that.
-    """
     base_active = [
         entry for entry in range(1, total)
         if base_values[total + entry]

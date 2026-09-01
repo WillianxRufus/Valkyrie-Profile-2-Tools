@@ -52,9 +52,6 @@ class RowLookupTests(unittest.TestCase):
         self.assertIsNone(check._row_for(self.profile, 999))
 
     def test_manifest_carries_fields_the_profile_does_not(self):
-        # The reason a check has to patch the manifest row: patching the
-        # profile row leaves out what compiling worked out, and measures
-        # something no build ever builds.
         profile = check._row_for(self.profile, 1000)
         manifest = check._row_for(self.manifest, 1000)
         self.assertNotIn("chapter_title", profile)
@@ -123,7 +120,6 @@ class AccentTests(unittest.TestCase):
         self.assertEqual((character, base, used), ("ú", "u", 1))
 
     def test_needs_the_plain_letter_to_already_be_there(self):
-        # Writing it plainly has to take a glyph out, not swap one in.
         self.assertIsNone(check._least_used_accent(self._rendered("ç")))
 
     def test_text_with_no_accents_has_nothing_to_measure(self):
@@ -151,7 +147,6 @@ class AccentTests(unittest.TestCase):
         _write(sheet, ("message_id", "translated"), [("1", "aço")])
         into = directory / "plain"
         into.mkdir()
-        # Which records a sheet holds is read from its name.
         self.assertEqual(
             check._sheet_without("ç", "c", sheet, into).name, sheet.name)
 

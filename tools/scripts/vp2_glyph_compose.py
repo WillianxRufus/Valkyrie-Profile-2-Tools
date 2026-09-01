@@ -214,8 +214,11 @@ LOWERCASE_EXTRA_OVERLAP = 1
 
 
 def compose_character(body_block, character, mark_grid, mark_rows,
-                      donor_bottom=None):
-    """Compose ``character`` with its recipe-specific placement."""
+                      donor_bottom=None, body_from=None):
+    """Compose ``character`` with its recipe-specific placement.
+
+    ``body_from`` overrides a replacement recipe's face-specific boundary.
+    """
     base, donor, position = COMPOSITES[character]
     shift = MARK_VERTICAL_SHIFTS.get(donor, 0)
     sideways = MARK_HORIZONTAL_SHIFTS.get(donor, 0)
@@ -223,7 +226,8 @@ def compose_character(body_block, character, mark_grid, mark_rows,
         shift += LOWERCASE_EXTRA_OVERLAP
     if position == "replace":
         return compose_replace(body_block, mark_grid, mark_rows,
-                               BODY_START[base], clearance=1,
+                               (BODY_START[base] if body_from is None
+                                else body_from), clearance=1,
                                dx_shift=sideways)
     if position == "below":
         if donor_bottom is not None:

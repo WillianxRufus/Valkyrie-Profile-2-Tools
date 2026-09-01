@@ -1,5 +1,6 @@
 """Read-back verification for patched scene text and fonts."""
 
+import contextlib
 import csv
 import glob
 import hashlib
@@ -43,6 +44,30 @@ def collapse(text):
     """Whitespace-insensitive form of a line."""
     return " ".join(
         text.replace(FRAGMENT_MARKER, " %s " % FRAGMENT_MARKER).split())
+
+def verify_chapter_title(args, resource):
+    """Compare the chapter title on the patched image against the expected one."""
+    title = (getattr(args, "chapter_title", None) or "").strip()
+    if not title:
+        return False
+    from . import vp2_title_face as title_face
+    message_id = int(getattr(args, "chapter_title_message"))
+    with contextlib.ExitStack() as stack:
+        source = stack.enter_context(open(args.iso, "rb"))
+        _, total, table = triace.load_table(source)
+        donor = None
+        if args.reference_iso:
+            handle = stack.enter_context(open(args.reference_iso, "rb"))
+            _, donor_total, donor_table = triace.load_table(handle)
+            donor = FileIso(handle, donor_table, donor_total)
+        actual = title_face.decode_title(
+            FileIso(source, table, total), resource, message_id, title,
+            donor_iso=donor)
+    if actual.lower() != title.lower():
+        raise ValueError("chapter title decoded as %s, expected %s"
+                         % (ascii(actual), ascii(title)))
+    return True
+
 
 def verify_scene_sheet(args):
     """Read a scene sheet's translations back off the disc, run by run."""
@@ -192,6 +217,7 @@ def verify_scene_sheet(args):
             sheet_rows = list(csv.DictReader(source))
         (source_expanded, source_metadata, source_display,
          source_offsets, source_next) = source_view
+        from .vp2_title_face import CHAPTER_RECORDS
         for sheet_row in sheet_rows:
             raw_id = (sheet_row.get("message_id") or "").strip()
             if not raw_id:
@@ -199,6 +225,7 @@ def verify_scene_sheet(args):
             message_id = int(raw_id, 0)
             if message_id in translated_ids \
                     or message_id not in displayed_ids \
+                    or (resource, message_id) in CHAPTER_RECORDS \
                     or not (sheet_row.get("original_en") or "").strip() \
                     or message_id not in offsets \
                     or message_id not in source_offsets:
@@ -245,8 +272,10 @@ def verify_scene_sheet(args):
             raise ValueError(
                 "%d glyph slot(s) lost a bitmap a record still draws" % len(lost))
     gate = "" if source_font is not None else " (font gate skipped: no --reference-iso)"
-    print("verified %d translated rows in resource #%d: %s%s" %
-          (len(rows), resource, args.iso, gate))
+    titled = verify_chapter_title(args, resource)
+    print("verified %d translated rows%s in resource #%d: %s%s" %
+          (len(rows), " plus chapter title" if titled else "",
+           resource, args.iso, gate))
 
 def cmd_verify(args):
     if is_scene_sheet(args.csv):
@@ -396,27 +425,7 @@ def cmd_verify(args):
             print("%s message %d expected %s, decoded %s" %
                   (audio_id, message_id, ascii(expected), ascii(actual)))
         raise ValueError("%d subtitle read-back mismatches" % len(mismatches))
-    verified_title = False
-    if args.chapter_title:
-        from . import vp2_title_face as title_face
-        with open(args.iso, "rb") as source:
-            _, total, table = triace.load_table(source)
-            face, _ = title_face.donor_index(
-                source, table, total, skip_patched=True)
-            title_expanded, title_layout = title_face.load_font(
-                source, table, total, resource)
-        blocks = title_face.glyph_blocks(title_expanded, title_layout)
-        names = {slot: face[hashlib.sha1(block).digest()]
-                 for slot, block in enumerate(blocks)
-                 if hashlib.sha1(block).digest() in face}
-        _, slots = title_face.title_record(
-            title_expanded, title_layout, args.chapter_title_message)
-        actual_title = "".join(names.get(slot, "?") for slot in slots)
-        expected = args.chapter_title
-        if actual_title.lower() != expected.lower():
-            raise ValueError("chapter title decoded as %s, expected %s" %
-                             (ascii(actual_title), ascii(expected)))
-        verified_title = True
+    verified_title = verify_chapter_title(args, resource)
     substituted = {}
     corrupted = []
     for row, actual in drawn_rows:

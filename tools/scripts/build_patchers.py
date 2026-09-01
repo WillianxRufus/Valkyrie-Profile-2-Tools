@@ -51,6 +51,8 @@ def verify_scene_in_memory(iso_path, row, reference_iso,
         reference_iso=str(reference_iso),
         en_names=None,
         primary_lookup=primary_lookup,
+        chapter_title=row.get('chapter_title') or None,
+        chapter_title_message=row.get('chapter_title_message') or None,
     ))
 
 def verify_args(iso, row, reference_iso):
@@ -250,8 +252,6 @@ def preflight(reference_iso, rows, *, dry_run, verbose=False):
           f"{reference_iso} ==")
     for row in scene_rows:
         if dry_run:
-            # Keep printing the equivalent command so a dry run still
-            # describes the chain it would have run.
             run([sys.executable, '-m', 'tools.scripts.vp2_cutscene_workflow',
                  'audit', str(reference_iso), '--resource', row['resource'],
                  '--csv', row['sheet'], '--strict'], dry_run=True)

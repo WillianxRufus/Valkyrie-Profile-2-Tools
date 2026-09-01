@@ -17,6 +17,7 @@ from . import slz
 from . import triace_ps2_unpack as triace
 from . import vp2_dcms as dcms
 from . import vp2_cutscene_subtitles as subtitles
+from .scene_fonts import append_glyph_blocks
 from .scene_codec import pack_tokens
 from .scene_glyphs import glyph_value, set_glyph_value
 
@@ -138,20 +139,38 @@ def build_face(iso, skip_patched=False):
     return face, sources
 
 
-def decode_title(iso, resource, message_id, face=None):
-    """Decode one title record using only bitmap fingerprints."""
+def decode_title(iso, resource, message_id, expected="", donor_iso=None,
+                 face=None):
     loaded = load_font(iso, resource)
     if loaded is None:
         raise ValueError("chapter resource #%d is not a PK1 scene font" % resource)
     expanded, layout = loaded
     face = read_title_names() if face is None else face
     blocks = glyph_blocks(expanded, layout)
+    installed = {}
+    if expected:
+        source = donor_iso or iso
+        _, donors = donor_index(source, skip_patched=donor_iso is None)
+        harvested = read_harvested_donors()
+        composable = _composition_art(source, donors, harvested, layout)
+        for character in dict.fromkeys(expected):
+            try:
+                bitmap, _, _, _ = glyph_art(source, character, donors,
+                                            harvested, composable, layout)
+            except ValueError:
+                continue
+            installed.setdefault(hashlib.sha1(bytes(bitmap)).digest(), character)
     _, slots = title_record(expanded, layout, message_id)
     characters = []
     for slot in slots:
         digest = hashlib.sha1(blocks[slot]).digest()
         character = face.get(digest)
         if character is None:
+            character = installed.get(digest)
+        if character is None:
+            if expected:
+                characters.append("?")
+                continue
             raise ValueError(
                 "chapter resource #%d message %d has an unnamed title glyph"
                 % (resource, message_id))
@@ -474,9 +493,60 @@ def title_record(expanded, layout, message_id):
     return runs[0]
 
 
-def install_title(expanded, layout, title_text, iso,
-                  message_id, face=None, donors=None):
-    """Re-cut a resource's title glyph block so it spells ``title_text``."""
+def glyph_art(iso, character, donors, harvested, composable, layout):
+    """The title-face bitmap and metric for *character*, and where it came from."""
+    location = find_donor(donors, character)
+    if location is not None:
+        donor_resource, donor_slot = location
+        bitmap, metric, glyph_bytes = subtitles.donor_glyph(
+            iso, donor_resource, donor_slot)
+    else:
+        art = find_harvested(harvested, character)
+        if art is not None:
+            bitmap, metric, glyph_bytes = art
+            donor_resource, donor_slot = "harvested", character
+        else:
+            composed = (compose_accented(character, composable)
+                        or compose_with_subtitle_mark(character, composable)
+                        or compose_procedural(character, composable))
+            if composed is None:
+                raise ValueError(
+                    "the chapter-title face has no %r and cannot compose "
+                    "one; it offers only %r (the face is unicase, so each "
+                    "letter covers both cases). A mark this face carries "
+                    "nowhere -- the tilde and the cedilla -- has to be "
+                    "authored rather than borrowed."
+                    % (character, face_alphabet(donors, harvested)))
+            bitmap, metric, source = composed
+            glyph_bytes = len(bitmap)
+            donor_resource, donor_slot = "composed", source
+    if glyph_bytes != layout["glyph_bytes"]:
+        raise ValueError("incompatible title donor for %r" % character)
+    return bitmap, metric, donor_resource, donor_slot
+
+
+def fold(character):
+    """The character a slot is keyed by; the face draws one bitmap per pair."""
+    return character.lower() if UNICASE else character
+
+
+def write_glyph(expanded, layout, slot, bitmap, metric):
+    """Put one bitmap and its advance into an existing slot."""
+    start = layout["font_start"] + slot * layout["glyph_bytes"]
+    expanded[start:start + layout["glyph_bytes"]] = bitmap
+    metric_start = layout["text_end"] + slot * 2
+    expanded[metric_start:metric_start + 2] = metric
+
+
+def title_tokens(title_text, assignment, glyph_base):
+    """Encode the title record against the slots its letters ended up in."""
+    return pack_tokens([subtitles.slot_token(assignment[fold(character)],
+                                             glyph_base)
+                        for character in title_text])
+
+
+def plan_title(expanded, layout, title_text, iso, message_id,
+               face=None, donors=None):
     if face is None or donors is None:
         face, donors = donor_index(iso)
     _, current = title_record(expanded, layout, message_id)
@@ -510,58 +580,63 @@ def install_title(expanded, layout, title_text, iso,
     free = [slot for slot in block if slot not in used]
     missing = [character for character in ordered
                if key(character) not in assignment]
-    if len(missing) > len(free):
-        raise ValueError(
-            "title %r needs %d new glyph slots but the block only frees %d; "
-            "shorten the title or reuse more of its existing characters"
-            % (title_text, len(missing), len(free)))
 
     harvested = read_harvested_donors()
     composable = _composition_art(iso, donors, harvested, layout)
+    art = [(character,) + glyph_art(iso, character, donors, harvested,
+                                    composable, layout)
+           for character in missing]
+
     installed = []
-    for character, slot in zip(missing, free):
-        location = find_donor(donors, character)
-        composed = None
-        if location is not None:
-            donor_resource, donor_slot = location
-            bitmap, metric, glyph_bytes = subtitles.donor_glyph(
-                iso, donor_resource, donor_slot)
-        else:
-            art = find_harvested(harvested, character)
-            if art is not None:
-                bitmap, metric, glyph_bytes = art
-                donor_resource, donor_slot = "harvested", character
-            else:
-                composed = (compose_accented(character, composable)
-                            or compose_with_subtitle_mark(character,
-                                                          composable)
-                            or compose_procedural(character, composable))
-                if composed is None:
-                    raise ValueError(
-                        "the chapter-title face has no %r and cannot compose "
-                        "one; it offers only %r (the face is unicase, so each "
-                        "letter covers both cases). A mark this face carries "
-                        "nowhere -- the tilde and the cedilla -- has to be "
-                        "authored rather than borrowed."
-                        % (character, face_alphabet(donors, harvested)))
-                bitmap, metric, source = composed
-                glyph_bytes = len(bitmap)
-                donor_resource, donor_slot = "composed", source
-        if glyph_bytes != layout["glyph_bytes"]:
-            raise ValueError("incompatible title donor for %r" % character)
-        start = layout["font_start"] + slot * layout["glyph_bytes"]
-        expanded[start:start + layout["glyph_bytes"]] = bitmap
-        metric_start = layout["text_end"] + slot * 2
-        expanded[metric_start:metric_start + 2] = metric
+    for (character, bitmap, metric, donor_resource, donor_slot), slot in zip(
+            art, free):
+        write_glyph(expanded, layout, slot, bitmap, metric)
         assignment[key(character)] = slot
         used.add(slot)
         installed.append((character, slot, donor_resource, donor_slot))
 
     released = [slot for slot in block if slot not in used]
-    tokens = pack_tokens([subtitles.slot_token(assignment[key(character)],
-                                               layout["glyph_base"])
-                          for character in title_text])
-    return assignment, installed, released, tokens
+    return assignment, installed, released, art[len(free):]
+
+
+SLOT_CANDIDATES = 12
+
+
+def place_title(expanded, layout, pending, free_slots, measure=None):
+    free = list(free_slots)[:]
+    assignment, installed, overflow = {}, [], []
+    for item in pending:
+        character, bitmap, metric, donor_resource, donor_slot = item
+        if not free:
+            overflow.append(item)
+            continue
+        slot = _cheapest_slot(expanded, layout, bitmap, metric, free, measure)
+        free.remove(slot)
+        write_glyph(expanded, layout, slot, bitmap, metric)
+        assignment[fold(character)] = slot
+        installed.append((character, slot, donor_resource, donor_slot))
+    appended = append_glyph_blocks(
+        expanded, layout, [(bitmap, metric)
+                           for _c, bitmap, metric, _r, _s in overflow])
+    for (character, _bitmap, _metric, donor_resource, donor_slot), slot in zip(
+            overflow, appended):
+        assignment[fold(character)] = slot
+        installed.append((character, slot, donor_resource, donor_slot))
+    return assignment, installed, appended
+
+
+def _cheapest_slot(expanded, layout, bitmap, metric, free, measure):
+    """The free slot this glyph compresses smallest in."""
+    if measure is None or len(free) == 1:
+        return free[0]
+    best, best_cost = None, None
+    for slot in free[:SLOT_CANDIDATES]:
+        trial = bytearray(expanded)
+        write_glyph(trial, layout, slot, bitmap, metric)
+        cost = measure(bytes(trial))
+        if best_cost is None or cost < best_cost:
+            best, best_cost = slot, cost
+    return best
 
 
 def resource_list(manifest):

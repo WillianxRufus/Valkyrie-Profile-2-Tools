@@ -204,8 +204,6 @@ class TaskRunner:
             self.after_id = None
 
     def _drain(self):
-        # Bounded on purpose: an unbounded drain never returns while a
-        # tool produces faster than the window consumes.
         for _ in range(self.BATCH):
             try:
                 item = self.events.get_nowait()
@@ -703,8 +701,6 @@ class App:
             self.progress.configure(mode="determinate", value=0)
             self.status_var.set("Preparing the translation build…")
         else:
-            # No step count to count against until the disc has been read,
-            # and a bar sitting at zero for minutes reads as a hung window.
             self.progress.configure(mode="indeterminate", value=0)
             self.progress.start(12)
             self.status_var.set("Reading your disc for the first time…")

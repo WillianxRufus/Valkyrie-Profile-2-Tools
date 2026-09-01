@@ -509,6 +509,11 @@ from .scene_text import (
     verification_glyph_advances, visible_text_tokens,
 )
 
+def _title_slot_cost(data):
+    """How small a candidate title-glyph placement makes the DCMS."""
+    return len(slz_compress.compress(data, mode=2, optimal=False))
+
+
 def patch_resource_bytes(raw, resource_index, args, rows, iso,
                          reference=None):
     """Compute the patched bytes + diagnostic info for one scene resource."""
@@ -541,12 +546,13 @@ def patch_resource_bytes(raw, resource_index, args, rows, iso,
     }
     cleared = []
     title_installed, title_released, title_tokens = [], [], None
+    title_slots, title_pending, title_free = {}, [], []
     if args.chapter_title:
         from . import vp2_title_face as title_face
         title_face_names, title_donors = title_face.donor_index(
             glyph_iso, skip_patched=True)
         (title_slots, title_installed, title_released,
-         title_tokens) = title_face.install_title(
+         title_pending) = title_face.plan_title(
             expanded, layout, args.chapter_title, glyph_iso,
             args.chapter_title_message,
             face=title_face_names, donors=title_donors)
@@ -620,6 +626,10 @@ def patch_resource_bytes(raw, resource_index, args, rows, iso,
             glyph_iso, accent_blocks, keep_glyphs)
         layout = font_layout(expanded)
         metadata["glyph_count"] = layout["glyph_count"]
+        title_free = [slot for slot in range(layout["glyph_count"])
+                      if slot not in set(assignment.values())
+                      and slot not in opaque
+                      and slot not in title_protected]
         full_font = {
             "characters": characters, "dropped": dropped,
             "installed": installed, "slots": slot_total,
@@ -665,6 +675,26 @@ def patch_resource_bytes(raw, resource_index, args, rows, iso,
         installed = append_required_glyphs(
             expanded, layout, alphabet, needed, glyph_iso,
             accent_blocks, target_resource=resource_index)
+    if title_pending:
+        extra, placed, appended = title_face.place_title(
+            expanded, layout, title_pending, title_free,
+            measure=_title_slot_cost if title_free else None)
+        title_slots.update(extra)
+        title_installed = title_installed + placed
+        title_protected |= set(extra.values())
+        for slot in title_protected:
+            alphabet.pop(slot, None)
+        if appended:
+            layout = font_layout(expanded)
+            metadata["glyph_count"] = layout["glyph_count"]
+        print("chapter title: %s -> slot(s) %s%s"
+              % (" ".join(character for character, _s, _r, _d in placed),
+                 " ".join(str(slot) for _c, slot, _r, _d in placed),
+                 " (appended %d)" % len(appended) if appended else
+                 " (free of %d)" % len(title_free)))
+    if args.chapter_title:
+        title_tokens = title_face.title_tokens(
+            args.chapter_title, title_slots, layout["glyph_base"])
     _, next_offset = message_pointers(expanded, metadata)
     advances = glyph_advances(expanded, metadata["text_end"], alphabet)
     replacements = dict(remapped)
@@ -1151,6 +1181,16 @@ def patch_resource_in_memory(iso, resource_index, args, rows,
                         info = fit_streamed_font_layout(
                             raw, resource_index, args, rows, iso, reference,
                             compact)
+        if (streamed and info.get("reclaimed")
+                and not info.get("grown_sectors")
+                and container_text.STREAMED_NEIGHBOUR_EXCEPTIONS.get(
+                    resource_index) is None):
+            searched = fit_streamed_font_layout(
+                raw, resource_index, args, rows, iso, reference, info)
+            if _preserves_streamed_neighbours(searched):
+                print("streamed archive kept off its neighbours by "
+                      "font ordering")
+                info = searched
     finally:
         args.full_font = old_full_font
         if old_recompressible is missing:

@@ -405,26 +405,49 @@ def append_required_glyphs(expanded, layout, alphabet, needed,
         char_to_slot[character] = target_slot
         installed.append((character, target_slot))
 
-    if blocks:
-        # The splice point has to be exactly one glyph past the last native
-        # slot, or every appended bitmap lands misaligned.
-        if layout["font_end"] - layout["font_start"] != (
-                layout["glyph_count"] * layout["glyph_bytes"]):
-            raise ValueError(
-                "font block is %d bytes but %d glyphs need %d; the layout "
-                "went stale before the splice"
-                % (layout["font_end"] - layout["font_start"],
-                   layout["glyph_count"],
-                   layout["glyph_count"] * layout["glyph_bytes"]))
-        for index, metric in enumerate(metrics):
-            target_slot = layout["glyph_count"] + index
-            target_metric = metric_start + target_slot * 2
-            expanded[target_metric:target_metric + 2] = metric
-        expanded[layout["font_end"]:layout["font_end"]] = b"".join(blocks)
-        struct.pack_into("<I", expanded, 0x20, len(expanded))
-        struct.pack_into("<I", expanded, 0x34,
-                         layout["glyph_count"] + len(blocks))
+    append_glyph_blocks(expanded, layout, zip(blocks, metrics))
     return installed
+
+
+def append_glyph_blocks(expanded, layout, arts):
+    arts = [(bytes(bitmap), bytes(metric)) for bitmap, metric in arts]
+    if not arts:
+        return []
+    metric_start = layout["text_end"]
+    font_start = layout["font_start"]
+    required_metric = (layout["glyph_count"] + len(arts)) * 2
+    if font_start - metric_start < required_metric:
+        shift = required_metric - (font_start - metric_start)
+        shift += (-shift) % 16
+        expanded[font_start:font_start] = b"\0" * shift
+        font_start += shift
+        struct.pack_into("<I", expanded, 0x30, font_start)
+        layout["font_start"] = font_start
+        layout["font_end"] += shift
+    # The splice point has to be exactly one glyph past the last native
+    # slot, or every appended bitmap lands misaligned.
+    if layout["font_end"] - layout["font_start"] != (
+            layout["glyph_count"] * layout["glyph_bytes"]):
+        raise ValueError(
+            "font block is %d bytes but %d glyphs need %d; the layout "
+            "went stale before the splice"
+            % (layout["font_end"] - layout["font_start"],
+               layout["glyph_count"],
+               layout["glyph_count"] * layout["glyph_bytes"]))
+    slots = []
+    for index, (bitmap, metric) in enumerate(arts):
+        if len(bitmap) != layout["glyph_bytes"]:
+            raise ValueError("incompatible glyph block for slot %d"
+                             % (layout["glyph_count"] + index))
+        slot = layout["glyph_count"] + index
+        target = metric_start + slot * 2
+        expanded[target:target + 2] = metric
+        slots.append(slot)
+    expanded[layout["font_end"]:layout["font_end"]] = b"".join(
+        bitmap for bitmap, _ in arts)
+    struct.pack_into("<I", expanded, 0x20, len(expanded))
+    struct.pack_into("<I", expanded, 0x34, layout["glyph_count"] + len(arts))
+    return slots
 
 def install_required_glyphs_in_slots(expanded, layout, alphabet, needed,
                                      iso, candidates, *,

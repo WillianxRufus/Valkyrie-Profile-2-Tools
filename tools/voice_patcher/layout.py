@@ -45,9 +45,6 @@ BATTLE_NAME = re.compile(
     re.IGNORECASE,
 )
 
-# The battle loader recognizes these stored first words and uses the paired
-# value as the initial state for its word-wise transform.  The table is shared
-# by the USA and Japanese executables.
 BATTLE_SEEDS = {
     0x9E636CDE: 0x00E6373A,
     0xAFA9E715: 0x0056F1E7,

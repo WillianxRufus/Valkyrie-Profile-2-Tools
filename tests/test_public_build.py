@@ -9,17 +9,6 @@ sys.path.insert(0, str(ROOT))
 
 
 class CacheLocationTests(unittest.TestCase):
-    """Where a build is allowed to leave things behind.
-
-    Two rules, and they exist for different people.  A source checkout
-    keeps its compression cache under the ignored workspace, beside the
-    rest of the state generated from the user's image, rather than next
-    to the output ISO.  A packaged run keeps it somewhere temporary and
-    deletes it: an end user builds their ISO once and should not be left
-    with tens of megabytes under their profile that nothing will read
-    again.
-    """
-
     def test_a_checkout_caches_inside_the_workspace(self):
         from tools.scripts import paths
         self.assertFalse(paths.FROZEN)
@@ -28,12 +17,6 @@ class CacheLocationTests(unittest.TestCase):
             paths.CACHE_ROOT)
 
     def test_a_packaged_run_writes_its_iso_where_it_was_invoked(self):
-        """State goes out of the way; the thing asked for does not.
-
-        BUILD_DIR is the per-user data directory when frozen, which is
-        right for caches and wrong for a 4.7 GB disc image: nobody looks
-        for their output in AppData, and nothing would have told them.
-        """
         from tools.scripts import paths
         self.assertEqual(paths.BUILD_DIR, paths.output_root())
         try:
@@ -47,14 +30,6 @@ class CacheLocationTests(unittest.TestCase):
         self.assertNotEqual(paths.BUILD_DIR / ".cache", paths.CACHE_ROOT)
 
     def test_no_seed_promotion_machinery_exists(self):
-        """Seeds are compressed game data; this repository carries none.
-
-        This used to assert a flag was off.  The flag is gone with the code
-        behind it: promotion took a build's compression results and wrote
-        them back into the repository as tracked files, which is the one
-        thing this tree must never do, and a switch is a weaker guarantee
-        than an absence.
-        """
         import importlib
         for name in ("build_cache", "promote_slz_cache"):
             with self.subTest(module=name):
@@ -69,14 +44,6 @@ class CacheLocationTests(unittest.TestCase):
 
 
 class PackProfileTests(unittest.TestCase):
-    """The build profile belongs to a language, not to the installation.
-
-    It names the resources a build writes and the flags each one needs,
-    including the shared-font containers that carry no text of their own.
-    Two languages do not have to want the same set, so each pack owns its
-    own copy and a build reads the one beside the pack it was given.
-    """
-
     def _packs(self):
         directory = ROOT / "translations"
         return sorted(path for path in directory.iterdir()
@@ -118,14 +85,6 @@ class PackProfileTests(unittest.TestCase):
 
 
 class ChildProcessTests(unittest.TestCase):
-    """Closing the window has to stop the patcher, not orphan it.
-
-    A build runs the low-level patcher as a child process. The window's
-    worker is a daemon thread and dies with the interpreter; the child does
-    not, and goes on writing a 4 GB ISO with nothing left on screen to say
-    so.
-    """
-
     def _sleeper(self):
         import subprocess
         process = subprocess.Popen(
@@ -160,13 +119,6 @@ class ChildProcessTests(unittest.TestCase):
 
 
 class AutomaticWorkspaceTests(unittest.TestCase):
-    """A build reads the disc itself rather than naming a second command.
-
-    The records a build needs come out of the user's image. Requiring a
-    separate `generate` first made the common path two steps and turned a
-    forgotten one into an error message instead of a wait.
-    """
-
     def _build(self, workspace, source):
         import tempfile
         from unittest import mock
@@ -226,13 +178,6 @@ if __name__ == "__main__":
 
 
 class BuildRootInstallTests(unittest.TestCase):
-    """Putting a compiled pack in place, on a filesystem that argues.
-
-    `shutil.rmtree` can return before Windows releases the directory entry,
-    and the replace onto that path then fails with a permission error in the
-    middle of a build that had otherwise succeeded.
-    """
-
     def _tree(self, root, name, marker):
         path = Path(root) / name
         path.mkdir()
@@ -284,12 +229,6 @@ class BuildRootInstallTests(unittest.TestCase):
 
 
 class ChildOutputTests(unittest.TestCase):
-    """The patcher's output must not be able to end the build.
-
-    It is decoded with errors="replace", so an unreadable byte becomes
-    U+FFFD; a redirected stdout on Windows is cp1252 and cannot encode that.
-    """
-
     def test_a_console_that_cannot_encode_it_still_gets_the_line(self):
         import io as _io
         from unittest import mock

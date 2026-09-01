@@ -265,12 +265,22 @@ def _payloads(raw, entries, target_tag, replacement, recompress_limit,
 
 
 def _assemble(raw, table_end, payloads, tail_start, tail):
-    """Lay the payloads out after the table and put the tail on its sector."""
+    used = table_end + sum(len(body) for _, _, _, body in payloads)
+    derived = ((used + SECTOR - 1) // SECTOR) * SECTOR
+    padding = tail_start - derived if derived < tail_start else 0
     rebuilt = bytearray(raw[:table_end])
-    for position, tag, flags, body in payloads:
+    for index, (position, tag, flags, body) in enumerate(payloads):
+        if padding and index == len(payloads) - 1:
+            rebuilt.extend(b"\0" * padding)
         struct.pack_into("<III", rebuilt, position + 4,
                          flags, len(body), len(rebuilt))
         rebuilt.extend(body)
+    if payloads and ((len(rebuilt) + SECTOR - 1) // SECTOR) * SECTOR != tail_start:
+        raise ValueError(
+            "content ends at %d, which derives tail_start %d rather than the "
+            "%d this tail is written to"
+            % (len(rebuilt),
+               ((len(rebuilt) + SECTOR - 1) // SECTOR) * SECTOR, tail_start))
     rebuilt.extend(b"\0" * (tail_start - len(rebuilt)))
     rebuilt.extend(tail)
     return bytes(rebuilt)

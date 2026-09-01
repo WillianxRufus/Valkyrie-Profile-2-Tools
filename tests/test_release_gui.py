@@ -244,11 +244,6 @@ class WindowSmokeTests(unittest.TestCase):
 
 
 def _window():
-    """A real window, or the reason there cannot be one.
-
-    The release container has Tk but no display, so these skip there and
-    run on a developer's machine, which is where the window is used.
-    """
     if launcher.TK_IMPORT_ERROR is not None:
         raise unittest.SkipTest(f"no Tk: {launcher.TK_IMPORT_ERROR}")
     try:
@@ -354,12 +349,6 @@ class WindowTests(unittest.TestCase):
         self.assertAlmostEqual(8, float(self.app.progress["value"]))
 
     def test_the_workspace_line_updates_as_soon_as_the_disc_is_read(self):
-        """Not at the end of the build, which is minutes too late.
-
-        A build that has to read the disc first leaves the window saying
-        the workspace is not prepared for the whole run, which is untrue
-        from the moment reading finishes.
-        """
         from unittest import mock
         self.app.workspace_var.set("Workspace not prepared")
         self.app.workspace_ready = False
@@ -385,13 +374,6 @@ if __name__ == "__main__":
 
 
 class DrainBoundTests(unittest.TestCase):
-    """A callback must hand the window back, however fast the tool talks.
-
-    The drain used to take "everything available", which never ends while a
-    producer outruns it -- patching thousands of voice clips does -- so Tk
-    never repainted and the window went white until the work finished.
-    """
-
     RUNNERS = ("tools.translate_gui", "tools.cheat_patcher.gui",
                "tools.voice_patcher.gui")
 

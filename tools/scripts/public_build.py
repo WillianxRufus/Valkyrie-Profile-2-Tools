@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import base64
+import collections
 import contextlib
 import csv
 import hashlib
@@ -31,6 +32,10 @@ from .translation_pack import (
     load_pack,
 )
 
+
+_ROUTINE = re.compile(r"^(\[\d+/\d+\]|copy: |writing to |workspace: "
+                      r"|dedupe: |shared-font: |chapters: |sheets: |== |"
+                      r"accents: |streamed archive |tracked SLZ )")
 
 SHEET_NAME_RE = re.compile(
     r"^(?:resource-[0-9]+-scenes|container-[0-9]+)\.csv$")
@@ -187,11 +192,6 @@ def _input_sheet(records: Path, row: dict[str, str]) -> Path:
 
 
 def _install_build_root(staging, build_root):
-    """Put *staging* in place, tolerating Windows holding the old name.
-
-    The old tree is renamed aside before the replace, and both steps
-    are retried.
-    """
     retired = None
     if build_root.exists():
         retired = build_root.with_name(
@@ -502,9 +502,6 @@ def build_iso(
         print("workspace: not prepared yet; reading the disc first",
               flush=True)
         generate_workspace(list(images) if images else [source], workspace)
-        # Said out loud because a build is the only thing watching: the
-        # window has no other way to know the disc has been read until the
-        # whole build ends, which is far too late to stop saying otherwise.
         print("workspace: prepared", flush=True)
     compiled = compile_build_workspace(workspace, resolve_pack(pack))
     glyph_pool = ensure_glyph_pool(source, workspace)
@@ -527,17 +524,25 @@ def build_iso(
     environment = os.environ.copy()
     environment["VP2_STATE_ROOT"] = os.fspath(BUILD_DIR)
     environment["VP2_GLYPH_POOL"] = os.fspath(glyph_pool)
+    environment["PYTHONUNBUFFERED"] = "1"
     process = subprocess.Popen(
         command, cwd=PROJECT_ROOT, env=environment,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         text=True, encoding="utf-8", errors="replace", bufsize=1)
     assert process.stdout is not None
+    recent: collections.deque[str] = collections.deque(maxlen=6)
     with _tracked(process):
         for line in process.stdout:
             _echo(line)
+            if line.strip():
+                recent.append(line.rstrip())
         returncode = process.wait()
     if returncode:
-        raise PackError(f"ISO build failed with exit code {returncode}")
+        reason = [line for line in recent if not _ROUTINE.match(line)]
+        said = "\n".join(reason or recent)
+        raise PackError(
+            (f"{said}\n\n" if said else "")
+            + f"(ISO build failed with exit code {returncode})")
     return destination
 
 

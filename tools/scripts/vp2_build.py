@@ -40,37 +40,41 @@ from .build_translations import (
 
 
 def apply_map_area_names(iso, built, scenes_dir):
-    """Patch the fixed-size PAMM copy of area names after scene writes."""
     sheets = Path(scenes_dir)
     source = sheets / "resource-0029-scenes.csv"
     layout = DATA_DIR / "area-name-layout.csv"
-    if not source.is_file() or not layout.is_file():
+    if not sheets.is_dir():
         return 0
 
-    with source.open(newline="", encoding="utf-8-sig") as handle:
-        records = {
-            (row.get("message_id") or "").strip(): (
-                (row.get("original_en") or "").strip(),
-                (row.get("translated") or "").strip(),
-            )
-            for row in csv.DictReader(handle)
-        }
     candidates = {}
-    with layout.open(newline="", encoding="utf-8-sig") as handle:
-        for row in csv.DictReader(handle):
-            found = records.get((row.get("message_id") or "").strip())
-            target = (row.get("target_resource") or "").strip()
-            if found and all(found) and target:
-                candidates.setdefault(target, []).append(found)
+    if source.is_file() and layout.is_file():
+        with source.open(newline="", encoding="utf-8-sig") as handle:
+            records = {
+                (row.get("message_id") or "").strip(): (
+                    (row.get("original_en") or "").strip(),
+                    (row.get("translated") or "").strip(),
+                )
+                for row in csv.DictReader(handle)
+            }
+        with layout.open(newline="", encoding="utf-8-sig") as handle:
+            for row in csv.DictReader(handle):
+                found = records.get((row.get("message_id") or "").strip())
+                target = (row.get("target_resource") or "").strip()
+                if found and all(found) and target:
+                    candidates.setdefault(target, []).append(found)
 
     tokens = map_names.accent_tokens()
     patched = 0
     refused = []
-    for resource in sorted(set(built) & set(candidates), key=int):
+    for resource in sorted(built, key=int):
         raw = iso.read_entry(int(resource))
         if not raw or map_names.pamm_row(raw) is None:
             continue
-        for english, translated in candidates[resource]:
+        found = list(candidates.get(str(resource), ()))
+        sheet = sheets / ("resource-%04d-scenes.csv" % int(resource))
+        if sheet.is_file():
+            found += list(map_names.candidate_names(sheet))
+        for english, translated in found:
             try:
                 new_raw, info = map_names.patch_area_name(
                     raw, english, translated, tokens)

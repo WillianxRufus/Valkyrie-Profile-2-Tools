@@ -22,6 +22,10 @@ SHARED_FONT_ENTRY = 8
 
 SHARED_ACCENT_DONORS = os.fspath(DATA_DIR / "shared-font-accent-donors.csv")
 
+# The shared face's `i` stem begins three rows above the scene face's.
+SHARED_REPLACE_BODY_START = {"i": 10}
+
+
 def load_slot_assignments(path=None):
     """Load the target character-to-token map from package configuration."""
     path = path or os.path.join(os.path.dirname(__file__), "shared_font_slots.csv")
@@ -106,7 +110,8 @@ def _composed_shared_glyph(font, layout, character):
     try:
         block = glyph_compose.compose_character(
             source, character, glyph_compose.unpack(mark["pixels"]),
-            mark["rows"], donor_bottom=mark.get("donor_bottom"))
+            mark["rows"], donor_bottom=mark.get("donor_bottom"),
+            body_from=SHARED_REPLACE_BODY_START.get(base))
     except ValueError:
         return None
     return bytes(block), subtitles.glyph_metric(font, layout, base_slot)

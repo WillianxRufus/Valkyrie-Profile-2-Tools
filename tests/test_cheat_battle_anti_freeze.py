@@ -74,13 +74,6 @@ if __name__ == "__main__":
 
 
 class ProtectedPackageTests(unittest.TestCase):
-    """Resource 1781 is protected on the retail disc and clear on the UNDUB.
-
-    The UNDUB's copy was rebuilt without tri-Ace's wrapper, so a reader that
-    only understood the clear form worked on that disc and refused every
-    retail one with "does not contain the expected p@Ck header".
-    """
-
     def _clear_entry(self):
         """A minimal clear p@Ck holding one mode-3 SLZ item."""
         from tools.cheat_patcher import battle_overlay, slz3

@@ -33,7 +33,6 @@ from tools.scripts.public_build import (
 )
 from tools.scripts.workspace_extract import _remembered_sources
 
-#: What the disc says a resource is, and the kind a profile row must use.
 KIND_FOR_CLASSIFICATION = {
     "local_font_dcms": "scene",
     "fontless_dcms_compatible": "fontless",
@@ -42,9 +41,6 @@ KIND_FOR_CLASSIFICATION = {
     "container_sle": "container",
 }
 
-#: Flags each kind is written with. A container's glyphs come from the
-#: shared font, so it always carries `shared-font-glyphs`; a scene owns its
-#: font and uses `full-font` when the whole face is re-cut.
 FLAGS_FOR_KIND = {
     "container": {"shared-font-glyphs"},
     "fontless": {""},
@@ -243,7 +239,6 @@ def _accent_saving(session, disc, row, info):
         plain_row = dict(row)
         plain_row["sheet"] = os.fspath(
             _sheet_without(character, base, row["sheet"], directory))
-        # The letter can also arrive through the dedupe map.
         lookup = {key: value.replace(character, base)
                   for key, value in (session.lookup or {}).items()}
         iso = _Overlay(disc, pristine=disc.pristine)
@@ -253,8 +248,6 @@ def _accent_saving(session, disc, row, info):
                     iso, plain_row, primary_lookup=lookup,
                     reference=iso.pristine)
         except (ValueError, KeyError, IndexError):
-            # The plainer text may not fit the same way; then there is
-            # nothing to compare.
             return None
     saved = packed - len(plain.get("recompressed") or b"")
     return (character, used, saved) if saved > 0 else None
@@ -296,13 +289,25 @@ class _Session:
             yield base
 
 
+def _refuse_past_the_ceiling(iso, resource, info):
+    from tools.scripts import vp2_container_text as limits
+    from tools.scripts import vp2_iso_space as iso_space
+
+    patched = info.get("patched") if info else None
+    if not patched:
+        return
+    _t, _e, content_end, _start, tail = iso_space._parse_archive(patched)
+    if tail:
+        return
+    limits.check_scene_content_extent(
+        resource, content_end, iso.pristine.entry_outer_allocation(resource))
+
+
 def _check_one(session, disc, resource, say=print, brief=False):
     """Patch one resource against *disc* and say what a build would do."""
     from tools.scripts import build_patchers, vp2_container_text as limits
 
     started = time.perf_counter()
-    # The profile row is what a translator edits; the manifest row is
-    # what a build patches, and it carries fields the profile does not.
     row = _row_for(session.pack / PACK_PROFILE, resource)
     built = _row_for(session.manifest, resource) or row
 
@@ -340,10 +345,10 @@ def _check_one(session, disc, resource, say=print, brief=False):
                 build_patchers.patch_fontless_resource_in_memory(
                     iso, patched, primary_lookup=session.lookup)
             else:
-                # Donor glyphs come from the disc as shipped.
                 info = build_patchers.patch_scene_resource_in_memory(
                     iso, patched, primary_lookup=session.lookup,
                     reference=iso.pristine)
+                _refuse_past_the_ceiling(iso, resource, info)
         verdict, detail = "fits", ""
     except limits.StreamedNeighbourReclaimed as exc:
         verdict, detail = "reclaims", str(exc)

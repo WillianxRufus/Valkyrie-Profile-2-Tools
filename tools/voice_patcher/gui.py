@@ -279,8 +279,6 @@ class TaskRunner:
             sys.stdout, sys.stderr = saved
 
     def _poll(self):
-        # Bounded on purpose: an unbounded drain never returns while a
-        # tool produces faster than the window consumes.
         backlog = True
         for _ in range(self.BATCH):
             try:
@@ -385,9 +383,6 @@ class App:
         )
 
         self.notebook = ttk.Notebook(self.canvas)
-        # Extracting and patching are separate jobs that happen to share a
-        # disc, and one page offering both read as a single workflow people
-        # had to do in order. A tab each says they are alternatives.
         extract_tab = ttk.Frame(
             self.notebook, style="Tab.TFrame", padding=(0, 4, 0, 0)
         )
@@ -401,8 +396,6 @@ class App:
         self.notebook.add(patch_tab, text="Patch Voices")
         self.notebook.add(undub_tab, text="Japanese Audio / Undub")
 
-        # One card per tab, both bound to the same variable: whichever tab
-        # you choose the disc on, the other already has it.
         for parent in (extract_tab, patch_tab):
             disc = self._card(parent, "DISC IMAGE")
             self._path_row(disc, 1, "Source", self.source_var,
