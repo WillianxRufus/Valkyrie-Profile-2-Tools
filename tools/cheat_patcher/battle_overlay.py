@@ -18,10 +18,8 @@ SLZ_HEADER_SIZE = 0x10
 def _clear_package(resource):
     """The package bytes to work on, and how to put them back.
 
-    Resource 1781 is a protected package on the retail USA disc and a clear
-    one on the UNDUB, whose copy was rebuilt without the wrapper. The p@Ck
-    inside is the same either way, so everything below reads the clear bytes
-    and the wrapper -- if there was one -- goes back on at the end.
+    The entry may be protected or clear; either way the work is done on
+    the clear bytes and any wrapper goes back on at the end.
     """
     try:
         clear, parsed = protected_package.decode_entry(resource)
@@ -57,11 +55,7 @@ def package_layout(resource):
 
 
 def _layout_for(resource, parsed):
-    """A protected entry keeps its header obscured; its table is decoded.
-
-    `decode_entry` clears the payload only, so the item offsets and flags
-    come from the layout it parsed rather than from the bytes.
-    """
+    """A protected entry keeps its header obscured; its table is decoded."""
     if parsed is None:
         return _clear_layout(resource)
     return PackageLayout(tuple(parsed.offsets), tuple(parsed.flags))

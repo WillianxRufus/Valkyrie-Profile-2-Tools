@@ -51,7 +51,7 @@ Royal Underground Path 4 - Getting to Dipan => scene-1201
 ### Chapter 2 Cutscenes
 
 Dipan Castle 1 - Entering the castle => scene-1229\
-Dipan castle 2 - There are monsters down here => scene-1231\
+Dipan Castle 2 - There are monsters down here => scene-1231\
 Dipan Castle 3 - Before boss battle => scene-1235\
 Dipan Castle 4 - Finding Dallas and Barbarossa => scene-1233\
 Dipan Castle 5 - Hrist shows up => scene-1237\
@@ -103,7 +103,7 @@ Dipan Castle - After Sovereign's Rite => scene-1357
 
 Dipan - Go to the Forest of Spirits => scene-1211
 
-Forest of Spirits 1 - After ... battle => scene-1287\
+Forest of Spirits 1 - After boss battle => scene-1287\
 Forest of Spirits 2 - Roussalier => scene-1289 and scene-1291
 
 Dipan Castle - Ghoul Powder => scene-1233
@@ -115,7 +115,7 @@ Ravine Caverns - Leaving the cavern => scene-1295
 
 Bifrost - Heimdall => scene-1297
 
-Asgasd - Odin and Gungnir scene => scene-1299
+Asgard - Odin and Gungnir scene => scene-1299
 
 Yggdrasil 1 - Alicia and Rufus => scene-1309\
 Yggdrasil 2 - Before Odin battle 1 => scene-1307\

@@ -73,16 +73,10 @@ def preserve_pcsx2_crc(original, candidate,
 
 
 def _code_arena(data):
-    """Return the terminal header and file offset for the injected-code arena.
+    """The terminal header and file offset for the injected-code arena.
 
-    VP2 has one empty terminal PT_LOAD but only 0x3F0 bytes of ISO allocation
-    slack after SLUS_214.52.  The PNACH routines span more than that because
-    their safe addresses deliberately leave large zero gaps.  ELF section
-    headers are not loaded by the PS2 program loader, so the patcher strips
-    that optional table and uses its existing file bytes as backing storage.
-    The complete PNACH arena is 0x3E00 bytes: the retail table holds its first
-    0x3A20, and the final 0x3E0 consumes existing ISO allocation slack without
-    moving the file's LBA.
+    The optional section-header table is not loaded at runtime, so its
+    file bytes back the arena and the executable keeps its LBA.
     """
     data = bytes(data)
     program_offset = struct.unpack_from("<I", data, 28)[0]

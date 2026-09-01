@@ -243,6 +243,9 @@ class _QueueStream:
 
 
 class TaskRunner:
+    #: Lines handled per callback before the window is given back.
+    BATCH = 200
+
     def __init__(self, root, on_line, on_done):
         self.root, self.on_line, self.on_done = root, on_line, on_done
         self.events = queue.Queue()
@@ -276,17 +279,21 @@ class TaskRunner:
             sys.stdout, sys.stderr = saved
 
     def _poll(self):
-        try:
-            while True:
+        # Bounded on purpose: an unbounded drain never returns while a
+        # tool produces faster than the window consumes.
+        backlog = True
+        for _ in range(self.BATCH):
+            try:
                 item = self.events.get_nowait()
-                if item[0] == "line":
-                    self.on_line(item[1])
-                else:
-                    self.on_done(*item[1:])
-        except queue.Empty:
-            pass
+            except queue.Empty:
+                backlog = False
+                break
+            if item[0] == "line":
+                self.on_line(item[1])
+            else:
+                self.on_done(*item[1:])
         if self.busy or not self.events.empty():
-            self.root.after(60, self._poll)
+            self.root.after(1 if backlog else 60, self._poll)
 
 
 class App:
@@ -378,24 +385,36 @@ class App:
         )
 
         self.notebook = ttk.Notebook(self.canvas)
-        voice_tab = ttk.Frame(
+        # Extracting and patching are separate jobs that happen to share a
+        # disc, and one page offering both read as a single workflow people
+        # had to do in order. A tab each says they are alternatives.
+        extract_tab = ttk.Frame(
+            self.notebook, style="Tab.TFrame", padding=(0, 4, 0, 0)
+        )
+        patch_tab = ttk.Frame(
             self.notebook, style="Tab.TFrame", padding=(0, 4, 0, 0)
         )
         undub_tab = ttk.Frame(
             self.notebook, style="Tab.TFrame", padding=(0, 4, 0, 0)
         )
-        self.notebook.add(voice_tab, text="Voice WAVs")
+        self.notebook.add(extract_tab, text="Extract Voices")
+        self.notebook.add(patch_tab, text="Patch Voices")
         self.notebook.add(undub_tab, text="Japanese Audio / Undub")
 
-        disc = self._card(voice_tab, "DISC IMAGE")
-        self._path_row(disc, 1, "Source", self.source_var, self._pick_source)
-        ttk.Label(
-            disc, text="USA (English) or Japan (Japanese) · source is never modified",
-            style="CardMuted.TLabel"
-        ).grid(row=2, column=1, columnspan=2, sticky="w", pady=(5, 0))
-        disc.pack(fill="x", pady=(0, 12))
+        # One card per tab, both bound to the same variable: whichever tab
+        # you choose the disc on, the other already has it.
+        for parent in (extract_tab, patch_tab):
+            disc = self._card(parent, "DISC IMAGE")
+            self._path_row(disc, 1, "Source", self.source_var,
+                           self._pick_source)
+            ttk.Label(
+                disc,
+                text="USA (English) or Japan (Japanese) · source is never modified",
+                style="CardMuted.TLabel"
+            ).grid(row=2, column=1, columnspan=2, sticky="w", pady=(5, 0))
+            disc.pack(fill="x", pady=(0, 12))
 
-        extract = self._card(voice_tab, "EXTRACT VOICES")
+        extract = self._card(extract_tab, "EXTRACT VOICES")
         self._path_row(
             extract, 1, "Voice root", self.extract_root_var,
             self._pick_extract_root, "Change…"
@@ -411,7 +430,7 @@ class App:
         self.extract_btn.grid(row=3, column=1, sticky="w")
         extract.pack(fill="x", pady=(0, 12))
 
-        patch = self._card(voice_tab, "PATCH VOICES")
+        patch = self._card(patch_tab, "PATCH VOICES")
         self._path_row(patch, 1, "WAV folder", self.voices_var,
                        self._pick_voices)
         self._path_row(patch, 2, "ISO output", self.iso_output_var,

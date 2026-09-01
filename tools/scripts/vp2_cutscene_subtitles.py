@@ -19,6 +19,7 @@ HERE = os.fspath(TOOLS_DIR)
 
 from . import slz
 from . import slz_compress
+from . import vp2_container_text as container_text
 from . import triace_ps2_unpack as triace
 from . import vp2_dcms as dcms
 from . import vp2_iso_space as iso_space
@@ -1165,6 +1166,8 @@ def patch_resource_in_memory(iso, resource_index, args, rows,
             "sector(s) after safe in-place font reuse; moving its streamed "
             "tail is not supported" %
             (resource_index, info["grown_sectors"]))
+    container_text.check_streamed_neighbours(
+        resource_index, info.get("reclaimed"))
     if info.get("grown_sectors") or info.get("relocated_offset") is not None:
         pass
     else:

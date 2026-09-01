@@ -159,6 +159,9 @@ class _QueueStream:
 class TaskRunner:
     """Run disc work off the Tk thread and stream its output back."""
 
+    #: Lines handled per callback before the window is given back.
+    BATCH = 200
+
     def __init__(self, root, on_line, on_done):
         self.root = root
         self.on_line = on_line
@@ -194,22 +197,25 @@ class TaskRunner:
             sys.stdout, sys.stderr = saved
 
     def _poll(self):
-        self._drain()
+        backlog = self._drain()
         if self.busy or not self.events.empty():
-            self.after_id = self.root.after(60, self._poll)
+            self.after_id = self.root.after(1 if backlog else 60, self._poll)
         else:
             self.after_id = None
 
     def _drain(self):
-        try:
-            while True:
+        # Bounded on purpose: an unbounded drain never returns while a
+        # tool produces faster than the window consumes.
+        for _ in range(self.BATCH):
+            try:
                 item = self.events.get_nowait()
-                if item[0] == "line":
-                    self.on_line(item[1])
-                else:
-                    self.on_done(*item[1:])
-        except queue.Empty:
-            pass
+            except queue.Empty:
+                return False
+            if item[0] == "line":
+                self.on_line(item[1])
+            else:
+                self.on_done(*item[1:])
+        return True
 
 
 def ui_font_family():
@@ -656,12 +662,7 @@ class App:
         return path
 
     def _images(self, usa):
-        """The discs to read, if this build has to read them.
-
-        The Japanese image is optional and only adds the original script to
-        the reference tables, so a bad one is worth saying out loud rather
-        than quietly building without it.
-        """
+        """The discs to read, if this build has to read them."""
         images = [usa]
         jp = self.jp_var.get().strip()
         if jp:
@@ -714,22 +715,12 @@ class App:
                           no_verify=not self.verify_var.get(), images=images)
 
     def _lockable(self, widget):
-        """Register a control that a running job takes away.
-
-        Its state before the first job is the state it comes back to, so a
-        combobox returns to `readonly` rather than becoming typable.
-        """
+        """Register a control that a running job takes away."""
         self.locked.append((widget, str(widget.cget("state")) or NORMAL))
         return widget
 
     def _set_busy(self, busy):
-        """Nothing a job read at its start may be changed while it runs.
-
-        Every one of these is settled before the thread starts, so editing
-        one mid-run cannot reach the job -- it only tells the user something
-        untrue about what is being built. Browsing for a disc is worse than
-        untrue: its handler writes over the live progress line.
-        """
+        """Nothing a job read at its start may be changed while it runs."""
         for widget, idle in self.locked:
             widget.configure(state=DISABLED if busy else idle)
         self.on_busy_change(bool(busy))
@@ -839,12 +830,7 @@ class App:
         self._reflow()
 
     def request_close(self):
-        """Closing the window has to stop the work, not just hide it.
-
-        The worker is a daemon thread and dies with the interpreter, but a
-        build's real work happens in a child process that does not. Closing
-        used to leave it writing the ISO with nothing on screen.
-        """
+        """Closing the window has to stop the work, not just hide it."""
         if self.runner.busy:
             if not messagebox.askyesno(
                     "Still working",

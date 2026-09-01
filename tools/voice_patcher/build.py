@@ -708,10 +708,8 @@ def _canonical_archive_layout(base_values, donor_values, total,
                               donor_resources, sector_overrides=None):
     """Repack the complete archive in the physical order its readers use.
 
-    All compared retail discs and the historical UNDUB store active entries
-    1+ as one contiguous, entry-ordered stream. Some sound readers advance inside
-    that stream instead of independently seeking every index LBA, so relocating
-    only selected entries is not compatible even when the index reads back.
+    Active entries are stored as one contiguous, entry-ordered stream;
+    relocating only selected entries is not compatible with that.
     """
     base_active = [
         entry for entry in range(1, total)

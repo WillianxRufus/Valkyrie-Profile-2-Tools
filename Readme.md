@@ -14,6 +14,8 @@ The downloadable **ValkyrieProfile2-Tools** application contains three tools:
 
 The application never modifies a source disc image.
 
+![](images/gui.jpg)
+
 ## Requirements
 
 - A clean USA disc image (`SLUS_214.52`) for translation and cheats.

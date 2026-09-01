@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import tomllib
 from pathlib import Path
 
@@ -83,13 +84,7 @@ def _tracked(process: subprocess.Popen):
 
 
 def terminate_active_builds(timeout: float = 5.0) -> int:
-    """Stop every patcher this process started, and say how many there were.
-
-    The window runs a build on a daemon thread, so closing the window ends
-    the thread -- but the patcher is a child process and outlives both the
-    thread and the interpreter that started it. Left alone it goes on
-    writing the ISO after the window it belonged to is gone.
-    """
+    """Stop every patcher this process started, and say how many there were."""
     with _RUNNING_LOCK:
         running = [process for process in _RUNNING if process.poll() is None]
     for process in running:
@@ -189,6 +184,39 @@ def _input_sheet(records: Path, row: dict[str, str]) -> Path:
     name = Path(row["sheet"]).name
     folder = "containers" if name.startswith("container-") else "scenes"
     return records / folder / name
+
+
+def _install_build_root(staging, build_root):
+    """Put *staging* in place, tolerating Windows holding the old name.
+
+    The old tree is renamed aside before the replace, and both steps
+    are retried.
+    """
+    retired = None
+    if build_root.exists():
+        retired = build_root.with_name(
+            "%s.old.%d" % (build_root.name, os.getpid()))
+        _retry_filesystem(lambda: build_root.replace(retired))
+    try:
+        _retry_filesystem(lambda: staging.replace(build_root))
+    except BaseException:
+        if retired is not None:
+            _retry_filesystem(lambda: retired.replace(build_root), raising=False)
+        raise
+    if retired is not None:
+        shutil.rmtree(retired, ignore_errors=True)
+
+
+def _retry_filesystem(action, attempts=5, raising=True):
+    for attempt in range(attempts):
+        try:
+            return action()
+        except PermissionError:
+            if attempt == attempts - 1:
+                if raising:
+                    raise
+                return None
+            time.sleep(0.1 * (attempt + 1))
 
 
 def compile_build_workspace(
@@ -443,6 +471,17 @@ def ensure_glyph_pool(
     return pool
 
 
+def _echo(text):
+    """Print one line of child output whatever the console can encode."""
+    stream = sys.stdout
+    try:
+        stream.write(text)
+    except UnicodeEncodeError:
+        encoding = getattr(stream, "encoding", None) or "ascii"
+        stream.write(text.encode(encoding, "replace").decode(encoding, "replace"))
+    stream.flush()
+
+
 def build_iso(
     source_iso: str | os.PathLike[str],
     pack: str | os.PathLike[str],
@@ -454,9 +493,7 @@ def build_iso(
 ) -> Path:
     """Compile the pack and run the patcher in a clean subprocess.
 
-    A build needs records read out of the disc.  Rather than fail and name
-    a second command, it reads them here when they are not there yet, from
-    *images* when the caller has more than the one image it was given.
+    Reads the workspace out of the disc first when it is not there yet.
     """
     source = Path(source_iso).expanduser().resolve()
     if not source.is_file():
@@ -497,7 +534,7 @@ def build_iso(
     assert process.stdout is not None
     with _tracked(process):
         for line in process.stdout:
-            print(line, end="", flush=True)
+            _echo(line)
         returncode = process.wait()
     if returncode:
         raise PackError(f"ISO build failed with exit code {returncode}")

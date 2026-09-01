@@ -73,12 +73,7 @@ class BuildResult:
 
 
 def default_output_path(source):
-    """Where a patched image goes when the caller does not say.
-
-    The same place the translation builder puts its ISO -- beside the tools
-    in a checkout, and beside the executable when frozen, because nobody
-    looks for a 4.6 GB file in an application data directory.
-    """
+    """Where a patched image goes when the caller does not say."""
     from ..scripts.paths import output_root
 
     source = Path(source)
@@ -116,11 +111,7 @@ COPY_CHUNK = 8 * 1024 * 1024
 
 
 def _copy_with_progress(source, target, say):
-    """`shutil.copyfile` with the one thing a caller waiting on it wants.
-
-    Copying a 4.6 GB image is nearly all the wall time of a build, so a
-    caller that cannot see inside it has nothing to show for minutes.
-    """
+    """`shutil.copyfile` that reports progress."""
     total = source.stat().st_size
     done = last = 0
     with source.open("rb") as reader, target.open("wb") as writer:

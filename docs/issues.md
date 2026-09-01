@@ -15,5 +15,10 @@ The texts in the title screen (New Game, Load Game and Settings) seems to be art
 
 ### Translation Limits and Blockers
 
-Build errors or in-game freezes/crashes can happen if a translated scene goes beyond it's byte headroom.
-This is caused by a scene using many different glyphs, line length, and multiple lines going a little over it's original byte size combined
+A scene has a limited amount of space. Going past it causes a build error,
+or a freeze in game. Long lines add to it, but the main cost is the number
+of _different_ accented letters a scene uses.
+
+`python test.py <language> <resource>` says whether a scene still fits and
+how much room is left, without building an ISO. See the
+[translator guide](translator.md).

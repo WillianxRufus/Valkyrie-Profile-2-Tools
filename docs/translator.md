@@ -58,6 +58,38 @@ python vp2_translate.py build <usa-image.iso> pt-BR --output <translated.iso>
 
 Run any command with `--help` for its complete arguments.
 
+## Checking text before a build
+
+`test.py` patches one resource, or a whole language, in memory and says
+whether a build would accept the result. The disc image is opened
+read-only and no ISO is produced.
+
+```bash
+python test.py pt-BR 1197
+python test.py pt-BR --all
+```
+
+One resource takes a few seconds; `--all` takes a few minutes and ends with
+a count. A resource that is not accepted says why.
+
+Where a scene fits, it says how much room is left, and what its rarest
+accented letter is costing:
+
+```
+  OK -- the text fits and a build would accept it.
+  Room left: 48 byte(s) before this scene needs more space.
+  Writing 'u' plainly, used 1 time(s) here, would free about 82 more.
+```
+
+`at least` before the room figure means there may be more beyond it. Each
+different accented letter costs its space whether it appears once or fifty
+times, so rewording around a rare one usually buys more room than
+shortening several lines. Both figures are measured for that scene; either
+line is left out when it cannot be.
+
+This checks whether the text fits. Whether a scene plays correctly is only
+answered by playing it.
+
 ## Output
 
 When running from source, the default output is

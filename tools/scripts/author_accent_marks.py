@@ -5,6 +5,7 @@ import base64
 import csv
 import hashlib
 import io
+import math
 import os
 
 from . import vp2_glyph_compose as gc
@@ -20,6 +21,9 @@ PROFILE = ((0.00, 15.0), (0.60, 15.0), (1.60, 7.0),
 DEFAULT_CAP = 1.0
 
 BASELINE = 23
+
+# Uniform scale around the tilde's visual centre.
+TILDE_SCALE = 0.9
 
 
 def _nearest_position(px, py, ax, ay, bx, by):
@@ -145,8 +149,15 @@ SHAPES = {
     },
     "tilde": {
         "rows": range(4, 10),
-        "path": [[(4.0, 9.05), (5.7, 6.65), (7.7, 9.05), (9.4, 6.65)]],
-        "weight": 0.78,
+        # A sampled curve keeps the turns round instead of concentrating ink
+        # at the corners of a four-segment zigzag.
+        "path": [[
+            (6.7 + TILDE_SCALE * (-2.9 + 5.8 * step / 32),
+             7.8 + TILDE_SCALE * 0.9 *
+             math.cos(3.0 * math.pi * step / 32))
+            for step in range(33)
+        ]],
+        "weight": 0.72 * TILDE_SCALE,
     },
     # Left at full weight: no report against it, and no language whose text
     # has been read in game draws it.

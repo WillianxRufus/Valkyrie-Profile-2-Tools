@@ -29,10 +29,10 @@ voices/en/1197/1483-000-8028.wav
 voices/en/1197/1485-000-....wav
 ```
 
-Each name is `<bank>-<subfile>-<clip-id>.wav`. Keep it unchanged: all three
-parts identify the exact game slot when the file is patched back. The
-adjacent `manifest.csv` records the region, cutscene resource, slot limit,
-duration, loudness measurements, and file hash.
+Each name is `<bank>-<subfile>-<clip-id>.wav`. Keep it unchanged: it
+identifies the game slot the file is patched back into. The adjacent
+`manifest.csv` records the region, resource, slot limit, duration, loudness
+and hash.
 
 Audio without a cutscene or text-line folder goes under `unmapped/`. Battle
 files have names such as:
@@ -43,8 +43,7 @@ voices/en/unmapped/battle-2189-000-1c49-0.wav
 
 The name is `battle-<entry>-<sample>-<clip-id>-<zone>.wav`. Keep all five
 parts unchanged so the file can be patched back into its original slot.
-Banks containing unverified alternate performances are kept under
-`unmapped/alternate-takes/` rather than being assigned to a numbered scene.
+Alternate performances are kept under `unmapped/alternate-takes/`.
 
 ## Patch replacement voices
 
@@ -72,9 +71,9 @@ Battle replacements follow the same fixed-slot duration rule as cutscene
 replacements. Several replacement files from one entry may be patched in the
 same build.
 
-Fixed-slot WAV replacement is intended for audio made for the selected base
-release. Do not use **Allow overlong WAVs** to convert a complete Japanese
-extraction into a USA image; the releases have different resource geometry.
+Replacement audio must be made for the selected base release. To put
+Japanese audio into another release, use the Japanese-audio import below
+rather than **Allow overlong WAVs**.
 
 ## Import all Japanese audio
 
@@ -98,9 +97,9 @@ python vp2_voices.py import-japanese <target.iso> <japan.iso>
 python vp2_voices.py import-japanese <target.iso> <japan.iso> -o <output.iso>
 ```
 
-The result keeps the target release's text and menus while using Japanese
-audio. It does not use extracted WAV files. Both source images remain
-unchanged, and the tool verifies the new image before reporting success.
+The result keeps the target release's text and menus with Japanese audio.
+It does not use extracted WAV files. Both sources are only read, and the
+new image is verified before the tool reports success.
 
 The older dubbing-kit layout is supported too. A folder such as
 `vp2/dub/opening/ptbr-chatterbox` may contain files named only by clip ID,

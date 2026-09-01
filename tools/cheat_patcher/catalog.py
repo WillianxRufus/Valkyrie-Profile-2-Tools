@@ -2,15 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """What each patch is called and what it does, for people choosing them.
 
-`build.PATCHERS` is the registry a build reads; this is the same set described
-for a reader.  The titles and summaries are the ones from the PNACH these
-patches were ported from, so a player who knows the cheat by its PCSX2 name
-recognises it here.
-
-A cheat marked `(!)` in the PNACH rewrites bytes inside a function, which the
-game's checksum notices: it hashes its own code after cutscenes, battles, map
-changes and saves, and freezes on a mismatch.  Those cheats therefore need
-`disable-anti-cheat` applied with them, which `requires_anti_cheat` records.
+Titles and summaries follow the PNACH names. A cheat marked `(!)` needs
+`disable-anti-cheat` applied with it; `requires_anti_cheat` records that.
 """
 
 from typing import NamedTuple
@@ -168,12 +161,7 @@ BY_NAME = {cheat.name: cheat for cheat in CHEATS}
 
 
 def required_with(names):
-    """The full patch set to build, once dependencies are honoured.
-
-    Selecting a `(!)` patch without the anti-cheat one produces an ISO that
-    freezes rather than one that misbehaves, so the dependency is added here
-    instead of being left to whoever ticked the boxes.
-    """
+    """The full patch set to build, once dependencies are honoured."""
     chosen = [name for name in BY_NAME if name in set(names)]
     if any(BY_NAME[name].requires_anti_cheat for name in chosen):
         if ANTI_CHEAT not in chosen:

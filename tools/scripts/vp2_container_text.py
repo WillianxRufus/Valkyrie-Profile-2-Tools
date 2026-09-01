@@ -268,6 +268,65 @@ RECORD_LIMITS = load_record_limits()
 SCENE_CONTENT_LIMITS = load_record_limits(scope="scene-content")
 
 
+def load_streamed_neighbour_exceptions(path=_RECORD_LIMITS_PATH):
+    """``{resource: kind}`` -- streamed scenes allowed to reclaim a neighbour.
+
+    These rows are permission rather than an extent, so ``max_extent`` is
+    written as ``0``.
+    """
+    exceptions = {}
+    if not path or not os.path.exists(path):
+        return exceptions
+    with io.open(path, encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            if (row.get("scope") or "").strip() != "streamed-neighbours":
+                continue
+            try:
+                resource = int(row["resource"])
+            except (TypeError, ValueError, KeyError):
+                continue
+            exceptions[resource] = (row.get("kind") or "verified").strip() or "verified"
+    return exceptions
+
+
+#: Streamed scenes with a play-tested exception, by resource.
+STREAMED_NEIGHBOUR_EXCEPTIONS = load_streamed_neighbour_exceptions()
+
+
+class StreamedNeighbourReclaimed(ValueError):
+    """A streamed scene rewrote a neighbour without a recorded play-test."""
+
+
+def check_streamed_neighbours(resource, reclaimed, exceptions=None,
+                              warn=None):
+    """Refuse an unvouched-for neighbour rewrite; note a vouched-for one."""
+    if not reclaimed:
+        return
+    table = (STREAMED_NEIGHBOUR_EXCEPTIONS if exceptions is None
+             else exceptions)
+    kind = table.get(resource)
+    tags = ", ".join(sorted({tag for tag, _old, _new in reclaimed}))
+    where = os.path.basename(_RECORD_LIMITS_PATH)
+    if kind is None:
+        raise StreamedNeighbourReclaimed(
+            "resource #%d only fits its translated text by rewriting %s. "
+            "The rewrite is lossless and reads back correctly, but it is "
+            "not known to be safe when the game runs, so it is refused. "
+            "Shorten or re-word this scene until it fits with %s left "
+            "alone, or test this build in the scene and record the "
+            "resource in %s with scope=streamed-neighbours."
+            % (resource, tags, tags, where))
+    if kind == "candidate":
+        # stderr, like every other candidate notice here: the build driver
+        # swallows a patcher's stdout, so a warning printed there is a
+        # warning nobody receives.
+        say = warn or (lambda text: print(text, file=sys.stderr))
+        say("CANDIDATE: resource #%d rewrote %s and is under test, not "
+            "released. Play the scene enough times to be confident, then "
+            "change its row in %s to kind=verified -- or give the scene "
+            "more room." % (resource, tags, where))
+
+
 class SceneContentCeilingExceeded(ValueError):
     """A plain archive's content ends past the extent verified to run."""
 

@@ -382,3 +382,56 @@ class WindowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DrainBoundTests(unittest.TestCase):
+    """A callback must hand the window back, however fast the tool talks.
+
+    The drain used to take "everything available", which never ends while a
+    producer outruns it -- patching thousands of voice clips does -- so Tk
+    never repainted and the window went white until the work finished.
+    """
+
+    RUNNERS = ("tools.translate_gui", "tools.cheat_patcher.gui",
+               "tools.voice_patcher.gui")
+
+    def _runner(self, module_name):
+        import importlib
+        module = importlib.import_module(module_name)
+        return module.TaskRunner
+
+    def test_every_runner_bounds_one_callback(self):
+        for name in self.RUNNERS:
+            with self.subTest(runner=name):
+                self.assertGreater(self._runner(name).BATCH, 0)
+
+    def test_a_callback_returns_while_more_is_still_arriving(self):
+        """The old loop never reached this assertion; it never returned."""
+        import queue as _queue
+        for name in self.RUNNERS:
+            with self.subTest(runner=name):
+                runner_class = self._runner(name)
+                runner = runner_class.__new__(runner_class)
+                runner.events = _queue.Queue()
+                runner.root = None
+                seen = []
+                runner.on_line = seen.append
+                runner.on_done = lambda *a: None
+                for index in range(runner_class.BATCH * 3):
+                    runner.events.put(("line", "line %d\n" % index))
+                drain = getattr(runner, "_drain", None)
+                if drain is None:          # this one drains inside _poll
+                    continue
+                drain()
+                self.assertLessEqual(len(seen), runner_class.BATCH)
+                self.assertFalse(runner.events.empty(),
+                                 "a bounded drain leaves the rest for next time")
+
+    def test_the_unbounded_shape_is_gone(self):
+        """`while True: get_nowait()` is the shape that cannot return."""
+        import inspect
+        for name in self.RUNNERS:
+            with self.subTest(runner=name):
+                source = inspect.getsource(self._runner(name))
+                self.assertNotIn("while True:", source)
+                self.assertIn("range(self.BATCH)", source)

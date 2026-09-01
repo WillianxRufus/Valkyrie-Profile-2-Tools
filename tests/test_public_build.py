@@ -223,3 +223,100 @@ class AutomaticWorkspaceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BuildRootInstallTests(unittest.TestCase):
+    """Putting a compiled pack in place, on a filesystem that argues.
+
+    `shutil.rmtree` can return before Windows releases the directory entry,
+    and the replace onto that path then fails with a permission error in the
+    middle of a build that had otherwise succeeded.
+    """
+
+    def _tree(self, root, name, marker):
+        path = Path(root) / name
+        path.mkdir()
+        (path / "build.json").write_text(marker, encoding="utf-8")
+        return path
+
+    def test_a_fresh_name_is_just_taken(self):
+        import tempfile
+        from tools.scripts.public_build import _install_build_root
+        with tempfile.TemporaryDirectory() as root:
+            staging = self._tree(root, "staging", "new")
+            target = Path(root) / "pt-BR"
+            _install_build_root(staging, target)
+            self.assertEqual("new", (target / "build.json").read_text(encoding="utf-8"))
+            self.assertFalse(staging.exists())
+
+    def test_an_existing_tree_is_replaced_and_removed(self):
+        import tempfile
+        from tools.scripts.public_build import _install_build_root
+        with tempfile.TemporaryDirectory() as root:
+            staging = self._tree(root, "staging", "new")
+            target = self._tree(root, "pt-BR", "old")
+            _install_build_root(staging, target)
+            self.assertEqual("new", (target / "build.json").read_text(encoding="utf-8"))
+            leftovers = [p.name for p in Path(root).iterdir() if p.name != "pt-BR"]
+            self.assertEqual([], leftovers)
+
+    def test_a_replace_that_argues_once_still_lands(self):
+        import tempfile
+        from unittest import mock
+        from tools.scripts import public_build
+        with tempfile.TemporaryDirectory() as root:
+            staging = self._tree(root, "staging", "new")
+            target = self._tree(root, "pt-BR", "old")
+            real = Path.replace
+            calls = []
+
+            def flaky(self, other):
+                calls.append(other)
+                if len(calls) == 2:
+                    raise PermissionError(5, "Access is denied")
+                return real(self, other)
+
+            with mock.patch.object(Path, "replace", flaky), \
+                    mock.patch.object(public_build.time, "sleep"):
+                public_build._install_build_root(staging, target)
+            self.assertEqual("new", (target / "build.json").read_text(encoding="utf-8"))
+            self.assertGreater(len(calls), 2)
+
+
+class ChildOutputTests(unittest.TestCase):
+    """The patcher's output must not be able to end the build.
+
+    It is decoded with errors="replace", so an unreadable byte becomes
+    U+FFFD; a redirected stdout on Windows is cp1252 and cannot encode that.
+    """
+
+    def test_a_console_that_cannot_encode_it_still_gets_the_line(self):
+        import io as _io
+        from unittest import mock
+        from tools.scripts import public_build
+
+        class Cp1252Stream(_io.StringIO):
+            encoding = "cp1252"
+
+            def write(self, text):
+                text.encode("cp1252")      # raises exactly as the real one does
+                return super().write(text)
+
+        stream = Cp1252Stream()
+        with mock.patch.object(public_build.sys, "stdout", stream):
+            public_build._echo("scene 1213 \ufffd ok\n")
+        self.assertIn("scene 1213", stream.getvalue())
+        self.assertIn("ok", stream.getvalue())
+
+    def test_an_ordinary_console_is_untouched(self):
+        import io as _io
+        from unittest import mock
+        from tools.scripts import public_build
+
+        class Utf8Stream(_io.StringIO):
+            encoding = "utf-8"
+
+        stream = Utf8Stream()
+        with mock.patch.object(public_build.sys, "stdout", stream):
+            public_build._echo("caf\u00e9 \ufffd\n")
+        self.assertEqual("caf\u00e9 \ufffd\n", stream.getvalue())
