@@ -1,49 +1,95 @@
 resource,message_id,translated,notes
-43,2,,
-43,3,,
-43,4,,
-43,5,,
-43,6,,
-43,7,,
-43,8,,
-43,9,,
-43,11,,
-43,12,,
-43,13,,
-43,15,,
-43,16,,
-43,17,,
-43,18,,
-43,26,,
-43,30,,
-43,29,,
-43,28,,
-43,31,,
-43,27,,
-43,37,,
-43,43,,
-43,44,,
-43,45,,
+43,2,"Esta é sua primeira vez nesta loja, hein?
+Aposto que você não reconhece algumas das minhas coisas. <PART>
+---
+Essas não costumam ser vendidas nas lojas, e
+elas exigem certos materiais para serem feitas. <PART>
+---
+Se você me vender os materiais necessários,
+posso fazer muitos itens raros para você. <PART>
+---
+Você só vai ter que esperar e ver!
+Mas fazer é diferente de vender! <PART>
+---
+E eu só faço isso para os meus melhores clientes,
+então lembre-se disso!",""
+43,3,Nossos produtos são os melhores! Volte em breve!,
+43,4,"Entendi... Bem, bem... Que tal isso!  
+Oh, você gostaria de dar uma olhada? <PART>  
+---  
+Eu peguei emprestado do Comerciante. Chama-se  
+""Como Fazer Itens Valorizados pelo Cliente.""",""
+43,5,"Oh, você gostaria de dar uma olhada?
+""Como Fazer Itens Valorizados pelo Cliente.""",""
+43,6,Aproximem-se! Apenas os produtos de melhor qualidade!,
+43,7,Aproximem-se! Apenas os produtos de melhor qualidade!,
+43,8,"Eu vim aqui no último navio que saiu de Dipan. <PART>
+---
+A cidade de Dipan estava cheia de tropas.
+Será que eles sabiam que os deuses atacariam?",""
+43,9,Como eles poderiam querer uma guerra? Humanos não têm chance contra os deuses!,
+43,11,"Parece que o Dipan está em apuros sérios. <PART>
+---
+Eles deveriam ter se preparado melhor para a guerra.",""
+43,12,"Olá, um cliente! Aproxime-se, por favor!",""
+43,13,"Bom te ver!  
+As coisas estão difíceis hoje em dia, não é?",""
+43,15,Nossos produtos são os melhores! Volte em breve!,
+43,16,Tenha cuidado lá fora!,
+43,17,"Eu não sei o que vai acontecer com a Solde, mas minha loja sempre vai estar aqui!",""
+43,18,"Pode ser que quase não reste mais ninguém em Solde, mas eu estou mantendo a loja funcionando!",""
+43,26,"Dríade <PART> : Corpo
+<PART> Lama <PART> : Cabeça
+<PART> Redemoinho <PART> : Corpo",""
+43,30,"Tear Soul <PART> : Núcleo
+<PART> Rei Kobold <PART> : Cabeça
+<PART> Espectro Furtivo <PART> : Aparição",""
+43,29,"Espectro Escondido <PART> : Espelho
+<PART> Cavaleiro Espectral <PART> : Armadura",""
+43,28,"Troll Selvagem <PART> : Arma de Haste
+<PART> Perseguidor Musculoso <PART> : Arma",""
+43,31,"Rei Slug <PART> : Casca
+<PART> Mariposa Gigante <PART> : Casca",""
+43,27,"Lobo do Inverno <PART> : Perna
+<PART> Lobo Selvagem <PART> : Perna",""
+43,37,"O que é um Item de Cliente Valioso? <PART>
+Como o nome sugere, Itens de Cliente Valioso são itens reservados exclusivamente para clientes preferenciais.
+Entre eles estão itens normalmente difíceis de obter e itens que não são encontrados em outros lugares.",""
+43,43,"Como eu vejo os itens à venda? <PART>
+Nomes de itens aparecendo como ""?"" vão se tornar visíveis quando você se tornar um cliente valorizado.
+Se você não vê os nomes, é porque o lojista julga que seu nível de patronagem é insuficiente. <PART>
+---
+<PART> Como eu vejo os itens à venda? <PART>
+Quanto mais  você comprar em uma loja, maior será o seu valor como cliente, fazendo com que cada vez mais itens fiquem visíveis.",""
+43,44,"Diga-me quais materiais eu preciso! <PART>
+Depois de saber o nome do item,
+é hora de pegar os materiais. Os materiais estão listados para cada item,
+então você só precisa pegá-los. A maioria dos materiais pode ser obtida derrotando monstros. <PART>
+---
+<PART> Diga-me quais materiais eu preciso! <PART>
+O que você consegue varia de acordo com quais partes do monstro se quebram.
+Quais partes fornecem quais materiais estão listadas nas <PART> Anotações do Comerciante <PART> em algum lugar da loja.",""
+43,45,"",""
 43,1,Sair,not displayed by the event script
 43,10,Falar,not displayed by the event script
-43,14,,
-43,19,<Notas do Mercador>,
-43,20,,
-43,21,,
-43,22,,
-43,23,,
-43,24,,
-43,25,,
-43,32,<Produção de Itens para Clientes Valorizados>,
-43,33,,
-43,34,,
-43,35,,
-43,36,,
-43,38,<Produção de Itens para Clientes Valorizados>,
-43,39,,
-43,40,,
-43,41,,
-43,42,,
+43,14,Ler,
+43,19,,
+43,20,Pedra do Mau Olhado,
+43,21,Espinélio Sagrado,
+43,22,Fragmento de Espelho,
+43,23,Minério Vermelho Polido,
+43,24,Pérola Gigante,
+43,25,Garra de Obsidiana,
+43,32,,
+43,33,O que é um Item de Cliente Valorizado?,
+43,34,Como posso ver os itens à venda?,
+43,35,Diga-me quais materiais eu preciso!,
+43,36,Faça meu item!,
+43,38,,
+43,39,O que é um Item de Cliente Valorizado?,
+43,40,Como posso ver os itens à venda?,
+43,41,Diga-me quais materiais eu preciso!,
+43,42,Faça meu item!,
 43,385,Solde,not displayed by the event script
-43,2787,,
+43,2787,Comerciante,
 43,2788,Aventureira,not displayed by the event script
