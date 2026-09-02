@@ -1,16 +1,41 @@
 resource,message_id,translated,notes
-41,6,,
-41,8,,
-41,9,,
-41,7,,
-41,10,,
-41,11,,
-41,12,,
-41,13,,
-41,14,,
-41,15,,
-41,16,,
-41,17,,
+41,6,"Eu preciso que você tire algo das minhas mãos.  
+Eu fui à Floresta dos Espíritos para pegar isso!",
+41,8,"Eu trouxe este tesouro que roubei de um daqueles elfos supostamente imortais. <PART>
+---
+Mas por algum motivo eu me sinto muito frio...
+Não é meu corpo, é... minha alma.",
+41,9,"Por favor, não fale comigo. 
+Passei por tempos difíceis.",
+41,7,"Bem, humm... 
+Isso é meio que um problema, sabe...",
+41,10,"Bem, eu deveria ir embora em breve.
+Eu detesto ter que lutar contra monstros de novo. <PART>
+---
+Embora eu nunca tenha encontrado nenhum, ouvi dizer que
+alguns monstros são imunes a armas normais. <PART>
+---
+E o que se faria então?
+Suponho que magia seja o jeito mais fácil.",
+41,11,"Se armas não conseguem machucar um monstro, use magia.
+Alguns itens podem ser usados no lugar da magia.",
+41,12,"O que tá acontecendo aí fora? Aconteceu alguma coisa <PART> ---- <PART>
+Ah, quer dizer, como posso ajudá-la, senhora?",
+41,13,"Enquanto os clientes precisarem de um lugar para ficar, a Solde Inn continuará aberta.",
+41,14,"É a primeira vez que você fica conosco?
+Bem-vindo ao porto de Solde! <PART>
+---
+Um rápido descanso em nossa pousada vai curar
+até o corpo mais exausto! <PART>
+---
+Mesmo que você esteja à beira da morte,
+você vai acordar se sentindo novinho em folha!",
+41,15,"Preciso que você tire algo das minhas mãos.  
+Desta vez, acho que você vai gostar de verdade.",
+41,16,"Eu desci para o sudeste para pegar este aqui, de volta à Floresta dos Espíritos. <PART>
+---
+Isso faz parecer realmente frio, como uma nevasca girando na minha alma.",
+41,17,"Por favor, não fale comigo. Passei por tempos difíceis.",
 41,2760,"Vai ficar?
 Temos um quarto com vista disponível.",
 41,2761,Bem-vindo. Gostaria de um quarto?,
