@@ -323,9 +323,7 @@ def compose_accented(character, art):
         return apply_mark(base[0], mark), metric, candidate
     return None
 
-
-SUBTITLE_MARK_NUDGE = {}
-
+SUBTITLE_MARK_NUDGE = {"ã": -1}
 
 def _stamp(base, grid, mark_rows, above, clearance, nudge):
     """Place a mark grid over or under *base* and return the merged block."""
