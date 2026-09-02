@@ -3,7 +3,7 @@ resource,message_id,translated,notes
 605,9,Precisamos encontrar o anel.,
 605,8,"Se o cronômetro chegar a zero, a alma de
  Rufus desaparecerá, encerrando o jogo.",
-605,2,"Cavernas da Ravina",
+605,2,Cavernas da Ravina,
 605,3,Floresta dos Espíritos,not displayed by the event script
 605,5,"Sair das Cavernas da Ravina?
 (As pedras de selo retornam aos seus lugares originais.)",
