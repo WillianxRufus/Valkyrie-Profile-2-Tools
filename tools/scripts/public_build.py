@@ -241,7 +241,7 @@ def compile_build_workspace(
             f"generate <USA.iso>` first")
 
     locale = _pack_locale(pack_path)
-    translations = load_pack(pack_path)
+    translations = load_pack(pack_path, ignore_reference_columns=True)
     expanded = _expanded_targets(
         translations, _menu_units(os.fspath(menu_layout)))
     chapters = {

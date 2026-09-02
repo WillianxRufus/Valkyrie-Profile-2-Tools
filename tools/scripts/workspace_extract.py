@@ -286,22 +286,56 @@ def _export_chapters(
     usa_image: Path,
     records_path: Path,
     output: Path,
+    japanese_image: Path | None = None,
+    japanese_glyphs: Path | None = None,
+    japanese_names: Path | None = None,
 ) -> int:
     """Decode chapter display-face records named by structural configuration."""
     fields, records = _read_csv(records_path)
     required = {"chapter", "resource", "message_id"}
+    if japanese_image is not None:
+        required.add("japanese_message_id")
     if not required.issubset(fields):
         raise PackError(
             f"{records_path}: missing chapter field(s): "
             f"{', '.join(sorted(required - set(fields)))}")
     rows = []
-    with usa_image.open("rb") as handle:
+    japanese_by_resource: dict[int, dict[str, str]] = {}
+    with contextlib.ExitStack() as stack:
+        handle = stack.enter_context(usa_image.open("rb"))
         _game, total, table = triace.load_table(handle)
         iso = vp2_title_face.FileIsoForTitleFace(handle, table, total)
         face, _sources = vp2_title_face.build_face(iso)
+        if japanese_image is not None:
+            japanese_handle = stack.enter_context(japanese_image.open("rb"))
+            _jp_game, japanese_total, japanese_table = triace.load_table(
+                japanese_handle)
+            japanese_characters = vp2_jp_glyphs.load_glyph_names(
+                os.fspath(japanese_glyphs) if japanese_glyphs else None,
+                os.fspath(japanese_names) if japanese_names else None,
+            )
         for record in records:
             resource = int(record["resource"])
             message_id = int(record["message_id"])
+            original_jp = ""
+            if japanese_image is not None:
+                if resource not in japanese_by_resource:
+                    decoded, _slots, _complete = vp2_jp_glyphs.decode_resource(
+                        japanese_handle, japanese_table, japanese_total,
+                        resource, japanese_characters)
+                    japanese_by_resource[resource] = {
+                        str(japanese_id): text
+                        for _index, japanese_id, _voice, text in decoded
+                        if text
+                    }
+                japanese_message_id = record["japanese_message_id"].strip()
+                original_jp = japanese_by_resource[resource].get(
+                    japanese_message_id, "")
+                if not original_jp:
+                    raise PackError(
+                        f"{records_path}: chapter {record['chapter']} Japanese "
+                        f"message {japanese_message_id or '<blank>'} was not "
+                        f"decoded from resource {resource}")
             rows.append({
                 "kind": "chapter",
                 "chapter": record["chapter"],
@@ -310,7 +344,7 @@ def _export_chapters(
                 "message_index": "",
                 "original_en": vp2_title_face.decode_title(
                     iso, resource, message_id, face=face),
-                "original_jp": "",
+                "original_jp": original_jp,
                 "translated": "",
                 "notes": "",
             })
@@ -470,7 +504,8 @@ def generate_workspace(
         container_lines += dragon_lines
         print("tables: exporting chapter titles", flush=True)
         chapter_lines = _export_chapters(
-            usa, chapter_records, records_dir / "chapters.csv")
+            usa, chapter_records, records_dir / "chapters.csv",
+            japanese, japanese_glyphs, japanese_names)
 
         metadata = {
             "format": 2,

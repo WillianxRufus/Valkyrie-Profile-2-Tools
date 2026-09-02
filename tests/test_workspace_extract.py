@@ -6,9 +6,13 @@ import csv
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
+from tools.scripts import vp2_container_text, workspace_extract
 from tools.scripts.translation_pack import _read_csv
 from tools.scripts.workspace_extract import (
+    _export_chapters,
     _looks_like_stream_chain,
     _normalize_source_sheet,
     _replace_generated_tree,
@@ -84,6 +88,92 @@ class WorkspaceExtractTests(unittest.TestCase):
             self.assertNotEqual(fields.index("kind"), fields.index("record_kind"))
             self.assertEqual("container", rows[0]["kind"])
             self.assertEqual("token", rows[0]["record_kind"])
+
+    def test_container_export_joins_japanese_to_string_token_id(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            image = root / "japanese.iso"
+            image.touch()
+            output = root / "container-0010.csv"
+            metadata = {
+                "text_start": 0, "text_end": 1, "font_start": 1,
+                "glyph_count": 1,
+            }
+            token_rows = [{
+                "key": "2000", "offset": 0, "byte_length": 1,
+                "original_en": "Danger.",
+            }]
+            args = SimpleNamespace(
+                iso=str(image), csv=str(output), resource=10,
+                jp_iso=str(image), jp_glyphs="glyphs.csv",
+                jp_names="names.csv",
+            )
+            with (
+                mock.patch.object(
+                    vp2_container_text.triace, "load_table",
+                    return_value=("VP2", 1, [])),
+                mock.patch.object(
+                    vp2_container_text, "container", return_value=b""),
+                mock.patch.object(
+                    vp2_container_text, "read_messages",
+                    return_value=(metadata, [])),
+                mock.patch.object(
+                    vp2_container_text, "walk_block", return_value=token_rows),
+                mock.patch.object(
+                    vp2_container_text, "japanese_text",
+                    return_value={"2000": "\u6765\u308b\u308f\u2026"}),
+                mock.patch("builtins.print"),
+            ):
+                vp2_container_text.cmd_export(args)
+
+            _fields, rows = _read_csv(output)
+            self.assertEqual("\u6765\u308b\u308f\u2026", rows[0]["original_jp"])
+
+    def test_chapter_export_uses_region_specific_japanese_message_id(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            usa = root / "usa.iso"
+            japanese = root / "japanese.iso"
+            usa.touch()
+            japanese.touch()
+            records = root / "chapter-records.csv"
+            output = root / "chapters.csv"
+            write_csv(records, [
+                "chapter", "resource", "message_id", "japanese_message_id",
+            ], [{
+                "chapter": "1", "resource": "1197", "message_id": "2739",
+                "japanese_message_id": "2765",
+            }])
+            decoded = [
+                (0, 2765, (None, None), "\u795e\u306b\u53db\u304d\u3057\u8005"),
+            ]
+            with (
+                mock.patch.object(
+                    workspace_extract.triace, "load_table",
+                    return_value=("VP2", 1, [])),
+                mock.patch.object(
+                    workspace_extract.vp2_title_face, "FileIsoForTitleFace"),
+                mock.patch.object(
+                    workspace_extract.vp2_title_face, "build_face",
+                    return_value=({}, {})),
+                mock.patch.object(
+                    workspace_extract.vp2_title_face, "decode_title",
+                    return_value="defiers of the Gods"),
+                mock.patch.object(
+                    workspace_extract.vp2_jp_glyphs, "load_glyph_names",
+                    return_value={}),
+                mock.patch.object(
+                    workspace_extract.vp2_jp_glyphs, "decode_resource",
+                    return_value=(decoded, 10, 1)),
+            ):
+                self.assertEqual(1, _export_chapters(
+                    usa, records, output, japanese,
+                    root / "japanese-glyphs.csv", root / "jp.csv"))
+
+            _fields, rows = _read_csv(output)
+            self.assertEqual("defiers of the Gods", rows[0]["original_en"])
+            self.assertEqual(
+                "\u795e\u306b\u53db\u304d\u3057\u8005", rows[0]["original_jp"])
 
     def test_source_snapshot_replacement_is_complete(self):
         with tempfile.TemporaryDirectory() as temporary:

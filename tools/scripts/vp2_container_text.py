@@ -589,7 +589,7 @@ def cmd_codepage(args):
     print("unnamed codes:", " ".join(mismatch) if mismatch else "none")
 
 def japanese_text(iso_path, resource, glyph_table, names_path=None):
-    """Return ``{message id: Japanese}`` for one bank of the Japanese image."""
+    """Return ``{string message id: Japanese}`` for a Japanese text bank."""
     import hashlib
     from . import vp2_cutscene_subtitles as subs
     from . import vp2_jp_glyphs as jg
@@ -620,7 +620,8 @@ def japanese_text(iso_path, resource, glyph_table, names_path=None):
                   "glyph_count": meta["glyph_count"]}
     out = {}
     for message_id, offset in pairs:
-        if message_id in out:
+        key = str(message_id)
+        if key in out:
             continue
         record = bytes(blob[meta["text_start"] + offset:
                             meta["text_start"] + following[offset]])
@@ -635,7 +636,7 @@ def japanese_text(iso_path, resource, glyph_table, names_path=None):
                 if slot is None or not 0 <= slot < len(names):
                     continue
                 pieces.append(names[slot] or "〓")
-        out[message_id] = "".join(pieces)
+        out[key] = "".join(pieces)
     return out
 
 def read_messages(blob, resource, slots=None, codepage_accents=None):
@@ -730,7 +731,7 @@ def cmd_export(args):
     for row in keep:
         message_id = row.get("message_id")
         row = {field: row.get(field, "") for field in fields}
-        row["original_jp"] = japanese.get(message_id, "")
+        row["original_jp"] = japanese.get(str(message_id), "")
         row["translated"] = existing.get(str(row["message_id"]), "")
         writer.writerow(row)
     with open(args.csv, "w", newline="", encoding="utf-8-sig") as target:

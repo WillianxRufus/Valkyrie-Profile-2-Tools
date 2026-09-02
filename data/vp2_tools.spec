@@ -67,7 +67,7 @@ a = Analysis(
         "pytest", "setuptools", "pip", "distutils",
         "test", "unittest.test",
         "curses", "readline",
-        "email", "http.server", "xmlrpc", "pydoc_data",
+        "http.server", "xmlrpc", "pydoc_data",
     ],
     noarchive=False,
     optimize=0,

@@ -62,6 +62,36 @@ class TranslationPackTests(unittest.TestCase):
             with self.assertRaisesRegex(PackError, "forbidden source"):
                 load_pack(pack)
 
+    def test_local_build_can_ignore_translator_reference_columns(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pack = Path(temporary)
+            write_manifest(pack)
+            fields = [
+                "original_jp", "resource", "message_id", "speaker",
+                "translated", "original_en", "notes",
+            ]
+            write_csv(pack / "chapter.csv", fields, [{
+                "resource": "1", "message_id": "2", "translated": "Target",
+                "notes": "", "original_en": "Source", "original_jp": "\u539f\u6587",
+                "speaker": "Narrator",
+            }])
+
+            rows = load_pack(pack, ignore_reference_columns=True)
+
+            self.assertEqual("Target", rows[("chapter", "1", "2", "")]["translated"])
+
+    def test_local_build_does_not_ignore_other_source_columns(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pack = Path(temporary)
+            write_manifest(pack)
+            write_csv(pack / "chapter.csv", [*PACK_FIELDS, "english"], [{
+                "resource": "1", "message_id": "2", "translated": "Target",
+                "notes": "", "english": "Source",
+            }])
+
+            with self.assertRaisesRegex(PackError, "forbidden source"):
+                load_pack(pack, ignore_reference_columns=True)
+
     def test_dialogue_filename_must_match_resource(self):
         with tempfile.TemporaryDirectory() as temporary:
             pack = Path(temporary)

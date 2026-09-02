@@ -17,6 +17,7 @@ from pathlib import Path
 
 
 PACK_FIELDS = ("resource", "message_id", "translated", "notes")
+REFERENCE_FIELDS = frozenset({"original_en", "original_jp", "speaker"})
 LEGACY_PACK_FIELDS = (
     "kind", "resource", "message_id", "message_index", "source_hash",
     "translated", "notes",
@@ -183,7 +184,11 @@ def _manifest_format(base: Path) -> int:
     return value
 
 
-def load_pack(directory: str | os.PathLike[str]) -> dict[tuple[str, ...], dict[str, str]]:
+def load_pack(
+    directory: str | os.PathLike[str],
+    *,
+    ignore_reference_columns: bool = False,
+) -> dict[tuple[str, ...], dict[str, str]]:
     """Validate a pack and return only its authored translations."""
     base = Path(directory)
     if not base.is_dir():
@@ -204,11 +209,16 @@ def load_pack(directory: str | os.PathLike[str]) -> dict[tuple[str, ...], dict[s
     rows: dict[tuple[str, ...], dict[str, str]] = {}
     for path in files:
         fields, records = _read_csv(path)
-        forbidden = SOURCE_FIELDS.intersection(field.lower() for field in fields)
+        validated_fields = [
+            field for field in fields
+            if not (ignore_reference_columns and field in REFERENCE_FIELDS)
+        ]
+        forbidden = SOURCE_FIELDS.intersection(
+            field.lower() for field in validated_fields)
         if forbidden:
             names = ", ".join(sorted(forbidden))
             raise PackError(f"{path}: forbidden source column(s): {names}")
-        if tuple(fields) != PACK_FIELDS:
+        if tuple(validated_fields) != PACK_FIELDS:
             raise PackError(f"{path}: expected columns {', '.join(PACK_FIELDS)}")
         for line, row in enumerate(records, 2):
             where = f"{path}:{line}"

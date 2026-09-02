@@ -126,12 +126,17 @@ class ChapterProfileSelectionTests(unittest.TestCase):
                 "verify": "yes",
             }])
             write_csv(pack / "chapter.csv", [
-                "resource", "message_id", "translated", "notes",
+                "resource", "original_en", "message_id", "original_jp",
+                "translated", "speaker", "notes",
             ], [
                 {"resource": "43", "message_id": "900",
-                 "translated": "Included Title", "notes": ""},
+                 "translated": "Included Title", "notes": "",
+                 "original_en": "Included", "original_jp": "\u53ce\u9332",
+                 "speaker": ""},
                 {"resource": "1197", "message_id": "2739",
-                 "translated": "Excluded Title", "notes": ""},
+                 "translated": "Excluded Title", "notes": "",
+                 "original_en": "Excluded", "original_jp": "\u9664\u5916",
+                 "speaker": ""},
             ])
             menu_layout = root / "menu-layout.csv"
             write_csv(menu_layout, [
