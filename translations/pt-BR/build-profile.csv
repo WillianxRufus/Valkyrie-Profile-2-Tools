@@ -185,6 +185,9 @@ container,1781,container-1781.csv,shared-font-glyphs,
 scene,33,resource-0033-scenes.csv,full-font,yes
 scene,35,resource-0035-scenes.csv,,yes
 scene,39,resource-0039-scenes.csv,full-font,yes
+scene,41,resource-0041-scenes.csv,full-font,yes
+scene,43,resource-0043-scenes.csv,full-font,yes
+scene,45,resource-0045-scenes.csv,full-font,yes
 scene,47,resource-0047-scenes.csv,full-font,yes
 scene,49,resource-0049-scenes.csv,full-font,yes
 scene,51,resource-0051-scenes.csv,,yes
@@ -247,6 +250,3 @@ scene,1159,resource-1159-scenes.csv,full-font,yes
 scene,1167,resource-1167-scenes.csv,,yes
 scene,1169,resource-1169-scenes.csv,full-font,yes
 scene,1183,resource-1183-scenes.csv,full-font,yes
-scene,45,resource-0045-scenes.csv,full-font,yes
-scene,41,resource-0041-scenes.csv,full-font,yes
-scene,43,resource-0043-scenes.csv,full-font,yes
