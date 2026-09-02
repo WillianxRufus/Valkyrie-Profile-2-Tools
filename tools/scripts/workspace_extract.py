@@ -271,11 +271,11 @@ def _export_dragon_hall_prompts(
                 jp_raw = (bytes(dcms.read_entry(
                     jp_handle, jp_table, jp_total, resource))
                     if jp_handle is not None else None)
-                row = vp2_dragon_hall.source_row(resource, usa_raw, jp_raw)
+                rows = vp2_dragon_hall.source_rows(resource, usa_raw, jp_raw)
                 _write_csv_atomic(
-                    output / f"container-{resource:04d}.csv", fields, [row])
+                    output / f"container-{resource:04d}.csv", fields, rows)
                 sheets += 1
-                lines += 1
+                lines += len(rows)
         finally:
             if jp_handle is not None:
                 jp_handle.close()

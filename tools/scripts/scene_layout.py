@@ -257,6 +257,21 @@ def preserve_source_run_edges(source, target):
         target += " "
     return target
 
+
+def preserve_translated_run_spacing(previous, source, raw_target, target):
+    """Keep an authored word space when a source newline is reflowed away."""
+    prefix = source[:len(source) - len(source.lstrip(" \t\n"))]
+    authored = raw_target[:len(raw_target) - len(raw_target.lstrip(" \t\n\r"))]
+    if (prefix.count("\n") != 1
+            or not authored
+            or "\n" in authored or "\r" in authored
+            or not previous or not target
+            or previous[-1].isspace() or target[0].isspace()
+            or not previous[-1].isalnum() or not target[0].isalnum()):
+        return target
+    return " " + target
+
+
 def _record_gap_tokens(data):
     """Decode a run gap while skipping control parameters."""
     tokens = []

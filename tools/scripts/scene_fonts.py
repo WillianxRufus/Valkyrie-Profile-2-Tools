@@ -528,6 +528,17 @@ def glyph_metric(expanded, layout, slot):
     at = layout["text_end"] + slot * 2
     return bytes(expanded[at:at + 2])
 
+
+def lowest_character_slots(alphabet):
+    """Map each character to its lowest slot in a possibly duplicated face."""
+    slots = {}
+    for slot in sorted(alphabet):
+        character = alphabet[slot]
+        if character is not None:
+            slots.setdefault(character, slot)
+    return slots
+
+
 def plan_full_font(expanded, layout, alphabet, metadata, translated,
                    iso, protected=(), use_vacated=False,
                    replaced=None, keep=None, assignment_order=None,
@@ -588,7 +599,7 @@ def plan_full_font(expanded, layout, alphabet, metadata, translated,
     needed = sorted(frequency, key=lambda c: (-frequency[c], c))
     dropped = sorted({c for c in alphabet.values() if c != "\n"} - set(needed))
 
-    char_to_slot = {character: slot for slot, character in alphabet.items()}
+    char_to_slot = lowest_character_slots(alphabet)
     for character, slot in (keep or {}).items():
         if character in frequency:
             char_to_slot.setdefault(character, slot)
@@ -633,7 +644,7 @@ def apply_full_font(expanded, layout, alphabet, assignment, opaque,
 
     bitmaps = {}
     metrics = {}
-    char_to_slot = {character: slot for slot, character in alphabet.items()}
+    char_to_slot = lowest_character_slots(alphabet)
     for slot in opaque:
         bitmaps[slot] = glyph_bitmap(expanded, layout, slot)
         metrics[slot] = glyph_metric(expanded, layout, slot)

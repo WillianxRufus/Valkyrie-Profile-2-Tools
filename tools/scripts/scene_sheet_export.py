@@ -28,12 +28,27 @@ def ecs_speakers(*args, **kwargs):
 def scene_details(*args, **kwargs):
     return _workflow_helper("scene_details")(*args, **kwargs)
 
+
+def export_run_text(rendered):
+    """Clean a run for translators without hiding visible blank rows."""
+    visible = subtitles.TAG.sub("", rendered)
+    lines = [line.strip() for line in visible.splitlines()]
+    content = [index for index, line in enumerate(lines) if line]
+    if not content:
+        return ""
+    first, last = content[0], content[-1]
+    body = "\n".join(lines[first:last + 1])
+    leading = "\n" if first else ""
+    trailing = "\n" if visible.endswith("\n") else ""
+    return leading + body + trailing
+
+
 def record_text(record, metadata, alphabet):
     """Read every run of text in a record, in the order it stores them."""
     parts = []
     for _, _, tokens in subtitles.parse_record(record, metadata):
         rendered, _, _ = subtitles.render_tokens(tokens, metadata, alphabet)
-        visible = subtitles.clean_text(rendered)
+        visible = export_run_text(rendered)
         if visible:
             parts.append(visible)
     joined = ""

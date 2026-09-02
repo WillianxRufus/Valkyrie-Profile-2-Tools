@@ -16,7 +16,8 @@ from .scene_layout import (
     NPC_DIALOGUE_MAX_LINES, SUBTITLE_MAX_WIDTH,
     break_overflowing_run_junction, dialogue_max_lines,
     materialize_blank_line, preserve_input_icon_spacing,
-    preserve_source_run_edges, wrap_structured_translations, wrap_translation,
+    preserve_source_run_edges, preserve_translated_run_spacing,
+    wrap_structured_translations, wrap_translation,
 )
 from .scene_codec import pack_tokens
 from .vp2_scene_fingerprint import PAGE_BREAK, PAGE_BREAK_TEXT, render_tokens
@@ -26,6 +27,55 @@ from .vp2_cutscene_subtitles import (
     FRAGMENT_MARKER, PAGE_BREAK_SPELLING, RAW_TOKEN, SCENE_COLUMNS,
     SPLIT_SUBTITLE_AUDIO, canonical_page_breaks, visible_characters,
 )
+
+
+SHARED_HEADER = re.compile(r"^<[^<>\r\n]+>$")
+
+
+def row_uses_shared_header(row):
+    """Whether a standalone angle-bracket heading uses the shared UI face."""
+    return bool(SHARED_HEADER.fullmatch(
+        (row.get("original_en") or "").strip()))
+
+
+def run_uses_shared_header(text, tokens, metadata, alphabet):
+    """Whether a structured run is a shared-UI heading in local chevrons."""
+    if not SHARED_HEADER.fullmatch(clean_text(text).strip()):
+        return False
+    local = []
+    for token in tokens:
+        if token >= 0x8000:
+            continue
+        slot = token_slot(token, metadata["glyph_base"],
+                          metadata["glyph_count"])
+        if slot is None:
+            continue
+        character = alphabet.get(slot)
+        if character is not None and not character.isspace():
+            local.append(character)
+    return set(local) == {"<", ">"}
+
+
+def encode_shared_header(text, source_tokens, metadata, alphabet):
+    """Keep the source chevrons and encode only their title in the UI face."""
+    visible = []
+    for index, token in enumerate(source_tokens):
+        rendered, _, _ = render_tokens([token], metadata, alphabet)
+        if clean_text(rendered) in ("<", ">"):
+            visible.append((index, clean_text(rendered)))
+    left = next((index for index, character in visible if character == "<"), None)
+    right = next((index for index, character in reversed(visible)
+                  if character == ">"), None)
+    if left is None or right is None or left >= right:
+        raise ValueError("shared UI heading has no preserved chevron frame")
+    stripped = text.strip()
+    inner = (stripped[1:-1]
+             if stripped.startswith("<") and stripped.endswith(">")
+             else stripped)
+    body = visible_text_tokens(
+        inner, alphabet, metadata["glyph_base"], codepage=True)
+    return pack_tokens(
+        list(source_tokens[:left + 1]) + body + list(source_tokens[right:]))
 
 
 def _facade_helper(name):
@@ -99,18 +149,22 @@ def scene_required_local_glyphs(expanded, metadata, alphabet, rows):
         for _start, _end, tokens in parse_record(record, metadata):
             text, _, _ = render_tokens(tokens, metadata, alphabet)
             if clean_text(text):
-                runs.append(tokens)
-        targets = [fragment_target(part) for part in
-                   row["translated"].split(FRAGMENT_MARKER)]
+                runs.append((text, tokens))
+        raw_targets = row["translated"].split(FRAGMENT_MARKER)
+        targets = [fragment_target(part) for part in raw_targets]
         if len(targets) != len(runs):
             # ``run_replacements`` will report the structural mismatch. Keep
             # font planning conservative until it does.
             needed.update(visible_characters(
                 row["translated"].replace(FRAGMENT_MARKER, "")))
             continue
-        for tokens, target in zip(runs, targets):
+        force_shared = row_uses_shared_header(row)
+        for (source_text, tokens), target in zip(runs, targets):
             glyphs = [token for token in tokens if token < 0x8000]
-            if run_uses_local_font(glyphs, metadata, alphabet):
+            if (not force_shared
+                    and not run_uses_shared_header(
+                        source_text, glyphs, metadata, alphabet)
+                    and run_uses_local_font(glyphs, metadata, alphabet)):
                 needed.update(visible_characters(target))
     return needed - CODEPAGE_ONLY
 
@@ -614,8 +668,8 @@ def run_replacements(expanded, metadata, alphabet, glyph_base, rows,
                 if padded is not None:
                     padding_edits.append(
                         (start, end - start, padded, record[start:end]))
-        targets = [fragment_target(part) for part in
-                   row["translated"].split(FRAGMENT_MARKER)]
+        raw_targets = row["translated"].split(FRAGMENT_MARKER)
+        targets = [fragment_target(part) for part in raw_targets]
         if len(targets) != len(runs):
             raise ValueError(
                 "%s spans %d run(s) but its translation has %d; separate them "
@@ -625,17 +679,26 @@ def run_replacements(expanded, metadata, alphabet, glyph_base, rows,
         auto_paginate = (len(runs) == 1
                          and max_lines == NPC_DIALOGUE_MAX_LINES)
         prepared = []
-        for index, ((start, end, visible, source_text, source_tokens), target) in enumerate(
-                zip(runs, targets)):
+        for index, ((start, end, visible, source_text, source_tokens),
+                    raw_target, target) in enumerate(
+                        zip(runs, raw_targets, targets)):
             source_run = [token for token in source_tokens if token < 0x8000]
-            from_codepage = (bool(source_run)
-                             and not run_uses_local_font(
-                                 source_run, source_meta, search))
+            shared_header = (
+                row_uses_shared_header(row)
+                or run_uses_shared_header(
+                    source_text, source_run, source_meta, search))
+            from_codepage = (
+                shared_header
+                or (bool(source_run)
+                    and not run_uses_local_font(
+                        source_run, source_meta, search)))
             if (from_codepage and source_run
                     and token_slot(source_run[-1], source_meta["glyph_base"],
                                    source_meta["glyph_count"]) is not None):
                 source_text = source_text.rstrip(" \t")
             target = preserve_source_run_edges(source_text, target)
+            target = preserve_translated_run_spacing(
+                shown[-1] if shown else "", source_text, raw_target, target)
             leading_gap = (record[runs[index - 1][1]:start]
                            if index else b"")
             trailing_gap = (record[end:runs[index + 1][0]]
@@ -672,11 +735,17 @@ def run_replacements(expanded, metadata, alphabet, glyph_base, rows,
             drawn.append(wrapped)
             if wrapped == visible:
                 continue
-            replacement = encode_visible_text(
-                wrapped if from_codepage
-                else remap_punctuation_to_period(wrapped, writable),
-                writable, glyph_base, codepage=from_codepage,
-                materialize_blank_rows=from_codepage)
+            if (row_uses_shared_header(row)
+                    or run_uses_shared_header(
+                        source_text, source_tokens, source_meta, search)):
+                replacement = encode_shared_header(
+                    wrapped, source_tokens, source_meta, search)
+            else:
+                replacement = encode_visible_text(
+                    wrapped if from_codepage
+                    else remap_punctuation_to_period(wrapped, writable),
+                    writable, glyph_base, codepage=from_codepage,
+                    materialize_blank_rows=from_codepage)
             # encode_visible_text terminates its output; a run sits inside the
             # record rather than ending it, so the terminator is dropped.
             if replacement.endswith(b"\0"):

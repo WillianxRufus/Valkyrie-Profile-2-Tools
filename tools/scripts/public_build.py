@@ -322,12 +322,9 @@ def compile_build_workspace(
             })[:2])
             for row in profile_rows
         }
-        ignored = sum(key[:2] not in profile_pairs for key in exact)
-        missing_chapters = sorted(set(chapters) - matched_chapters)
-        if missing_chapters:
-            raise PackError(
-                f"chapter translation(s) are outside the build profile: "
-                f"{missing_chapters[:5]!r}")
+        ignored_chapters = set(chapters) - matched_chapters
+        ignored = (sum(key[:2] not in profile_pairs for key in exact)
+                   + len(ignored_chapters))
         if not manifest_rows:
             raise PackError(f"{profile_path} lists no resources")
 

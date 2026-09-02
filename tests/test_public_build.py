@@ -84,6 +84,71 @@ class PackProfileTests(unittest.TestCase):
         self.assertIn("pt-BR", str(raised.exception))
 
 
+class ChapterProfileSelectionTests(unittest.TestCase):
+    def test_chapter_outside_profile_is_ignored(self):
+        import csv
+        import json
+        import tempfile
+        from tools.scripts import public_build
+
+        def write_csv(path, fields, rows):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fields)
+                writer.writeheader()
+                writer.writerows(rows)
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            workspace = root / "workspace"
+            records = workspace / "internal" / "records" / "scenes"
+            records.mkdir(parents=True)
+            (workspace / "internal" / "generation.json").write_text(
+                json.dumps({"format": 2}), encoding="utf-8")
+            write_csv(records / "resource-0043-scenes.csv", [
+                "kind", "resource", "message_id", "message_index",
+                "translated",
+            ], [{
+                "kind": "scene", "resource": "43", "message_id": "1",
+                "message_index": "", "translated": "",
+            }])
+
+            pack = root / "xx-XX"
+            pack.mkdir()
+            (pack / "pack.toml").write_text(
+                'format = 2\nlocale = "xx-XX"\nname = "Test"\n',
+                encoding="utf-8")
+            write_csv(pack / "build-profile.csv", [
+                "kind", "resource", "sheet", "flags", "verify",
+            ], [{
+                "kind": "scene", "resource": "43",
+                "sheet": "resource-0043-scenes.csv", "flags": "",
+                "verify": "yes",
+            }])
+            write_csv(pack / "chapter.csv", [
+                "resource", "message_id", "translated", "notes",
+            ], [
+                {"resource": "43", "message_id": "900",
+                 "translated": "Included Title", "notes": ""},
+                {"resource": "1197", "message_id": "2739",
+                 "translated": "Excluded Title", "notes": ""},
+            ])
+            menu_layout = root / "menu-layout.csv"
+            write_csv(menu_layout, [
+                "menu", "unit", "resource", "message_id", "message_index",
+            ], [])
+
+            compiled = public_build.compile_build_workspace(
+                workspace, pack, menu_layout=menu_layout)
+            with Path(compiled["manifest"]).open(
+                    encoding="utf-8-sig", newline="") as handle:
+                manifest = next(csv.DictReader(handle))
+
+        self.assertEqual("Included Title", manifest["chapter_title"])
+        self.assertEqual("900", manifest["chapter_title_message"])
+        self.assertEqual(1, compiled["outside_profile"])
+
+
 class ChildProcessTests(unittest.TestCase):
     def _sleeper(self):
         import subprocess

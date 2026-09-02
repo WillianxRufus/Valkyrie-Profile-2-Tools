@@ -21,6 +21,29 @@ ORIGINAL_JP = "どの石をはめますか？"
 JP_PROMPT = bytes(range(0x65, 0x6F)) + b"\0"
 NEXT_TEXT_OFFSET = PROMPT_OFFSET + PROMPT_SIZE
 NEXT_EN = "Sunlight Stone"
+TEXT_FIELDS = (
+    (0xE80, "Insert which stone?", "どの石をはめますか？"),
+    (0xE94, "Sunlight Stone", "陽光の石"),
+    (0xEA3, "Halo Stone", "輪光の石"),
+    (0xEAE, "Painted Cloud Stone", "彩雲の石"),
+    (0xEC2, "Dark Moon Stone", "裏月の石"),
+    (0xED2, "Crimson Flame Stone", "紅炎の石"),
+    (0xEE6, "Ring of Mylinn", "ミュリンの指輪"),
+    (0xEF5, "Dragon Orb", "ドラゴンオーブ"),
+    (0xF00, "Ghoul Powder", "グールパウダー"),
+    (0xF0D, "Sun and Moon Stone", "陽月の石"),
+    (0xF20, "Jade Sealpouch", "翠の封陣器"),
+    (0xF2F, "Rose Sealpouch", "緋の封陣器"),
+    (0xF3E, "Azure Sealpouch", "藍の封陣器"),
+    (0xF4E, "Eclipse Stone", "日食の石"),
+)
+FIELD_BY_ID = {
+    message_id: (english, japanese,
+                 (TEXT_FIELDS[index + 1][0] - message_id
+                  if index + 1 < len(TEXT_FIELDS)
+                  else len(container_text.encode_codepage(english))))
+    for index, (message_id, english, japanese) in enumerate(TEXT_FIELDS)
+}
 
 
 def protect(slz_blob: bytes) -> bytes:
@@ -62,24 +85,30 @@ def _sle_candidates(raw: bytes):
 
 
 def _english_stream(raw: bytes):
-    signature = container_text.encode_codepage(NEXT_EN)
     for candidate in _sle_candidates(raw):
         expanded = candidate[4]
-        if expanded[NEXT_TEXT_OFFSET:NEXT_TEXT_OFFSET + len(signature)] == signature:
+        if (len(expanded) == 4480 and all(
+                b"\0" in expanded[message_id:message_id + size]
+                for message_id, (_english, _japanese, size)
+                in FIELD_BY_ID.items())):
             return candidate
     raise ValueError("SPDDragonHall.bin prompt stream was not found")
 
 
-def extract_english(raw: bytes, *, accent_tokens=None) -> str:
+def extract_english(raw: bytes, message_id=MESSAGE_ID, *, accent_tokens=None) -> str:
+    try:
+        _english, _japanese, size = FIELD_BY_ID[message_id]
+    except KeyError as exc:
+        raise ValueError(f"unknown Dragon Hall text field {message_id}") from exc
     expanded = _english_stream(raw)[4]
     text, consumed = container_text.render_codepage(
         expanded,
-        {"text_start": 0, "text_end": NEXT_TEXT_OFFSET},
-        PROMPT_OFFSET,
+        {"text_start": 0, "text_end": message_id + size},
+        message_id,
         accent_tokens=accent_tokens,
     )
-    if consumed > PROMPT_SIZE:
-        raise ValueError("Dragon Hall prompt overruns its fixed slot")
+    if consumed > size:
+        raise ValueError(f"Dragon Hall text field {message_id} overruns its slot")
     return text
 
 
@@ -91,72 +120,96 @@ def extract_japanese(raw: bytes) -> str:
     raise ValueError("Japanese SPDDragonHall.bin prompt stream was not found")
 
 
-def source_row(resource: int, raw: bytes, japanese_raw: bytes | None = None):
+def source_rows(resource: int, raw: bytes, japanese_raw: bytes | None = None):
     if resource not in RESOURCES:
         raise ValueError(f"resource {resource} is not a Dragon Hall prompt owner")
-    english = extract_english(raw)
-    if english != ORIGINAL_EN:
-        raise ValueError(
-            f"resource {resource}: expected {ORIGINAL_EN!r}, found {english!r}")
-    japanese = extract_japanese(japanese_raw) if japanese_raw is not None else ""
-    return {
-        "kind": "container",
-        "resource": str(resource),
-        "message_id": str(MESSAGE_ID),
-        "message_index": "",
-        "record_kind": "dragon_hall_prompt",
-        "offset": str(PROMPT_OFFSET),
-        "byte_length": str(PROMPT_SIZE),
-        "original_en": english,
-        "original_jp": japanese,
-        "translated": "",
-        "notes": "",
-    }
+    if japanese_raw is not None:
+        extract_japanese(japanese_raw)
+    rows = []
+    for message_id, expected, japanese in TEXT_FIELDS:
+        english = extract_english(raw, message_id)
+        if english != expected:
+            raise ValueError(
+                f"resource {resource}: expected {expected!r}, found {english!r}")
+        size = FIELD_BY_ID[message_id][2]
+        rows.append({
+            "kind": "container",
+            "resource": str(resource),
+            "message_id": str(message_id),
+            "message_index": "",
+            "record_kind": "dragon_hall_prompt",
+            "offset": str(message_id),
+            "byte_length": str(size),
+            "original_en": english,
+            "original_jp": japanese if japanese_raw is not None else "",
+            "translated": "",
+            "notes": "",
+        })
+    return rows
 
 
-def patch_raw(raw: bytes, translated: str, *, accent_tokens=None):
+def source_row(resource: int, raw: bytes, japanese_raw: bytes | None = None):
+    return source_rows(resource, raw, japanese_raw)[0]
+
+
+def patch_raw(raw: bytes, translations, *, accent_tokens=None):
+    if isinstance(translations, str):
+        translations = {MESSAGE_ID: translations}
+    else:
+        translations = {int(key): value for key, value in translations.items()}
     offset, end, stored_size, stream, expanded = _english_stream(raw)
-    before = extract_english(raw, accent_tokens=accent_tokens)
-    if before != ORIGINAL_EN:
-        raise ValueError(f"expected {ORIGINAL_EN!r}, found {before!r}")
-    encoded = container_text.encode_codepage(
-        translated, label="Dragon Hall prompt", accent_tokens=accent_tokens)
-    if len(encoded) > PROMPT_SIZE:
-        raise ValueError(
-            "Dragon Hall prompt uses %d encoded bytes; its fixed slot holds %d "
-            "including the terminator" % (len(encoded), PROMPT_SIZE))
     rebuilt = bytearray(expanded)
-    rebuilt[PROMPT_OFFSET:NEXT_TEXT_OFFSET] = encoded.ljust(PROMPT_SIZE, b"\0")
+    expected = {}
+    for message_id, translated in translations.items():
+        try:
+            original, _japanese, size = FIELD_BY_ID[message_id]
+        except KeyError as exc:
+            raise ValueError(f"unknown Dragon Hall text field {message_id}") from exc
+        before = extract_english(raw, message_id, accent_tokens=accent_tokens)
+        if before != original:
+            raise ValueError(f"expected {original!r}, found {before!r}")
+        encoded = container_text.encode_codepage(
+            translated, label=f"Dragon Hall text {message_id}",
+            accent_tokens=accent_tokens)
+        if len(encoded) > size:
+            raise ValueError(
+                "Dragon Hall text %d uses %d encoded bytes; its fixed slot "
+                "holds %d including the terminator" %
+                (message_id, len(encoded), size))
+        rebuilt[message_id:message_id + size] = encoded.ljust(size, b"\0")
+        expected[message_id] = container_text.codepage_semantic_text(
+            translated, accent_tokens=accent_tokens)
     compressed = slz_compress.compress(
         rebuilt, mode=stream[3], target_size=stored_size, cache_dir="")
     protected = protect(compressed)
     if len(protected) != len(stream):
         raise AssertionError("exact-size Dragon Hall recompression changed the stream")
     output = raw[:offset] + protected + raw[end:]
-    readback = extract_english(output, accent_tokens=accent_tokens)
-    expected = container_text.codepage_semantic_text(
-        translated, accent_tokens=accent_tokens)
+    readback = {
+        message_id: extract_english(
+            output, message_id, accent_tokens=accent_tokens)
+        for message_id in translations
+    }
     if readback != expected:
-        raise AssertionError(
-            f"Dragon Hall prompt readback mismatch: {readback!r} != {expected!r}")
+        raise AssertionError(f"Dragon Hall text readback mismatch: {readback!r}")
     return output, {
         "wrapper": "SLE",
         "stream_offset": offset,
         "stored_size": stored_size,
-        "prompt": readback,
+        "prompt": readback.get(MESSAGE_ID, extract_english(output)),
+        "fields": readback,
     }
 
 
 def patch_resource_in_memory(iso, resource: int, supplied, *, accent_tokens=None):
-    key = str(MESSAGE_ID)
-    row = supplied.get(key)
-    if row is None:
-        raise ValueError(f"resource {resource}: missing Dragon Hall prompt row {key}")
-    extra = sorted(set(supplied) - {key})
+    known = {str(message_id) for message_id in FIELD_BY_ID}
+    extra = sorted(set(supplied) - known)
     if extra:
         raise ValueError(f"resource {resource}: unexpected Dragon Hall rows {extra}")
     original = bytes(iso.read_entry(resource))
     rebuilt, details = patch_raw(
-        original, row["translated"], accent_tokens=accent_tokens)
+        original,
+        {int(key): row["translated"] for key, row in supplied.items()},
+        accent_tokens=accent_tokens)
     iso.write_entry(resource, rebuilt)
-    return {"written": 1, "details": details, "font_patch": None}
+    return {"written": len(supplied), "details": details, "font_patch": None}
