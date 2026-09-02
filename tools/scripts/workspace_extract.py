@@ -26,6 +26,7 @@ from . import package_archive
 from . import protected_package
 from . import vp2_dcms as dcms
 from . import vp2_jp_glyphs
+from . import vp2_dragon_hall
 from . import vp2_title_face
 from .translation_pack import PackError, _read_csv, _write_csv_atomic
 from .translation_layout import write_reference_tree
@@ -242,6 +243,45 @@ def _export_containers(
     return sheets, lines, skipped
 
 
+def _export_dragon_hall_prompts(
+    usa_image: Path,
+    output: Path,
+    japanese_image: Path | None,
+) -> tuple[int, int]:
+    """Expose the one fixed SPDDragonHall prompt as container-style rows."""
+    output.mkdir(parents=True, exist_ok=True)
+    fields = [
+        "kind", "resource", "message_id", "message_index", "record_kind",
+        "offset", "byte_length", "original_en", "original_jp", "translated",
+        "notes",
+    ]
+    sheets = lines = 0
+    with usa_image.open("rb") as usa_handle:
+        _game, usa_total, usa_table = triace.load_table(usa_handle)
+        if japanese_image is not None:
+            jp_handle = japanese_image.open("rb")
+            _jp_game, jp_total, jp_table = triace.load_table(jp_handle)
+        else:
+            jp_handle = None
+            jp_total = jp_table = None
+        try:
+            for resource in vp2_dragon_hall.RESOURCES:
+                usa_raw = bytes(dcms.read_entry(
+                    usa_handle, usa_table, usa_total, resource))
+                jp_raw = (bytes(dcms.read_entry(
+                    jp_handle, jp_table, jp_total, resource))
+                    if jp_handle is not None else None)
+                row = vp2_dragon_hall.source_row(resource, usa_raw, jp_raw)
+                _write_csv_atomic(
+                    output / f"container-{resource:04d}.csv", fields, [row])
+                sheets += 1
+                lines += 1
+        finally:
+            if jp_handle is not None:
+                jp_handle.close()
+    return sheets, lines
+
+
 def _export_chapters(
     usa_image: Path,
     records_path: Path,
@@ -424,6 +464,10 @@ def generate_workspace(
         container_sheets, container_lines, skipped = _export_containers(
             usa, usa_rows, records_dir / "containers", japanese,
             japanese_glyphs, japanese_names)
+        dragon_sheets, dragon_lines = _export_dragon_hall_prompts(
+            usa, records_dir / "containers", japanese)
+        container_sheets += dragon_sheets
+        container_lines += dragon_lines
         print("tables: exporting chapter titles", flush=True)
         chapter_lines = _export_chapters(
             usa, chapter_records, records_dir / "chapters.csv")

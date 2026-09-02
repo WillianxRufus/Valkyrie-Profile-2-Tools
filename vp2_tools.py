@@ -10,13 +10,15 @@ import argparse
 import ctypes
 import io
 import os
+import queue
 import sys
+import threading
 import webbrowser
 
 import vp2_cheats
 import vp2_translate
 import vp2_voices
-from tools import app_meta, translate_gui
+from tools import app_meta, translate_gui, update_check
 from tools.cheat_patcher import gui as cheat_gui
 from tools.voice_patcher import gui as voice_gui
 
@@ -112,6 +114,7 @@ class App:
         self._build_shell()
         root.protocol("WM_DELETE_WINDOW", self._on_close)
         self.show("translate")
+        self._check_for_updates()
 
     def _configure_styles(self):
         style = ttk.Style(self.root)
@@ -183,21 +186,55 @@ class App:
         footer = ttk.Frame(
             self.root, style="Footer.TFrame", padding=(18, 8))
         footer.grid(row=1, column=0, sticky="ew")
-        footer.columnconfigure(1, weight=1)
+        footer.columnconfigure(1, weight=0)
+        footer.columnconfigure(2, weight=1)
         ttk.Label(
             footer,
             text=f"{app_meta.PROJECT_NAME}  ·  v{app_meta.VERSION}",
             style="Footer.TLabel",
         ).grid(row=0, column=0, sticky="w")
+        self.update_link = ttk.Label(
+            footer, text="", style="FooterLink.TLabel", cursor="hand2")
+        self.update_link.grid(row=0, column=1, sticky="w", padx=(16, 0))
+        self.update_link.grid_remove()
         link = ttk.Label(
             footer, text="GitHub", style="FooterLink.TLabel", cursor="hand2")
-        link.grid(row=0, column=2, sticky="e")
+        link.grid(row=0, column=3, sticky="e")
         link.bind("<Button-1>", self._open_project)
         self.footer_link = link
         self.root.configure(background=dark["bg"])
 
     def _open_project(self, _event=None):
         webbrowser.open(app_meta.PROJECT_URL)
+
+    def _open_release(self, url):
+        webbrowser.open(url)
+
+    def _check_for_updates(self):
+        """Ask GitHub once for a newer release; surface a link if found."""
+        if not update_check.is_release_build():
+            return
+        self._update_queue = queue.Queue()
+        self._update_polls = 0
+        thread = threading.Thread(
+            target=update_check.worker, args=(self._update_queue,), daemon=True)
+        thread.start()
+        self.root.after(2000, self._poll_update)
+
+    def _poll_update(self):
+        try:
+            release = self._update_queue.get_nowait()
+        except queue.Empty:
+            self._update_polls += 1
+            if self._update_polls < 60:
+                self.root.after(2000, self._poll_update)
+            return
+        if release is None:
+            return
+        self.update_link.configure(text="Update v%s" % release.version)
+        self.update_link.bind(
+            "<Button-1>", lambda _e, url=release.html_url: self._open_release(url))
+        self.update_link.grid()
 
     def show(self, key):
         if self.busy_tools and key != self.current:

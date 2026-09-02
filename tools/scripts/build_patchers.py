@@ -12,6 +12,7 @@ from .paths import FROZEN, PROJECT_ROOT
 from . import vp2_container_text
 from . import vp2_iso_buffer as iso_buffer
 from . import vp2_shared_font as shared_font
+from . import vp2_dragon_hall
 from .build_config import expand_flags
 from .build_translations import _read_sheet_with_dedupe
 
@@ -135,6 +136,21 @@ def patch_container_resource_in_memory(iso, row, *, primary_lookup=None):
         return {"written": 0, "details": {"wrapper": "unchanged"},
                 "font_patch": None}
     flags = (row.get('flags') or '').split()
+    record_kinds = {
+        (item.get('record_kind') or item.get('kind') or '').strip()
+        for item in sheet_rows
+    }
+    if 'dragon_hall_prompt' in record_kinds:
+        if record_kinds != {'dragon_hall_prompt'}:
+            raise ValueError(
+                f"{sheet_path}: Dragon Hall prompt is mixed with other records")
+        return vp2_dragon_hall.patch_resource_in_memory(
+            iso,
+            int(row['resource']),
+            supplied,
+            accent_tokens=(shared_font.SHARED_EXTENSION_TOKENS
+                           if 'shared-font-glyphs' in flags else None),
+        )
     return vp2_container_text.patch_resource_in_memory(
         iso,
         int(row['resource']),

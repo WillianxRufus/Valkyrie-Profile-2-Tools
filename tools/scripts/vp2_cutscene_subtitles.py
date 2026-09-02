@@ -128,7 +128,7 @@ FIELDS = [
     "visible_parts_json", "source_tokens", "source_raw_hex", "source_rendered",
     "translator_notes",
 ]
-TAG = re.compile(r"<[^>]+>")
+TAG = re.compile(r"<(?:[0-9A-Fa-f]{4}|\?|END)>")
 
 RAW_TOKEN = re.compile(r"<([0-9A-Fa-f]{4})>")
 
