@@ -127,10 +127,16 @@ def run_uses_local_font(tokens, metadata, alphabet):
             return True
     return False
 
-def shared_codepage_owns_layout(run_faces):
-    """Whether every glyph-bearing run uses the shared-codepage consumer."""
-    return (any(face is True for face in run_faces)
-            and all(face is not False for face in run_faces))
+def shared_codepage_owns_layout(run_faces, run_texts=None):
+    """Whether the shared-codepage consumer lays a record out."""
+    if not any(face is True for face in run_faces):
+        return False
+    texts = list(run_texts or ())
+    for index, face in enumerate(run_faces):
+        if face is False and "\n" in (texts[index] if index < len(texts)
+                                      else "\n"):
+            return False
+    return True
 
 def scene_required_local_glyphs(expanded, metadata, alphabet, rows):
     """Characters needed by translated runs that actually use this font."""
@@ -165,7 +171,14 @@ def scene_required_local_glyphs(expanded, metadata, alphabet, rows):
                     and not run_uses_shared_header(
                         source_text, glyphs, metadata, alphabet)
                     and run_uses_local_font(glyphs, metadata, alphabet)):
-                needed.update(visible_characters(target))
+                if run_mixes_faces(glyphs, metadata, alphabet):
+                    # Only the local glyphs the run keeps stay local.
+                    local = local_run_characters(glyphs, metadata, alphabet)
+                    needed.update(character
+                                  for character in visible_characters(target)
+                                  if character in local)
+                else:
+                    needed.update(visible_characters(target))
     return needed - CODEPAGE_ONLY
 
 def encode_subtitle(row, alphabet, glyph_base, source_alphabet=None,
@@ -238,11 +251,47 @@ def codepage_char_tokens():
     tokens.update(vp2_shared_font.SHARED_EXTENSION_TOKENS)
     return tokens
 
+def local_run_characters(tokens, metadata, alphabet):
+    """The characters a run draws from its local font."""
+    found = set()
+    for token in tokens:
+        slot = token_slot(token, metadata["glyph_base"],
+                          metadata["glyph_count"])
+        character = alphabet.get(slot) if slot is not None else None
+        if character is not None and not character.isspace():
+            found.add(character)
+    return found
+
+def run_mixes_faces(tokens, metadata, alphabet):
+    """Whether a run draws from both its local font and the shared face."""
+    shared = any(
+        token_slot(token, metadata["glyph_base"],
+                   metadata["glyph_count"]) is None
+        or alphabet.get(token_slot(token, metadata["glyph_base"],
+                                   metadata["glyph_count"])) is None
+        for token in tokens)
+    return shared and bool(local_run_characters(tokens, metadata, alphabet))
+
+def mixed_run_char_tokens(tokens, metadata, alphabet):
+    """Shared-face tokens, overridden by the local ones a run already used."""
+    char_tokens = codepage_char_tokens()
+    for token in tokens:
+        slot = token_slot(token, metadata["glyph_base"],
+                          metadata["glyph_count"])
+        character = alphabet.get(slot) if slot is not None else None
+        # Whitespace is not a face choice: a local space is merely wider, and
+        # overriding every space with it re-spaces the whole line.
+        if character is not None and not character.isspace():
+            char_tokens[character] = token
+    return char_tokens
+
 def visible_text_tokens(text, alphabet, glyph_base, codepage=False,
-                        materialize_blank_rows=False):
+                        materialize_blank_rows=False, char_tokens=None):
     """The inverse of ``render_tokens`` for one run of text."""
     text = canonical_page_breaks(text)
-    if codepage:
+    if char_tokens is not None:
+        char_to_token = char_tokens
+    elif codepage:
         char_to_token = codepage_char_tokens()
     else:
         text = remap_punctuation_to_period(text, alphabet)
@@ -270,11 +319,12 @@ def visible_text_tokens(text, alphabet, glyph_base, codepage=False,
     return body
 
 def encode_visible_text(text, alphabet, glyph_base, codepage=False,
-                        materialize_blank_rows=False):
+                        materialize_blank_rows=False, char_tokens=None):
     return pack_tokens(visible_text_tokens(text, alphabet, glyph_base,
                                            codepage=codepage,
                                            materialize_blank_rows=
-                                           materialize_blank_rows))
+                                           materialize_blank_rows,
+                                           char_tokens=char_tokens))
 
 def encode_visible_part(part, text, alphabet, glyph_base,
                         source_alphabet=None, source_base=None,
@@ -710,7 +760,8 @@ def run_replacements(expanded, metadata, alphabet, glyph_base, rows,
                              target, from_codepage))
             codepage_runs.append(from_codepage if source_run else None)
 
-        codepage_layout = shared_codepage_owns_layout(codepage_runs)
+        codepage_layout = shared_codepage_owns_layout(
+            codepage_runs, [source_run[2] for source_run in runs])
 
         if len(prepared) > 1 and not any(codepage_runs):
             wrapped_runs = wrap_structured_translations(
@@ -740,6 +791,15 @@ def run_replacements(expanded, metadata, alphabet, glyph_base, rows,
                         source_text, source_tokens, source_meta, search)):
                 replacement = encode_shared_header(
                     wrapped, source_tokens, source_meta, search)
+            elif (not from_codepage
+                  and run_mixes_faces([token for token in source_tokens
+                                       if token < 0x8000],
+                                      source_meta, search)):
+                replacement = encode_visible_text(
+                    wrapped, writable, glyph_base, materialize_blank_rows=True,
+                    char_tokens=mixed_run_char_tokens(
+                        [token for token in source_tokens if token < 0x8000],
+                        source_meta, search))
             else:
                 replacement = encode_visible_text(
                     wrapped if from_codepage

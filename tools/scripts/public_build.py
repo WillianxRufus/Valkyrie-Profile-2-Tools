@@ -24,6 +24,7 @@ from pathlib import Path
 
 from .paths import BUILD_DIR, PROJECT_ROOT, WORKSPACE_DIR, output_root
 from .workspace_extract import generate_workspace
+from .translation_layout import rename_tree
 from .translation_pack import (
     PACK_PROFILE,
     PackError,
@@ -346,7 +347,7 @@ def compile_build_workspace(
             encoding="utf-8")
         if build_root.exists():
             shutil.rmtree(build_root)
-        staging.replace(build_root)
+        rename_tree(staging, build_root)
         return {
             **metadata,
             "root": build_root,

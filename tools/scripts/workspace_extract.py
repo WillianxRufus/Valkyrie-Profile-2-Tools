@@ -29,7 +29,7 @@ from . import vp2_jp_glyphs
 from . import vp2_dragon_hall
 from . import vp2_title_face
 from .translation_pack import PackError, _read_csv, _write_csv_atomic
-from .translation_layout import write_reference_tree
+from .translation_layout import rename_tree, write_reference_tree
 
 
 INVENTORY_FIELDS = (
@@ -333,16 +333,16 @@ def _replace_generated_tree(target: Path, generated: Path) -> None:
     backup = target.with_name("." + target.name + "-previous")
     # Recover the only complete snapshot after an interrupted earlier swap.
     if backup.exists() and not target.exists():
-        backup.replace(target)
+        rename_tree(backup, target)
     elif backup.exists():
         _remove_path(backup)
     if target.exists():
-        target.replace(backup)
+        rename_tree(target, backup)
     try:
-        generated.replace(target)
+        rename_tree(generated, target)
     except BaseException:
         if backup.exists() and not target.exists():
-            backup.replace(target)
+            rename_tree(backup, target)
         raise
     if backup.exists():
         _remove_path(backup)

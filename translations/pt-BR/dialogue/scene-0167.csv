@@ -1,5 +1,6 @@
 resource,message_id,translated,notes
-167,4,"Sobre os Einherjar <PART> Vários einherjar que nunca foram levados para Valhalla habitam o corpo de Alicia. Suas psiques enfraqueceram, mas eles podem ser materializados ao tocarem relíquias espalhadas. <PART>
+167,4,"Sobre os Einherjar <PART> Vários einherjar que nunca foram levados para Valhalla habitam o corpo de Alicia.
+Suas psiques enfraqueceram, mas eles podem ser materializados ao tocarem relíquias espalhadas. <PART>
 ---
  <PART> Sobre os Einherjar <PART> A alma de um corpo recém-materializado é instável e se dissipa se ficar longe de sua hospedeira, Alicia. <PART>
 ---
@@ -8,6 +9,7 @@ resource,message_id,translated,notes
 Verifique a tela de status para saber em que nível um einherjar pode ser libertado. <PART>
 ---
  <PART> Sobre os Einherjar <PART> Após devolverem seu poder a Alicia, os einherjar libertados começam uma nova vida como humanos. 
+ 
  <PART>
 Se tiver sorte, você poderá vê-los novamente algum dia.",
 167,2340,,

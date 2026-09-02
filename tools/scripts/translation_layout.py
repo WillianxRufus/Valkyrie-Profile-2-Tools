@@ -10,6 +10,7 @@ import json
 import os
 import re
 import shutil
+import time
 import uuid
 from collections import defaultdict
 from pathlib import Path
@@ -80,20 +81,33 @@ def _remove_path(path: Path) -> None:
         path.unlink()
 
 
+def rename_tree(source: Path, target: Path, timeout: float = 30.0) -> None:
+    """Rename a directory, waiting out a transient hold on a fresh tree."""
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            source.replace(target)
+            return
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(0.1)
+
+
 def _replace_tree(target: Path, generated: Path) -> None:
     """Replace one generated directory, restoring the old tree on error."""
     backup = target.with_name("." + target.name + "-previous")
     if backup.exists() and not target.exists():
-        backup.replace(target)
+        rename_tree(backup, target)
     elif backup.exists():
         _remove_path(backup)
     if target.exists():
-        target.replace(backup)
+        rename_tree(target, backup)
     try:
-        generated.replace(target)
+        rename_tree(generated, target)
     except BaseException:
         if backup.exists() and not target.exists():
-            backup.replace(target)
+            rename_tree(backup, target)
         raise
     if backup.exists():
         _remove_path(backup)

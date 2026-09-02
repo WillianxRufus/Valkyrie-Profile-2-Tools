@@ -87,6 +87,7 @@ def _source_text_matches(actual, sheet):
 
 def _structured_codepage_runs(message):
     """Return the full source extent and its visible shared-font runs."""
+    from . import scene_sheet_export
     from . import vp2_cutscene_subtitles as subtitles
 
     source = bytes.fromhex(message.get("record_raw_hex", message["raw_hex"]))
@@ -94,7 +95,7 @@ def _structured_codepage_runs(message):
     runs = []
     for start, end, tokens in subtitles.parse_record(source, metadata):
         rendered, _, _ = subtitles.render_tokens(tokens, metadata, {})
-        visible = subtitles.clean_text(rendered)
+        visible = scene_sheet_export.export_run_text(rendered)
         if visible:
             leading = rendered[:len(rendered) - len(rendered.lstrip(" \t"))]
             trailing = rendered[len(rendered.rstrip(" \t")):]
