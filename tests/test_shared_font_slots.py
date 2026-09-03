@@ -14,6 +14,7 @@ from tools.scripts.paths import PROJECT_ROOT
 from tools.scripts.translation_pack import PACK_FIELDS, PACK_SLOTS, load_pack
 
 PACKS = PROJECT_ROOT / "translations"
+#: Entry 8's font holds this many glyphs, so a token outside it has no slot.
 SHARED_FONT_SLOTS = 95
 
 
@@ -89,6 +90,7 @@ class ActiveSlotMapTests(unittest.TestCase):
                              encoding="utf-8")
             shared_font.use_slot_assignments(table)
         self.assertEqual({"\u00e5": 0x3C}, shared_font.SHARED_EXTENSION_TOKENS)
+        # Imported at module load, long before the selection above.
         self.assertEqual({"\u00e5": 0x3C}, text_patch.SHARED_EXTENSION_TOKENS)
 
     def test_the_default_table_is_used_when_nothing_selects_one(self):

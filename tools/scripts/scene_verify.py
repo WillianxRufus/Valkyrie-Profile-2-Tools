@@ -74,6 +74,10 @@ def verify_scene_sheet(args):
     rows = read_scene_rows(args.csv, args.resource,
                            primary_lookup=getattr(args, "primary_lookup", None))
     if not rows:
+        if verify_chapter_title(args, int(args.resource)):
+            print("verified chapter title in resource #%d: %s"
+                  % (int(args.resource), args.iso))
+            return
         raise ValueError("no translated rows in %s" % args.csv)
     resources = {int(row["resource_index"]) for row in rows}
     if len(resources) != 1:

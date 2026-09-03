@@ -214,7 +214,8 @@ def patch_scene_resource_in_memory(iso, row, *, primary_lookup=None,
     from . import vp2_cutscene_subtitles as subtitles
     rows = subtitles.read_scene_rows(
         sheet_path, int(row['resource']), primary_lookup=primary_lookup)
-    if not rows:
+    title = (row.get('chapter_title') or '').strip()
+    if not rows and not title:
         print(f"warning: no translatable rows in {sheet_path}", file=sys.stderr)
         return {'written': 0, 'details': {}, 'rendered': [], 'installed': []}
     args = _scene_args_from_row(row)

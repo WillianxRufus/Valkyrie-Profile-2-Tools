@@ -380,6 +380,64 @@ def compose_with_subtitle_mark(character, art, marks=None):
         return block, metric, "subtitle face"
     return None
 
+Y_JUNCTION_ROW = 15
+Y_ARM_FOOT_ROWS = 2
+
+def _squeeze_rows(grid, top, bottom, new_top, new_bottom):
+    """Area-average rows ``top..bottom`` of *grid* into ``new_top..new_bottom``."""
+    from . import vp2_glyph_compose as glyph_compose
+    out = [[0] * glyph_compose.WIDTH for _ in range(glyph_compose.HEIGHT)]
+    span = bottom - top + 1
+    new_span = new_bottom - new_top + 1
+    if span <= 0 or new_span <= 0:
+        return None
+    for y in range(new_top, new_bottom + 1):
+        low = top + (y - new_top) * span / new_span
+        high = top + (y - new_top + 1) * span / new_span
+        for x in range(glyph_compose.WIDTH):
+            ink = weight = 0.0
+            source = int(low)
+            while source < high:
+                part = min(high, source + 1) - max(low, source)
+                if part > 0 and source <= bottom:
+                    ink += grid[source][x] * part
+                    weight += part
+                source += 1
+            out[y][x] = min(15, int(round(ink / weight))) if weight else 0
+    return out
+
+
+def _stack_y(arms_block, stem_block):
+    """A Y: the V's arms shortened onto the I's stem and foot."""
+    from . import vp2_glyph_compose as glyph_compose
+    arms = glyph_compose.unpack(bytes(arms_block))
+    stem = glyph_compose.unpack(bytes(stem_block))
+    arm_rows = glyph_compose.ink_rows(arms)
+    stem_rows = glyph_compose.ink_rows(stem)
+    if not arm_rows or not stem_rows:
+        return None
+    top, bottom = arm_rows[0], arm_rows[-1] - Y_ARM_FOOT_ROWS
+    if not top < Y_JUNCTION_ROW < bottom:
+        return None
+    out = _squeeze_rows(arms, top, bottom, top, Y_JUNCTION_ROW)
+    if out is None:
+        return None
+    joint = [x for x in range(glyph_compose.WIDTH) if out[Y_JUNCTION_ROW][x]]
+    column = [x for x in range(glyph_compose.WIDTH) if stem[Y_JUNCTION_ROW][x]]
+    if not joint or not column:
+        return None
+    shift = ((min(joint) + max(joint)) // 2
+             - (min(column) + max(column)) // 2)
+    for y in range(Y_JUNCTION_ROW, glyph_compose.HEIGHT):
+        for x in range(glyph_compose.WIDTH):
+            if not stem[y][x]:
+                continue
+            target = x + shift
+            if not 0 <= target < glyph_compose.WIDTH:
+                return None
+            out[y][target] = max(out[y][target], stem[y][x])
+    return glyph_compose.pack(out)
+
 
 def compose_procedural(character, art):
     """Derive title glyphs absent from every USA chapter title."""
@@ -403,6 +461,16 @@ def compose_procedural(character, art):
             for x in range(opening_left, right + 1):
                 grid[y][x] = 0
         return glyph_compose.pack(grid), bytes(base[1]), "procedural o"
+
+    if character.lower() == "y":
+        arms = _lookup(art, "v")
+        stem = _lookup(art, "i")
+        if arms is None or stem is None:
+            return None
+        block = _stack_y(arms[0], stem[0])
+        if block is None:
+            return None
+        return block, bytes(arms[1]), "procedural v over i"
 
     decomposed = unicodedata.normalize("NFD", character)
     if len(decomposed) != 2:

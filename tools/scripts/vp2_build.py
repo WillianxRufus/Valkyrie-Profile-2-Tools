@@ -405,7 +405,7 @@ def main():
             if args.verbose and row_log.getvalue():
                 print(row_log.getvalue(), end='')
 
-            if kind == 'scene':
+            if kind == 'scene' and details.get('patched') is not None:
                 _check_scene_content_ceiling(
                     source_iso, int(resource), details['patched'], _fail)
 

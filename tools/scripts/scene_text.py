@@ -128,7 +128,11 @@ def run_uses_local_font(tokens, metadata, alphabet):
     return False
 
 def shared_codepage_owns_layout(run_faces, run_texts=None):
-    """Whether the shared-codepage consumer lays a record out."""
+    """Whether the shared-codepage consumer lays a record out.
+
+    A local-font run only claims the layout when it breaks its own line;
+    without ``run_texts`` every local run is taken to claim it.
+    """
     if not any(face is True for face in run_faces):
         return False
     texts = list(run_texts or ())
