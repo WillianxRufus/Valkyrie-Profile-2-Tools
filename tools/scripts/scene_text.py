@@ -266,6 +266,10 @@ def local_run_characters(tokens, metadata, alphabet):
             found.add(character)
     return found
 
+def run_frames_shared_heading(tokens, metadata, alphabet):
+    """Whether a run's only local glyphs are the chevrons around a heading."""
+    return local_run_characters(tokens, metadata, alphabet) <= {"<", ">"}
+
 def run_mixes_faces(tokens, metadata, alphabet):
     """Whether a run draws from both its local font and the shared face."""
     shared = any(
@@ -730,6 +734,7 @@ def run_replacements(expanded, metadata, alphabet, glyph_base, rows,
                 "with %s exactly as the sheet's original does" %
                 (row["audio_id"], len(runs), len(targets), FRAGMENT_MARKER))
         edits, shown, drawn, codepage_runs = list(padding_edits), [], [], []
+        layout_runs = []
         auto_paginate = (len(runs) == 1
                          and max_lines == NPC_DIALOGUE_MAX_LINES)
         prepared = []
@@ -763,9 +768,14 @@ def run_replacements(expanded, metadata, alphabet, glyph_base, rows,
             prepared.append(((start, end, visible, source_text, source_tokens),
                              target, from_codepage))
             codepage_runs.append(from_codepage if source_run else None)
+            layout_runs.append(
+                (from_codepage
+                 or run_frames_shared_heading(
+                     source_run, source_meta, search))
+                if source_run else None)
 
         codepage_layout = shared_codepage_owns_layout(
-            codepage_runs, [source_run[2] for source_run in runs])
+            layout_runs, [source_run[2] for source_run in runs])
 
         if len(prepared) > 1 and not any(codepage_runs):
             wrapped_runs = wrap_structured_translations(
@@ -774,7 +784,7 @@ def run_replacements(expanded, metadata, alphabet, glyph_base, rows,
         else:
             wrapped_runs = []
             for (_run, target, from_codepage) in prepared:
-                if from_codepage:
+                if from_codepage or codepage_layout:
                     wrapped = target
                 else:
                     wrapped = wrap_translation(

@@ -349,7 +349,28 @@ No entanto, além do poder da criação, ela também detém o poder da destruiç
 1781,2579,,
 1781,2580,,
 1781,2583,,
-1781,2584,,
+1781,2584,"<8086:00000000><8088:06><8084:01><0065><0066>Sobre Agrupamento<0066><0065>
+<8085><8089><8087>
+Pressione <808A:0000803F0000603F><8099:11><8099:12><808B> no modo de
+movimento para dividir o grupo
+em duas equipes, uma vermelha
+e uma azul.<8082><8081><8086:00000000><8088:06><8084:01><0065><0066>Agrupamento<0066><0065>
+<8085><8089><8087>
+Uma equipe pode distrair um
+monstro enquanto a outra ataca
+por trás. Dominar o agrupamento
+permite comandar batalhas de
+forma mais estratégica.<8082><8081><8086:00000000><8088:06><8084:01><0065><0066>Agrupamento<0066><0065>
+<8085><8089><8087>
+Mesmo separado, o grupo se
+reúne imediatamente quando
+você ordena o reagrupamento.<8082><8081><8086:00000000><8088:06><8084:01><0065><0066>Agrupamento<0066><0065>
+<8085><8089><8087>
+Porém...
+Se um membro estiver longe
+demais ao reagrupar, ele pode
+não conseguir se juntar.
+Tenha cuidado.<8082>",
 1781,2006,,
 1781,2007,,
 1781,2008,,
