@@ -26,9 +26,13 @@ SHARED_ACCENT_DONORS = os.fspath(DATA_DIR / "shared-font-accent-donors.csv")
 SHARED_REPLACE_BODY_START = {"i": 10}
 
 
+DEFAULT_SLOT_TABLE = os.path.join(os.path.dirname(__file__),
+                                  "shared_font_slots.csv")
+
+
 def load_slot_assignments(path=None):
     """Load the target character-to-token map from package configuration."""
-    path = path or os.path.join(os.path.dirname(__file__), "shared_font_slots.csv")
+    path = path or DEFAULT_SLOT_TABLE
     with open(path, newline="", encoding="utf-8") as source:
         rows = list(csv.DictReader(source))
     assignments = {}
@@ -46,6 +50,13 @@ def load_slot_assignments(path=None):
 
 
 SHARED_EXTENSION_TOKENS = load_slot_assignments()
+
+def use_slot_assignments(path):
+    """Point every consumer at the map in *path*."""
+    replacement = load_slot_assignments(path)
+    SHARED_EXTENSION_TOKENS.clear()
+    SHARED_EXTENSION_TOKENS.update(replacement)
+    return SHARED_EXTENSION_TOKENS
 
 
 def _round_up(value, alignment):
@@ -117,6 +128,26 @@ def _composed_shared_glyph(font, layout, character):
     return bytes(block), subtitles.glyph_metric(font, layout, base_slot)
 
 
+def shared_glyph_for(font, layout, character, donors):
+    """``(block, metric)`` to install for *character*: donor, composed, derived."""
+    if character in donors and donors[character][0] is not None:
+        block, metric, glyph_bytes = donors[character]
+        if glyph_bytes != layout["glyph_bytes"]:
+            raise ValueError(
+                "incompatible shared-font donor for %r" % character)
+        return block, metric
+    composed = _composed_shared_glyph(font, layout, character)
+    if composed is not None:
+        return composed
+    base, mark = subtitles.ACCENTS[character]
+    base_slot = ord(base) - 0x20
+    source = subtitles.glyph_bitmap(font, layout, base_slot)
+    vertical_shift = -2 if mark == "tilde" else 0
+    return (subtitles.accented_block(source, mark,
+                                     vertical_shift=vertical_shift),
+            subtitles.glyph_metric(font, layout, base_slot))
+
+
 def patch_shared_font(archive, characters, accent_tokens=None):
     """Install ``characters`` into globally-unused slots of shared font"""
     accent_tokens = accent_tokens or SHARED_EXTENSION_TOKENS
@@ -142,24 +173,8 @@ def patch_shared_font(archive, characters, accent_tokens=None):
         target_slot = token - 1
         if not 0 <= target_slot < layout["glyph_count"]:
             raise ValueError("shared-font token 0x%02X is outside the font" % token)
-        if character in donors:
-            block, metric, glyph_bytes = donors[character]
-            if glyph_bytes != layout["glyph_bytes"]:
-                raise ValueError("incompatible shared-font donor for %r" % character)
-        else:
-            composed = _composed_shared_glyph(rebuilt_font, layout, character)
-            if composed is not None:
-                block, metric = composed
-            else:
-                base, mark = subtitles.ACCENTS[character]
-                base_slot = ord(base) - 0x20
-                source = subtitles.glyph_bitmap(
-                    rebuilt_font, layout, base_slot)
-                vertical_shift = -2 if mark == "tilde" else 0
-                block = subtitles.accented_block(
-                    source, mark, vertical_shift=vertical_shift)
-                metric = subtitles.glyph_metric(
-                    rebuilt_font, layout, base_slot)
+        block, metric = shared_glyph_for(rebuilt_font, layout, character,
+                                         donors)
         start = layout["font_start"] + target_slot * layout["glyph_bytes"]
         rebuilt_font[start:start + layout["glyph_bytes"]] = block
         metric_at = layout["text_end"] + target_slot * 2
@@ -242,16 +257,7 @@ def install_glyphs(archive, characters, accent_tokens=None):
     _, _, _, _, expanded, layout = shared_font_stream(archive)
     needed = []
     for character in sorted(set(characters), key=lambda c: accent_tokens[c]):
-        if character in donors and donors[character][0] is not None:
-            block = donors[character][0]
-        else:
-            base, mark = subtitles.ACCENTS[character]
-            base_slot = ord(base) - 0x20
-            source = subtitles.glyph_bitmap(
-                expanded, layout, base_slot)
-            vertical_shift = -2 if mark == "tilde" else 0
-            block = subtitles.accented_block(
-                source, mark, vertical_shift=vertical_shift)
+        block, _metric = shared_glyph_for(expanded, layout, character, donors)
         target_slot = accent_tokens[character] - 1
         glyph_start = layout["font_start"] + target_slot * layout["glyph_bytes"]
         current = bytes(expanded[

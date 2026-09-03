@@ -27,6 +27,7 @@ from .workspace_extract import generate_workspace
 from .translation_layout import rename_tree
 from .translation_pack import (
     PACK_PROFILE,
+    PACK_SLOTS,
     PackError,
     _expanded_targets,
     _menu_units,
@@ -335,6 +336,9 @@ def compile_build_workspace(
             "chapter_title", "chapter_title_message",
         ]
         _write_csv(manifest_path, manifest_fields, manifest_rows)
+        pack_slots = pack_path / PACK_SLOTS
+        if pack_slots.is_file():
+            shutil.copyfile(pack_slots, staging / PACK_SLOTS)
         metadata = {
             "format": 1,
             "locale": locale,
@@ -348,11 +352,13 @@ def compile_build_workspace(
         if build_root.exists():
             shutil.rmtree(build_root)
         rename_tree(staging, build_root)
+        compiled_slots = build_root / PACK_SLOTS
         return {
             **metadata,
             "root": build_root,
             "manifest": build_root / "manifest.csv",
             "sheets": build_root / "sheets",
+            "slots": compiled_slots if compiled_slots.is_file() else None,
         }
     except BaseException:
         if staging.exists():
@@ -516,6 +522,9 @@ def build_iso(
         "--output", os.fspath(destination),
         "--reference-iso", os.fspath(source),
     ]
+    if compiled.get("slots"):
+        runtime_args += ["--shared-font-slots",
+                         os.fspath(compiled["slots"])]
     if no_verify:
         runtime_args.append("--no-verify")
     command = runtime_command(runtime_args)

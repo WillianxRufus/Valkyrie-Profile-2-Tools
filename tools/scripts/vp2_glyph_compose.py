@@ -191,6 +191,8 @@ COMPOSITES = {
     "Ì": ("I", "à", "above"),
     "Î": ("I", "â", "above"),
     "Ï": ("I", "ü", "above"),
+    "å": ("a", "å", "above"),
+    "Å": ("A", "å", "above"),
 }
 
 DONOR_BASE = {
@@ -200,6 +202,7 @@ DONOR_BASE = {
     "ó": "o", "ô": "o", "õ": "o",
     "ú": "u", "ü": "u",
     "ç": "c",
+    "å": "a",
 }
 
 MARK_VERTICAL_SHIFTS = {"ã": -2, "õ": -2,
@@ -212,6 +215,8 @@ MARK_HORIZONTAL_SHIFTS = {"á": 2, "é": 2, "ó": 2, "ú": 2, "à": -1.5,
 
 LOWERCASE_EXTRA_OVERLAP = 1
 
+NO_LOWERCASE_OVERLAP = frozenset({"å"})
+
 
 def compose_character(body_block, character, mark_grid, mark_rows,
                       donor_bottom=None, body_from=None):
@@ -222,7 +227,7 @@ def compose_character(body_block, character, mark_grid, mark_rows,
     base, donor, position = COMPOSITES[character]
     shift = MARK_VERTICAL_SHIFTS.get(donor, 0)
     sideways = MARK_HORIZONTAL_SHIFTS.get(donor, 0)
-    if base.islower():
+    if base.islower() and donor not in NO_LOWERCASE_OVERLAP:
         shift += LOWERCASE_EXTRA_OVERLAP
     if position == "replace":
         return compose_replace(body_block, mark_grid, mark_rows,

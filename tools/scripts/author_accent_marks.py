@@ -11,8 +11,6 @@ import os
 from . import vp2_glyph_compose as gc
 from .vp2_cutscene_subtitles import _resolve_authored_marks_path
 
-#: Subsamples per axis.  Eight is enough that the edge band lands on stable
-#: values between runs; sixteen changes no rendered pixel.
 SUPERSAMPLE = 8
 
 PROFILE = ((0.00, 15.0), (0.60, 15.0), (1.60, 7.0),
@@ -22,8 +20,11 @@ DEFAULT_CAP = 1.0
 
 BASELINE = 23
 
-# Uniform scale around the tilde's visual centre.
 TILDE_SCALE = 0.9
+
+RING_RADIUS_X, RING_RADIUS_Y = 2.5, 1.9
+
+RING_PROFILE = ((0.00, 15.0), (0.80, 15.0), (1.40, 7.0), (1.80, 0.0))
 
 
 def _nearest_position(px, py, ax, ay, bx, by):
@@ -165,6 +166,14 @@ SHAPES = {
         "rows": range(5, 10),
         "path": [[(4.9, 7.1), (4.9, 7.9)], [(9.1, 7.1), (9.1, 7.9)]],
     },
+    "ring": {
+        "rows": range(4, 12),
+        "path": [[(7.0 + RING_RADIUS_X * math.cos(2.0 * math.pi * step / 48),
+                   7.5 + RING_RADIUS_Y * math.sin(2.0 * math.pi * step / 48))
+                  for step in range(49)]],
+        "weight": 0.75,
+        "profile": RING_PROFILE,
+    },
     "cedilla": {
         "rows": range(22, 28),
         "path": [[(7.2, 22.5), (7.9, 23.6), (6.2, 24.8), (5.4, 25.0)]],
@@ -177,7 +186,7 @@ DONOR_SHAPES = {
     "é": "acute", "ê": "circumflex",
     "ó": "acute", "ô": "circumflex", "õ": "tilde",
     "ú": "acute", "ü": "diaeresis",
-    "ç": "cedilla",
+    "ç": "cedilla", "å": "ring",
 }
 
 FIELDS = ["character", "base", "position", "rows", "donor_bottom",
@@ -200,7 +209,8 @@ def build_rows():
     """Every donor row the composer expects, as CSV-ready dicts."""
     rendered = {name: render(shape["path"], shape["rows"],
                              shape.get("cap", DEFAULT_CAP),
-                             shape.get("weight", 1.0))
+                             shape.get("weight", 1.0),
+                             profile=shape.get("profile"))
                 for name, shape in SHAPES.items()}
     out = []
     for donor in sorted(DONOR_SHAPES, key=ord):
@@ -250,7 +260,8 @@ def cmd_check(harvested):
     for name, shape in sorted(SHAPES.items()):
         grid = render(shape["path"], shape["rows"],
                       shape.get("cap", DEFAULT_CAP),
-                      shape.get("weight", 1.0))
+                      shape.get("weight", 1.0),
+                      profile=shape.get("profile"))
         grid = trim(grid, mark_rows(grid, shape["rows"]))
         print("--- %s" % name)
         for y in shape["rows"]:

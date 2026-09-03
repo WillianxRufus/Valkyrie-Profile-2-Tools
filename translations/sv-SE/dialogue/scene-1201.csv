@@ -1,35 +1,54 @@
 resource,message_id,translated,notes
-1201,20,,
-1201,27,,
-1201,21,,
-1201,25,,
-1201,22,,
-1201,23,,
-1201,28,,
-1201,1,,
-1201,2,,
-1201,3,,
-1201,4,,
-1201,5,,
-1201,6,,
-1201,26,,
-1201,7,,
-1201,8,,
-1201,9,,
-1201,10,,
-1201,11,,
-1201,12,,
-1201,13,,
-1201,32,,
-1201,14,,
-1201,15,,
-1201,16,,
-1201,17,,
-1201,18,,
-1201,19,,
-1201,30,,
-1201,29,,
-1201,31,,
+1201,20,"Ah, men det betyder inte nödvändigtvis
+att du är hans fiende!",
+1201,27,"Visserligen har jag inget sätt att bevisa det.",
+1201,21,Sköt om dig.,
+1201,25,"Vänta! Jag säger inte att jag
+inte tror dig.",
+1201,22,"Säg mig bara en sak: Vad ska du göra
+när du träffar kungen?",
+1201,23,"Jag tänker bedöma kungens uppriktighet,
+och sedan förbereda Dipan för krig mot gudarna.",
+1201,28,Jag hänger på.,
+1201,1,Så detta är Dipan.,
+1201,2,Vilket innebär att min tid här är slut.,
+1201,3,"Jag tar vad jag har rätt till och tar
+farväl av Hennes Majestät.",
+1201,4,Till fader <PART> ----,
+1201,5,"Jag menar, till kungen?",
+1201,6,"Som en trogen riddare av Dipan följer
+jag er vart ni än går.",
+1201,26,"Landet ser ut ungefär som jag minns det.
+Jag tror att jag kan leda vägen.",
+1201,7,"Du är en prinsessa, eller hur?",
+1201,8,"Här borde du kunna blåsa i en pipa
+och låta en betjänt eskortera dig
+tillbaka dit.",
+1201,9,"Borde du inte ge upp det här skådespelet,
+prinsessa Alicia?",
+1201,10,Eller kanske...,
+1201,11,"Eftersom jag bara kan anta att själarna
+av dina himlabundna einherjar lyssnar,",
+1201,12,...skulle det vara enklare att kalla dig Valkyria.,
+1201,13,Detsamma.,
+1201,32,Ni är två där inne!?,
+1201,14,Jag är Silmeria. Trevligt att träffas.,
+1201,15,"Syster till Hrist och Lenneth.
+Den yngsta av de tre ödesgudinnorna
+under Oden.",
+1201,16,"Men valkyrior inkarnerar sig inte
+som människor <PART> ---- <PART>
+utan anledning.",
+1201,17,"Jag har hört att Dipan planerar
+ett uppror mot gudarna...",
+1201,18,Vad du än har hört är denna valkyria inte längre i Odins tjänst.,
+1201,19,"Jag borde ha återfötts som kungens
+dotter Alicia, men Odins misstag
+väckte mig.",
+1201,30,"Snälla, kan ni eskortera mig till slottet?",
+1201,29,Mitt hem.,
+1201,31,"Du måste vara här för att hitta
+bevis och föra dem tillbaka till Oden!",
 1201,2756,,
 1201,2757,,
 1201,2758,,
@@ -43,7 +62,7 @@ resource,message_id,translated,notes
 1201,2342,,
 1201,2343,,
 1201,35,,
-1201,36,,
+1201,36,,not displayed by the event script
 1201,37,,
 1201,38,,
 1201,39,,

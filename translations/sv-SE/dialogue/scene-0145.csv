@@ -1,6 +1,9 @@
 resource,message_id,translated,notes
-145,3,,
-145,2,,
+145,3,"Håll <PART> intryckt under förflyttningen <PART> för att hoppa till destinationen, även i luften. <PART>
+Byt plats med fienden och hoppa upp till avsatsen. <PART>
+---
+När fienden är besegrad rör sig inte kvarlevan. Den återställs dock om man lämnar området och kommer tillbaka.",
+145,2,Kungliga underjordiska passagen,not displayed by the event script
 145,22,,
-145,2741,,
-145,2742,,
+145,2741,Erhöll <PART> 400 OTH,not displayed by the event script
+145,2742,Erhöll <PART> Krigarens arkanum,not displayed by the event script

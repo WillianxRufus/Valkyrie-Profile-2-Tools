@@ -1,15 +1,27 @@
 resource,message_id,translated,notes
-167,4,,
+167,4,"Om einherjar <PART> Flera einherjar som aldrig fördes till Valhall bebor Alicias kropp.
+Deras själar har bleknat, men de kan materialiseras genom att röra vid kvarlämnade reliker. <PART>
+---
+ <PART> Om einherjar <PART> En nyligen materialiserad kropps själ är instabil och bleknar bort från sin värd, Alicia. <PART>
+---
+ <PART> Om einherjar <PART> För att återfödas som människor måste einherjarna nå en nivå där de kan befrias. 
+<PART>
+Kontrollera statusskärmen för att se vid vilken nivå en einherjar kan befrias. <PART>
+---
+ <PART> Om einherjar <PART> Efter att de befriade einherjarna återgett sin kraft till Alicia börjar de ett nytt liv som människor. 
+ 
+ <PART>
+Om du har tur kanske du ser dem igen någon dag.",
 167,2340,,
 167,2343,,
 167,2344,,
 167,2746,,
-167,2747,,
-167,2748,,
+167,2747,Jessica <PART> har anslutit sig till gruppen.,
+167,2748,Richelle <PART> har anslutit sig till gruppen.,
 167,2749,,
 167,2750,,
 167,2751,,
-167,2752,,
+167,2752,Sylphide <PART> har anslutit sig till gruppen.,
 167,2753,,
 167,2754,,
 167,2755,,
@@ -44,12 +56,13 @@ resource,message_id,translated,notes
 167,2784,,
 167,2785,,
 167,2586,,
-167,2587,,
-167,2588,,
+167,2587,"Om det finns något sätt jag kan tjäna er,
+skulle det vara mig ett nöje.",
+167,2588,Så länge jag lever ska du ha mitt svärd.,
 167,2589,,
 167,2590,,
 167,2591,,
-167,2592,,
+167,2592,Jag ger mitt liv för fred i denna värld.,
 167,2593,,
 167,2594,,
 167,2595,,
@@ -83,16 +96,16 @@ resource,message_id,translated,notes
 167,2623,,
 167,2624,,
 167,2625,,
-167,2626,,
+167,2626,En lätt krigares själ emanerar från svärdet.,
 167,2627,,
 167,2628,,
 167,2629,,
 167,2633,,
 167,3,,
-167,2630,,
-167,2631,,
-167,2632,,
-167,2634,,
+167,2630,Utför materialisering?,not displayed by the event script
+167,2631,Ja,not displayed by the event script
+167,2632,Nej,not displayed by the event script
+167,2634,Kungliga underjordiska gången,not displayed by the event script
 167,2786,,
 167,2787,,
 167,2788,,

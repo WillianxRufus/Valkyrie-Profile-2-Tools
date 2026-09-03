@@ -172,6 +172,9 @@ def main():
                         help='Directory holding the compiled record sheets '
                              'this build patches from '
                              '(default: %(default)s).')
+    parser.add_argument('--shared-font-slots',
+                        help='Character-to-token map for the shared font '
+                             '(default: the packaged table).')
     parser.add_argument('--lint', action='store_true',
                         help='Static checks only: load the manifest, run '
                              'every '
@@ -216,6 +219,11 @@ def main():
                         help='Directory holding cached pre-installed ISOs. '
                              '(default: %(default)s).')
     args = parser.parse_args()
+
+    if args.shared_font_slots:
+        tokens = shared_font.use_slot_assignments(args.shared_font_slots)
+        print("shared-font: %d character(s) from %s"
+              % (len(tokens), args.shared_font_slots))
 
     rows = load_manifest(args.manifest)
     if not rows:

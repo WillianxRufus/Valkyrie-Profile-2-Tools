@@ -1,4 +1,18 @@
 resource,message_id,translated,notes
-185,1,,
-185,3,,
-185,300,,
+185,1,"Skjuta fotoner <PART> Skjut fotoner med <PART> . Att träffa en fiende med fotoner förseglar den i en kristall. <PART>
+Tryck på <PART> eller <PART> tillsammans med <PART> för att skjuta diagonalt. <PART>
+---
+ <PART> Skjuta fotoner <PART> Att röra vid en kristalliserad fiende startar inte en strid. <PART>
+Du kan skjuta fiender eller använda dem som plattform tills förseglingen bryts. <PART>
+---
+ <PART> Teleportering   Skjut fotoner på en kristall <PART> Genom att skjuta fler fotoner på en fotonkristall
+byter du plats med kristallen. <PART>
+Med detta når du avlägsna eller isolerade platser. <PART>
+---
+ <PART> Teleportering   Skjut fotoner på en kristall <PART> Du kan hoppa i luften direkt efter teleportering. <PART>
+
+Eller håll <PART> intryckt under teleporteringen. <PART>
+---
+ <PART> Teleportering   Skjut fotoner på en kristall <PART> Besegrade fiender lämnar kvarlevor. Kvarlevorna rör sig inte; fienderna återställs när man byter skärm och kommer tillbaka.",
+185,3,Fotoner,not displayed by the event script
+185,300,Den försvunna skogen,not displayed by the event script

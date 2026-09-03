@@ -1,5 +1,9 @@
 resource,message_id,translated,notes
-165,2,,
-165,3,,
-165,1841,,
-165,2745,,
+165,2,"Antal attacker i strid <PART> Antalet attacker beror på det utrustade vapnet. <PART>
+Utrusta vapen med flera attacker så kan karaktärerna utföra fler tekniker. 
+ <PART>
+---
+ <PART> Antal attacker i strid <PART> Du kan också trycka på <PART> för att byta utrustning eller använda föremål från menyn.",
+165,3,Antal attacker,not displayed by the event script
+165,1841,Kungliga underjordiska gången,not displayed by the event script
+165,2745,Erhöll <PART> Shamshir,not displayed by the event script

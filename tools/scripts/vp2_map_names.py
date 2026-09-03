@@ -21,10 +21,7 @@ class AreaNameTooLong(ValueError):
 
 def accent_tokens():
     """The shared-font extension slots, so an accented name encodes."""
-    assignments = shared_font.load_slot_assignments()
-    if isinstance(assignments, tuple):
-        assignments = assignments[0]
-    return assignments
+    return shared_font.SHARED_EXTENSION_TOKENS
 
 
 def pamm_row(raw):
