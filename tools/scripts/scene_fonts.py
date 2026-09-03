@@ -788,21 +788,21 @@ def remap_untranslated(expanded, metadata, replaced, remap, base, count,
                        new_base, displayed=None):
     """Re-encode every record part the translation writer leaves untouched."""
     pointers, next_offset = message_pointers(expanded, metadata)
+    source_meta = dict(metadata)
+    source_meta["glyph_base"] = base
+    source_meta["glyph_count"] = count
     replacements = {}
     for _, message_id, offset in pointers:
         if displayed is not None and message_id not in displayed:
             continue
         spans = replaced.get(message_id, ())
-        record = expanded[metadata["text_start"] + offset:
-                          metadata["text_start"] + next_offset[offset]]
-        for _, relative, part in split_nonempty(record):
+        record = bytes(expanded[metadata["text_start"] + offset:
+                                metadata["text_start"] + next_offset[offset]])
+        for relative, run_end, tokens in parse_record(record, source_meta):
+            part = record[relative:run_end]
             if any(relative < start + length
-                   and start < relative + len(part)
+                   and start < run_end
                    for start, length in spans):
-                continue
-            try:
-                tokens = byte_tokens(part)
-            except ValueError:
                 continue
             rebuilt, changed = [], False
             for token in tokens:
@@ -817,7 +817,7 @@ def remap_untranslated(expanded, metadata, replaced, remap, base, count,
                 continue
             replacements.setdefault(offset, []).append(
                 (relative, len(part), pack_tokens(rebuilt, terminated=False),
-                 bytes(part)))
+                 part))
     return replacements
 
 def untouched_workspace_characters(expanded, metadata, alphabet, translated,
