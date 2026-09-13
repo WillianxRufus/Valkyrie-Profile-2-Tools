@@ -110,6 +110,45 @@ def layout(raw):
     return candidates[0]
 
 
+def extend_payload_end(clear, new_end):
+    clear = bytes(clear)
+    parsed = layout(clear)
+    if new_end <= parsed.payload_end:
+        return clear, parsed
+    if new_end > len(clear) or new_end % 4:
+        raise ProtectedPackageError(
+            "protected payload end %d is outside a %d-byte entry or unaligned"
+            % (new_end, len(clear)))
+
+    prepared = bytearray(clear)
+    for index, value in enumerate(HEADER_XOR):
+        prepared[index] ^= value
+    key = _table_key(parsed.seed)
+    last = len(parsed.offsets) - 1
+    for row in range(last + 1):
+        offset_key = key
+        key = _next_table_key(key)
+        key = _next_table_key(key)  # flags use this key; leave them unchanged
+        if row == last:
+            at = 8 + row * 8
+            stored = struct.unpack_from("<I", prepared, at)[0]
+            old = stored ^ offset_key
+            value = (old & PROTECTED_OFFSET) | new_end
+            struct.pack_into("<I", prepared, at, value ^ offset_key)
+    for index, value in enumerate(HEADER_XOR):
+        prepared[index] ^= value
+    prepared[parsed.payload_end:new_end] = bytes(new_end - parsed.payload_end)
+
+    expanded = bytes(prepared)
+    current = layout(expanded)
+    if (current.offsets[:-1] != parsed.offsets[:-1] or
+            current.offsets[-1] != new_end or
+            current.flags != parsed.flags or current.seed != parsed.seed):
+        raise ProtectedPackageError(
+            "protected payload expansion changed its layout")
+    return expanded, current
+
+
 def _arithmetic_half(value):
     signed = value if value < 0x80000000 else value - 0x100000000
     return (signed >> 1) & MASK32
@@ -158,8 +197,26 @@ def encode_entry(original, clear, parsed):
         raise ProtectedPackageError(
             "protected entry geometry changed from %d to %d bytes" %
             (len(original), len(clear)))
+    current = layout(clear)
+    expanded = current != parsed
+    if expanded and not (
+            current.seed == parsed.seed and
+            current.payload_start == parsed.payload_start and
+            current.payload_end > parsed.payload_end and
+            current.offsets[:-1] == parsed.offsets[:-1] and
+            current.flags == parsed.flags):
+        raise ProtectedPackageError(
+            "protected entry changed more than its final item allocation")
+    if expanded:
+        expected, _layout = extend_payload_end(original, current.payload_end)
+        if clear[:current.payload_start] != expected[:current.payload_start]:
+            raise ProtectedPackageError(
+                "protected entry header changed unexpectedly")
+        parsed = current
     start, end = parsed.payload_start, parsed.payload_end
     rebuilt = bytearray(original)
+    if expanded:
+        rebuilt[:start] = clear[:start]
     rebuilt[start:end] = _transform(clear[start:end], parsed, encode=True)
     checked, checked_layout = decode_entry(bytes(rebuilt))
     if checked != clear or checked_layout != parsed:

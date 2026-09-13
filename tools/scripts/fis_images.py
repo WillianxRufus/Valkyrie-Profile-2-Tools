@@ -456,6 +456,17 @@ def _put_slz(blob, at, packed):
         if at < end < at + room:
             room = end - at
     if len(packed) > room:
+        try:
+            protected = protected_package.layout(blob)
+        except protected_package.ProtectedPackageError:
+            protected = None
+        if protected is not None and at + room == protected.payload_end:
+            required = (at + len(packed) + 0x1F) & ~0x1F
+            if required <= len(blob):
+                blob, _layout = protected_package.extend_payload_end(
+                    blob, required)
+                room = required - at
+    if len(packed) > room:
         raise FisError(
             "the repainted picture compresses to %d bytes and its slot holds "
             "%d; keep more of the original picture's pixels unchanged"
