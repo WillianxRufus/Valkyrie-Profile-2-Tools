@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from tools.scripts import glyph_range
 from tools.scripts import vp2_cutscene_subtitles as subtitles
 from tools.scripts import vp2_glyph_compose as glyph_compose
 from tools.scripts import vp2_shared_font as shared_font
@@ -16,8 +17,7 @@ from tools.scripts.translation_pack import (
 )
 
 PACKS = PROJECT_ROOT / "translations"
-#: Entry 8's font holds this many glyphs, so a token outside it has no slot.
-SHARED_FONT_SLOTS = 95
+
 
 
 def pack_tables():
@@ -58,7 +58,7 @@ class PackSlotTableTests(unittest.TestCase):
             for character, token in sorted(
                     shared_font.load_slot_assignments(table).items()):
                 with self.subTest(pack=name, character=character):
-                    self.assertTrue(1 <= token <= SHARED_FONT_SLOTS)
+                    glyph_range.glyph_for_token(token)
 
     def test_every_assigned_character_can_be_drawn(self):
         """A token with no way to draw its letter fails late, mid-build."""
@@ -99,6 +99,55 @@ class ActiveSlotMapTests(unittest.TestCase):
         self.assertEqual(
             shared_font.load_slot_assignments(shared_font.DEFAULT_SLOT_TABLE),
             self.restore)
+
+
+class DisplacedCharacterTests(unittest.TestCase):
+    """A slot a pack gives to a letter no longer draws the character it held."""
+
+    MAP = {"Ú": 0x0C, "ç": 0x5F}
+
+    def test_the_displaced_characters_are_named(self):
+        self.assertEqual({"+": "Ú", "~": "ç"},
+                         shared_font.displaced_characters(self.MAP))
+
+    def test_a_container_record_refuses_a_displaced_character(self):
+        from tools.scripts import vp2_container_text as container_text
+        with self.assertRaisesRegex(ValueError, "draws 'Ú'"):
+            container_text.encode_codepage("Ataque+", accent_tokens=self.MAP)
+
+    def test_a_fontless_record_refuses_a_displaced_character(self):
+        with self.assertRaisesRegex(ValueError, "draws 'Ú'"):
+            text_patch.encode_english_text("Ataque+", self.MAP)
+
+    def test_the_letter_itself_still_encodes(self):
+        from tools.scripts import vp2_container_text as container_text
+        self.assertEqual(
+            b"\x0C\x00",
+            container_text.encode_codepage("Ú", accent_tokens=self.MAP))
+
+
+class GlyphRangeTests(unittest.TestCase):
+    """Codes from 0x400 draw entry-8 glyphs 100 and up."""
+
+    def test_tokens_and_glyphs_round_trip(self):
+        from tools.scripts import glyph_range
+        for glyph in (0, 94, 99, 100, 101, 127):
+            token = glyph_range.token_for_glyph(glyph)
+            self.assertEqual(glyph, glyph_range.glyph_for_token(token))
+        self.assertEqual(0x0880, glyph_range.token_for_glyph(100))
+
+    def test_a_local_font_token_is_not_in_the_range(self):
+        from tools.scripts import glyph_range
+        for token in (0x0165, 0x01FF, 0x8080, 0x8099):
+            self.assertFalse(glyph_range.is_range_token(token))
+            with self.assertRaises(ValueError):
+                glyph_range.glyph_for_token(token)
+
+    def test_the_rewrite_fills_the_routine_and_ends_in_nops(self):
+        from tools.scripts import glyph_range
+        block = glyph_range.renderer_block()
+        self.assertEqual(len(glyph_range.ORIGINAL), len(block))
+        self.assertEqual((0, 0, 0, 0), block[-4:])
 
 
 if __name__ == "__main__":

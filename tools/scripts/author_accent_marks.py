@@ -181,12 +181,49 @@ SHAPES = {
     },
 }
 
+CAPITAL_TILDE_SCALE = 0.75
+
+#: Marks drawn to fit above a capital in the shared face, whose capitals begin
+#: on row 5.  The diaeresis and ring use their lowercase marks.
+CAPITAL_SHAPES = {
+    "acute": {
+        "rows": range(0, 7),
+        "path": [[(9.2, 1.8), (6.9, 5.2)]],
+        "weight": 0.95,
+    },
+    "grave": {
+        "rows": range(0, 7),
+        "path": [[(4.8, 1.8), (7.1, 5.2)]],
+        "weight": 0.95,
+    },
+    "circumflex": {
+        "rows": range(1, 8),
+        "path": [[(4.5, 5.4), (7.0, 3.0), (9.5, 5.4)]],
+        "weight": 0.85,
+    },
+    "tilde": {
+        "rows": range(1, 8),
+        "path": [[
+            (7.0 + CAPITAL_TILDE_SCALE * (-3.5 + 7.0 * step / 32),
+             4.2 + CAPITAL_TILDE_SCALE * 1.0 *
+             math.cos(3.0 * math.pi * step / 32))
+            for step in range(33)
+        ]],
+        "weight": 0.84 * CAPITAL_TILDE_SCALE,
+    },
+}
+
 DONOR_SHAPES = {
     "à": "grave", "á": "acute", "â": "circumflex", "ã": "tilde",
     "é": "acute", "ê": "circumflex",
     "ó": "acute", "ô": "circumflex", "õ": "tilde",
     "ú": "acute", "ü": "diaeresis",
     "ç": "cedilla", "å": "ring",
+}
+
+#: One row per capital mark, keyed by the capital `A` carrying it.
+CAPITAL_DONOR_SHAPES = {
+    "À": "grave", "Á": "acute", "Â": "circumflex", "Ã": "tilde",
 }
 
 FIELDS = ["character", "base", "position", "rows", "donor_bottom",
@@ -205,22 +242,25 @@ def trim(grid, rows):
             for y, row in enumerate(grid)]
 
 
-def build_rows():
-    """Every donor row the composer expects, as CSV-ready dicts."""
-    rendered = {name: render(shape["path"], shape["rows"],
-                             shape.get("cap", DEFAULT_CAP),
-                             shape.get("weight", 1.0),
-                             profile=shape.get("profile"))
-                for name, shape in SHAPES.items()}
+def _render_shapes(shapes):
+    return {name: render(shape["path"], shape["rows"],
+                         shape.get("cap", DEFAULT_CAP),
+                         shape.get("weight", 1.0),
+                         profile=shape.get("profile"))
+            for name, shape in shapes.items()}
+
+
+def _donor_rows(donor_shapes, shapes, bases):
+    rendered = _render_shapes(shapes)
     out = []
-    for donor in sorted(DONOR_SHAPES, key=ord):
-        name = DONOR_SHAPES[donor]
+    for donor in sorted(donor_shapes, key=ord):
+        name = donor_shapes[donor]
         grid = rendered[name]
-        rows = mark_rows(grid, SHAPES[name]["rows"])
+        rows = mark_rows(grid, shapes[name]["rows"])
         block = gc.pack(trim(grid, rows))
         out.append({
             "character": donor,
-            "base": gc.DONOR_BASE[donor],
+            "base": bases[donor],
             "position": "below" if name == "cedilla" else "above",
             "rows": " ".join(str(y) for y in rows),
             "donor_bottom": str(BASELINE),
@@ -228,6 +268,13 @@ def build_rows():
             "pixels": base64.b64encode(block).decode("ascii"),
         })
     return out
+
+
+def build_rows():
+    """Every donor row the composer expects, as CSV-ready dicts."""
+    return (_donor_rows(DONOR_SHAPES, SHAPES, gc.DONOR_BASE)
+            + _donor_rows(CAPITAL_DONOR_SHAPES, CAPITAL_SHAPES,
+                          {donor: "A" for donor in CAPITAL_DONOR_SHAPES}))
 
 
 def _profile(block):
@@ -246,8 +293,10 @@ def cmd_check(harvested):
     for row in build_rows():
         block = base64.b64decode(row["pixels"])
         ink, mass, levels = _profile(block)
+        shape = (DONOR_SHAPES.get(row["character"])
+                 or "capital " + CAPITAL_DONOR_SHAPES[row["character"]])
         line = ("%s  %-11s rows %-14s ink %3d  mass %4d  levels %2d"
-                % (row["character"], DONOR_SHAPES[row["character"]],
+                % (row["character"], shape,
                    row["rows"], ink, mass, levels))
         if row["character"] in reference:
             other = reference[row["character"]]

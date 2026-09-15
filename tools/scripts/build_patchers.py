@@ -49,8 +49,8 @@ def verify_scene_in_memory(iso_path, row, reference_iso,
     subtitles.verify_scene_sheet(argparse.Namespace(
         csv=row['sheet'],
         resource=int(row['resource']),
-        iso=str(iso_path),
-        reference_iso=str(reference_iso),
+        iso=iso_path,
+        reference_iso=reference_iso,
         en_names=None,
         primary_lookup=primary_lookup,
         chapter_title=row.get('chapter_title') or None,
@@ -105,7 +105,7 @@ def install_shared_font_once(working_iso, rows, *, dry_run=False):
     print("shared-font: " + shared_font.describe_install(info))
 
 def install_shared_font_in_memory(iso, rows, *, dry_run=False,
-                                  primary_lookup=None):
+                                  primary_lookup=None, renderer=False):
     """Pre-install shared-font accents inside an IsoBuffer."""
     needed = collect_shared_font_characters(
         rows, primary_lookup=primary_lookup)
@@ -123,6 +123,22 @@ def install_shared_font_in_memory(iso, rows, *, dry_run=False,
     if not info.get("no_op"):
         iso.write_entry(shared_font.SHARED_FONT_ENTRY, rebuilt)
     print("shared-font: " + shared_font.describe_install(info))
+    if renderer:
+        install_glyph_range_renderer(iso, needed)
+
+def install_glyph_range_renderer(iso, characters):
+    """Rewrite the glyph routine when a letter draws from the second range."""
+    from . import glyph_range
+    tokens = shared_font.SHARED_EXTENSION_TOKENS
+    if not any(glyph_range.is_range_token(tokens[character])
+               for character in characters):
+        return
+    original = bytes(iso.read_entry(glyph_range.RESOURCE))
+    rebuilt = glyph_range.patch_renderer(original)
+    if rebuilt != original:
+        iso.write_entry(glyph_range.RESOURCE, rebuilt)
+    print("shared-font: resource %d glyph routine reads codes from 0x%X "
+          "as entry-8 glyphs" % (glyph_range.RESOURCE, glyph_range.BASE))
 
 def patch_container_resource_in_memory(iso, row, *, primary_lookup=None):
     """Read a container row's sheet and patch the resource in *iso*."""

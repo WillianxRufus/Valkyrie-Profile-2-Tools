@@ -146,6 +146,13 @@ class IsoBuffer:
         self.bytes[byte_offset:byte_offset + len(new_bytes)] = bytes(new_bytes)
         return new_bytes
 
+    def read_at(self, offset, size):
+        """Raw image bytes, for data the tri-Ace index does not name."""
+        return bytes(self.bytes[offset:offset + size])
+
+    def write_at(self, offset, data):
+        self.bytes[offset:offset + len(data)] = bytes(data)
+
 
 class IsoFile:
     """File-backed twin of :class:`IsoBuffer`, for builds that must not"""
@@ -231,6 +238,18 @@ class IsoFile:
         self._handle.seek(self._table[resource] * triace.SECTOR)
         self._handle.write(bytes(new_bytes))
         return new_bytes
+
+    def read_at(self, offset, size):
+        """Raw image bytes, for data the tri-Ace index does not name."""
+        self._handle.seek(offset)
+        return self._handle.read(size)
+
+    def write_at(self, offset, data):
+        if self.readonly:
+            raise ValueError(
+                "%s is open read-only; open it 'r+b' to patch" % self.path)
+        self._handle.seek(offset)
+        self._handle.write(bytes(data))
 
     def commit(self, path=None):
         """Flush the handle; the bytes are already where they belong."""

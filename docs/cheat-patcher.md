@@ -81,6 +81,9 @@ cutscenes, battles, map changes, and saves. The window and command-line
 launcher automatically add `disable-anti-cheat` whenever a selected cheat
 requires it.
 
+A translated ISO already has the anti-cheat turned off. Patching one with
+`disable-anti-cheat` selected leaves those parts as they are.
+
 ## Safety
 
 The patcher supports only the USA release identified by `SLUS_214.52`. Before

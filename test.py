@@ -228,6 +228,16 @@ def _sheet_without(character, base, sheet, directory):
     return target
 
 
+def _lookup_without(character, base, lookup):
+    """The dedupe lookup with one accented letter written plainly.
+
+    A lookup also holds claims, whose value is ``True`` rather than text.
+    """
+    return {key: value.replace(character, base) if isinstance(value, str)
+            else value
+            for key, value in (lookup or {}).items()}
+
+
 def _accent_saving(session, disc, row, info):
     """Measure what dropping one accented letter would buy this resource."""
     from tools.scripts import build_patchers
@@ -241,8 +251,7 @@ def _accent_saving(session, disc, row, info):
         plain_row = dict(row)
         plain_row["sheet"] = os.fspath(
             _sheet_without(character, base, row["sheet"], directory))
-        lookup = {key: value.replace(character, base)
-                  for key, value in (session.lookup or {}).items()}
+        lookup = _lookup_without(character, base, session.lookup)
         iso = _Overlay(disc, pristine=disc.pristine)
         try:
             with contextlib.redirect_stdout(io.StringIO()):
@@ -305,6 +314,23 @@ def _refuse_past_the_ceiling(iso, resource, info):
         resource, content_end, iso.pristine.entry_outer_allocation(resource))
 
 
+def _read_back(iso, row, info, lookup):
+    """Read the patched scene back the way a build's verify step does."""
+    from tools.scripts import build_patchers
+
+    grown = info and (info.get("grown_sectors")
+                      or info.get("relocated_offset") is not None)
+    if grown:
+        iso.write_entry(int(row["resource"], 0), info["patched"])
+    report = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(report):
+            build_patchers.verify_scene_in_memory(
+                iso, row, iso.pristine, primary_lookup=lookup)
+    except ValueError as exc:
+        raise ValueError("\n".join([str(exc)] + report.getvalue().splitlines()))
+
+
 def _check_one(session, disc, resource, say=print, brief=False):
     """Patch one resource against *disc* and say what a build would do."""
     from tools.scripts import build_patchers, vp2_container_text as limits
@@ -351,6 +377,7 @@ def _check_one(session, disc, resource, say=print, brief=False):
                     iso, patched, primary_lookup=session.lookup,
                     reference=iso.pristine)
                 _refuse_past_the_ceiling(iso, resource, info)
+                _read_back(iso, patched, info, session.lookup)
         verdict, detail = "fits", ""
     except limits.StreamedNeighbourReclaimed as exc:
         verdict, detail = "reclaims", str(exc)
@@ -375,6 +402,8 @@ def _check_one(session, disc, resource, say=print, brief=False):
             say("  %-6d %-9s ok%s" % (resource, kind or "?", room))
             return 0
         say("  %-6d %-9s NOT ACCEPTED (%s)" % (resource, kind or "?", verdict))
+        for line in detail.splitlines()[:3]:
+            say("           %s" % line.strip())
         return 2
 
     if verdict == "fits":

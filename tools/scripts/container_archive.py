@@ -9,6 +9,7 @@ from . import encrypted_entry
 from . import protected_package
 from .slz import decompress
 from .vp2_dcms import parse_pk1, read_entry
+from .triace_ps2_unpack import SECTOR
 
 
 def encode_codepage(*args, **kwargs):
@@ -923,13 +924,8 @@ def _pack_zls_stream(raw, blob, resource, base):
     new_span = max(old_span, _round_up(0x10 + len(packed), 128))
     suffix = raw[suffix_at:]
     used = len(suffix.rstrip(bytes(1)))
-    if base + new_span + used > len(raw):
-        raise ValueError(
-            "resource #%d needs %d more compressed bytes but its ZLS "
-            "entry has only %d bytes of trailing slack" %
-            (resource, new_span - old_span,
-             len(raw) - suffix_at - used))
-    rebuilt = bytearray(len(raw))
+    size = len(raw) + _round_up(max(base + new_span + used - len(raw), 0), SECTOR)
+    rebuilt = bytearray(size)
     rebuilt[:base + 0x10] = raw[:base + 0x10]
     struct.pack_into("<I", rebuilt, base + 4, len(packed))
     struct.pack_into("<I", rebuilt, base + 0x0C, new_span)
@@ -946,6 +942,8 @@ def _pack_zls_stream(raw, blob, resource, base):
         "encoded_after": encoded_stored,
         "suffix_shift": new_span - old_span,
     }
+    if size > len(raw):
+        details["grown_sectors"] = (size - len(raw)) // SECTOR
     if group_details is not None:
         details["groups"] = group_details
     check = unpack_container_entry(bytes(rebuilt), resource)

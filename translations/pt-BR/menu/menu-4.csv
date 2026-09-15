@@ -635,98 +635,132 @@ resource,message_id,translated,notes
 644,25,Ver acessórios.,
 644,26,Ver outros itens.,
 644,27,Ver itens preciosos.,
-644,39,,
-644,42,,
-644,43,,
-644,44,,
-644,45,,
-644,1749,,
+644,39,Ordenar por limite físico.,
+644,42,<8099:32>Ordem <8099:09><8099:0A>Pág.,
+644,43,<8099:21>Usar <8099:32>Ordem <8099:09><8099:0A>Pág.,
+644,44,<8099:21>Usar <8099:09><8099:0A>Pág.,
+644,45,<8099:21>Usar,
+644,1749,Pedra Solar,
 644,1750,Pedra Halo,
-644,1751,,
-644,1752,,
+644,1751,Pedra Nuvem Pintada,
+644,1752,Pedra Lua Negra,
 644,1753,,
-644,1754,,
+644,1754,Anel de Mylinn,
 644,1755,,
 644,1756,,
 644,1757,,
-644,1761,,
-644,1769,,
-644,1774,,
-644,1775,,
-644,1776,,
-644,1777,,
-644,1778,,
-644,1779,,
-644,1780,,
-644,1781,,
-644,1782,,
-644,1783,,
-644,1784,,
-644,1794,,
-644,1795,,
-644,1796,,
-644,1802,,
-644,1803,,
-644,1804,,
-644,1805,,
-644,1806,,
-644,1807,,
-644,1808,,
-644,1809,,
-644,1810,,
-644,1811,,
-644,1812,,
-644,1813,,
-644,1814,,
-644,1815,,
-644,1816,,
-644,1817,,
-644,1818,,
-644,1819,,
-644,1820,,
-644,1821,,
-644,1822,,
-644,1823,,
-644,1824,,
+644,1761,Pedra Eclipse,
+644,1769,Fúria Avançada,
+644,1774,Primeiro Oráculo,
+644,1775,Segundo Oráculo,
+644,1776,Terceiro Oráculo,
+644,1777,Quarto Oráculo,
+644,1778,Quinto Oráculo,
+644,1779,Sexto Oráculo,
+644,1780,Sétimo Oráculo,
+644,1781,Oitavo Oráculo,
+644,1782,Nono Oráculo,
+644,1783,Espelho D'água,
+644,1784,Chave para as Minas,
+644,1794,O anel que Odin obrigou Rufus a usar. Suprime todo o poder.,
+644,1795,Um dos Quatro Tesouros. Protege Midgard.,
+644,1796,Remédio que transforma humanos vivos em carniçais.,
+644,1802,Dá a quem o possui mais ataques do que o normal.,
+644,1803,Ensina a Silmeria o ataque normal Verdade Rebeliosa.,
+644,1804,Ensina a Brahms o ataque normal Chuva de Sangue.,
+644,1805,Ensina a Rufus o ataque normal Quebra Trovão.,
+644,1806,Ensina a Arngrim o ataque normal Fim Mortífero.,
+644,1807,Ensina a Dylan o ataque normal Legião Dismembrada.,
+644,1808,Ensina a guerreiros leves o ataque normal Segunda Ruína.,
+644,1809,Ensina a Hrist o ataque normal Fúria Avançada.,
+644,1810,Ensina a Lenneth o ataque normal Quebra de Código.,
+644,1811,"Ensina a Alicia e à Valquíria o ataque normal Lâmina
+do Céu Alto.",
+644,1812,Ensina a guerreiros pesados o ataque normal Lâmina Sônica.,
+644,1813,Ensina a arqueiros o ataque normal Tiro Esmagador.,
+644,1814,"Quanto mais voltas você dá, mais forte o inimigo fica.
+Seja forte.",
+644,1815,"A paz viria, se ao menos Odin não existisse.",
+644,1816,"Se ninguém causasse problemas, o Ragnarok nunca viria.
+Mesmo assim...",
+644,1817,Será que Rufus e Freya um dia serão amigos...?,
+644,1818,A transferência de Brahms atrai os mortos-vivos.,
+644,1819,"Com ou sem Odin, Lezard ainda se tornaria um mago maligno.",
+644,1820,"Silmeria e as irmãs não mudaram. O Rito do Soberano
+as invocará como sempre.",
+644,1821,"Acho que Surt e Hel não mudariam. O mistério é Loki... e
+por que ele fez o que fez.",
+644,1822,Você é forte. Eu perdi. Tente outra rodada; seu prêmio espera.,
+644,1823,"Um fragmento do espelho d'água do Salão de Valhalla. Com ele,
+é possível viajar a qualquer lugar do mundo.",
+644,1824,A chave da porta que fica dentro da Mina de Turgen.,
 645,13,Elmo,
 645,14,Peitoral,
 645,15,Braçad.,
 645,16,Grevas,
 645,33,Hab. formada!,
 645,34,Hab. destruída.,
-645,40,,
-645,41,,
-645,42,,
-645,43,,
-645,44,,
-645,45,,
-645,59,,
-645,60,,
-645,61,,
-645,62,,
-645,65,,
-645,66,,
-645,67,,
-645,68,,
-645,69,,
-645,70,,
-645,72,,
-645,74,,
-645,75,,
-645,76,,
-645,77,,
-645,78,,
-645,79,,
-645,80,,
-645,81,,
-645,82,,
-645,83,,
-645,84,,
-645,85,,
-645,86,,
-645,87,,
-645,88,,
-645,89,,
+645,40,Trocar arma.,
+645,41,Trocar elmo.,
+645,42,Trocar peitoral.,
+645,43,Trocar braçadeiras.,
+645,44,Trocar grevas.,
+645,45,Trocar acessórios.,
+645,59,Ver hab. não aprendidas.,
+645,60,Mostrar descrição do equipamento.,
+645,61,<8099:33>Hab. <8099:0B><8099:0C>Pers. <8099:10>Info,
+645,62,<8099:32>Ordem <8099:33>Hab. <8099:09><8099:0A>Pág.,
+645,65,<8099:03><8099:04>Trocar Pág.,
+645,66,1. Ver o Status,
+645,67,2. Tipos de Equip.,
+645,68,3. Vínculos,
+645,69,4. Runas,
+645,70,5. Aprender Hab.,
+645,72,"Os números de status no canto superior direito
+indicam as capacidades do personagem.",
+645,74,"Equipe 9 espaços: arma, cabeça, corpo,
+braços, pernas e mais 4 espaços extras.",
+645,75,"Além dos tipos de uma e duas mãos, há
+4 cores de equipamento: vermelho, azul, verde
+e incolor.",
+645,76,"Equipe itens da mesma cor lado a lado e
+os quadros piscam.
+
+Isso se chama vínculo.",
+645,77,"Vinculados, os efeitos do equipamento
+são reforçados.",
+645,78,"Quanto mais equipamentos vinculados,
+maior o reforço.",
+645,79,"Junte equipamentos da mesma cor para
+efeitos ainda mais fortes.",
+645,80,"Além da cor, o equipamento também tem um
+atributo de runa.
+
+As runas é que formam as habilidades.",
+645,81,"Há atributos de runa em equipamentos vermelhos,
+verdes e azuis, mas não nos incolores.",
+645,82,"Habilidade é um poder especial usado em batalha.
+
+Use as de ataque para atacar, as de defesa para
+defender, etc. Há 5 tipos no total.",
+645,83,"Combinar certas runas com equipamentos
+vinculados faz as runas brilharem.
+
+Isso forma uma habilidade.",
+645,84,"Quando uma habilidade se forma, o nome dela
+aparece na tela.",
+645,85,"Formar uma habilidade não significa poder usá-la.
+Formá-la é como descobri-la.",
+645,86,"Veja a combinação de runas que forma cada
+habilidade com <8099:33>.",
+645,87,"Se faltar uma runa no seu equipamento, aparece
+um ""?"".",
+645,88,"Vencer batalhas com habilidades formadas
+aumenta a % de aquisição.",
+645,89,"Quando a % de aquisição chega a 100, você aprende
+a habilidade.
+
+Defina-a na tela de habilidades para usar em batalha.",
 646,4,Pontos de Cap.,
 646,5,Máx,
 646,6,Total,
@@ -755,149 +789,279 @@ resource,message_id,translated,notes
 647,24,Reordenar ataques.,
 647,25,,
 647,28,,
-648,1,,
-648,4,,
-648,5,,
-648,6,,
-648,7,,
-648,8,,
-648,9,,
+648,1,Custo,
+648,4,1. Pedras de Selo,
+648,5,2. Alvos dos Efeitos,
+648,6,3. Efeitos de Área,
+648,7,4. Vazio da Divinidade,
+648,8,5. Fontes e Restauração,
+648,9,6. Menu do Acampamento,
 648,13,,
-648,3,,
+648,3,Origem,
 648,18,Adquirido,
-648,19,,
+648,19,Restaurada,
 648,26,,
-648,50,,
-648,51,,
-648,52,,
-648,53,,
-648,54,,
-648,55,,
-648,56,,
-648,57,,
+648,50,Ver pedras de selo portadas.,
+648,51,Ver lista de pedras de selo.,
+648,52,Ver descrição da pedra de selo.,
+648,53,<8099:33>Info<0065><8099:09><8099:0A>Trocar pág.,
+648,54,<8099:33>Info,
+648,55,<8099:03><8099:04>Trocar pág.,
+648,56,<8099:33><8099:21>Info  <8099:32>Ordem  <8099:09><8099:0A>Pág.,
+648,57,Ordenar por origem.,
 648,58,,
-648,60,,
-648,61,,
-648,71,,
-648,72,,
-648,73,,
-648,74,,
-648,75,,
-648,76,,
-648,77,,
-648,78,,
-648,79,,
-648,80,,
-648,81,,
-648,82,,
-648,83,,
-648,84,,
-648,85,,
-648,86,,
-648,87,,
-648,88,,
-648,89,,
-648,90,,
-648,91,,
-648,92,,
-648,93,,
-648,94,,
-648,95,,
-648,96,,
-648,97,,
-648,98,,
-648,99,,
+648,60,Pedras obtidas no topo.,
+648,61,Pedras restauradas no topo.,
+648,71,"<8088:02>Pedras de Selo<8089> são energia concentrada que
+brota das veias da terra de Yggdrasil.
+Elas afetam as habilidades de quem as porta.",
+648,72,"Quando um personagem porta uma pedra
+de selo, ela afeta todo o grupo.",
+648,73,"As pedras de selo só podem ser colocadas
+em certos lugares.",
+648,74,"Elas podem ir num <8088:02>pedestal<8089>, onde as veias
+se cruzam, numa <8088:02>fonte<8089>, onde as veias se
+abrem, ou numa <8088:02>concha<8089> de pedra de selo.",
+648,75,"Depois de pegas, só podem ser deixadas
+num <8088:02>pedestal<8089>, <8088:02>concha<8089> ou <8088:02>fonte<8089>.",
+648,76,"Quando o grupo porta uma pedra de selo,
+<8088:02>todo o grupo recebe<8089> os
+efeitos.",
+648,77,"Quando uma pedra é posta num pedestal,
+<8088:02>todos os inimigos ao redor recebem<8089> os
+efeitos. Isso se chama
+<8088:02>Efeito de Área<8089>.",
+648,78,"Ao entrar numa zona com Efeitos de Área
+ativos, surge um ícone de aviso.",
+648,79,"Quando um inimigo porta uma pedra de
+selo, ele é afetado.",
+648,80,"Ao entrar numa zona onde um inimigo
+tem pedra de selo, surge um ícone de aviso.
+Os ícones podem ser vistos a qualquer
+momento com <8099:30>.",
+648,81,"Ao lutar com inimigos que portam pedras,
+<8088:02>todo o grupo inimigo recebe<8089> os
+efeitos.",
+648,82,"Ao vencer inimigos que portam pedras
+de selo, elas ficam no local para
+o grupo pegar.",
+648,83,"Como o pedestal fica sobre as veias da
+terra, ao pôr uma pedra nele os Efeitos
+de Área correm pelas veias e afetam
+o mapa inteiro.",
+648,84,"Porém, onde as veias terminam ou são
+interrompidas, os Efeitos de Área
+param ali.",
+648,85,"O alcance dos Efeitos de Área pode ser
+visto no mapa geral.
+O alcance de um Efeito de Área aparece
+em vermelho.",
+648,86,"Com duas pedras num pedestal, os
+efeitos das duas ficam ativos
+ao mesmo tempo.",
+648,87,"Sem pedras num pedestal, os Efeitos
+de Área param ali.",
+648,88,"Ao pôr uma pedra de selo numa concha,
+seu efeito de área não é ativado.",
+648,89,"Um <8088:02>Vazio da Divinidade<8089> é onde as veias da
+terra de Yggdrasil secaram e morreram.
+Num <8088:02>Vazio da Divinidade<8089>, as pedras
+portadas não têm efeito.",
+648,90,"Além disso, o Vazio da Divinidade
+também interrompe os Efeitos de Área.",
+648,91,"Ao sair de uma masmorra, as pedras
+voltam ao lugar de origem.
+Em geral, não podem ser levadas para fora.",
+648,92,"Nas masmorras há lugares chamados <8088:02>fontes<8089>,
+por onde as veias passam. Jogar uma
+pedra de selo numa fonte a devolve às
+veias da terra de Yggdrasil.",
+648,93,"Devolver pedras às veias da terra de
+Yggdrasil se chama <8088:02>restauração<8089>.
+Restaurar pedras de selo consome
+<8088:02>cristais mágicos<8089>.",
+648,94,"Após a restauração, as pedras podem ser
+retiradas de novo das <8088:02>fontes<8089>.
+Retirar pedras de uma fonte não
+consome cristais mágicos.",
+648,95,"As fontes espalhadas pelo mundo estão
+ligadas pelas veias de Yggdrasil.
+Uma pedra restaurada numa fonte pode
+ser retirada em outra.",
+648,96,"Restauradas nas fontes, as pedras de
+selo ficam disponíveis para uso em
+outras masmorras.",
+648,97,"Como os pedestais também ficam sobre as
+veias, dá para restaurar pedras neles.
+Porém, não é possível retirar pedras
+de pedestais.",
+648,98,"Veja as informações de qualquer pedra já
+portada na seção Pedras de Selo
+do menu do acampamento.",
+648,99,"Use esta opção para ver os locais conhecidos
+de certas pedras de selo e estudar
+seus efeitos.",
 649,12,1P,
 649,13,2P,
-649,24,,
-649,25,,
-649,26,,
-649,27,,
-649,28,,
-649,29,,
-649,30,,
-649,31,,
-649,33,,
-649,37,,
-649,38,,
-649,39,,
-649,40,,
-649,41,,
-649,42,,
-649,43,,
-649,44,,
-649,45,,
-649,46,,
-649,47,,
-649,48,,
-649,49,,
-649,50,,
-649,51,,
-649,52,,
-649,53,,
-649,54,,
-649,55,,
-649,56,,
-649,57,,
-649,58,,
-649,59,,
-649,60,,
-649,61,,
-649,62,,
-649,63,,
-649,64,,
-649,65,,
-649,66,,
-649,67,,
-649,68,,
-649,69,,
-649,70,,
-649,71,,
-649,72,,
-649,73,,
-649,74,,
-649,75,,
-649,76,,
-649,78,,
-649,79,,
-649,80,,
-649,81,,
-649,82,,
-649,83,,
-649,84,,
-649,85,,
-649,86,,
-649,87,,
-649,88,,
-649,89,,
-649,90,,
-649,91,,
-649,92,,
-649,93,,
-649,94,,
-649,95,,
-649,96,,
-649,97,,
-649,98,,
-649,99,,
-649,100,,
-649,101,,
-649,102,,
-649,103,,
-649,104,,
-649,105,,
-649,106,,
-649,107,,
-649,108,,
-649,109,,
-649,110,,
-649,111,,
-649,112,,
-649,113,,
-649,114,,
-649,115,,
-649,116,,
-649,117,,
-649,119,,
-649,120,,
-649,121,,
+649,24,"Obteve um cristal com
+o poder do einherjar.",
+649,25,"<8084:01><8088:05>Sobre Libertar Einherjar<8089><808E:00008041>
+<808F>Ao libertar um einherjar,
+o poder que ele acumulou vira
+um cristal para você guardar.<8082><8081>Há três tipos
+de cristais de poder:<808E:00000041>
+<8088:04>gemas rosa, celeste e de jade.<8089>
+<808F>Cada uma aumenta muito a
+categoria de status dela.<8082><8081> 
+O tipo de cristal em que
+o einherjar se torna depende
+dos atributos do personagem.<8082><8081> 
+Você pode receber outras coisas
+conforme o equipamento do
+einherjar ao libertá-lo.<8082><8081>Por exemplo, se ele tiver uma
+espada equipada, você recebe<808E:00000041>
+<8088:04>Perícia do Esgrimista (FOR + 5)<8089>
+<808F>junto com o cristal de poder.<8082><8081> 
+Porém, com certos itens,
+você não recebe nada.<8082>",
+649,26,"<8084:01>Libertar einherjar<808E:00000041>
+<808F><8088:05><808A:9A99593F9A99593F>(Os itens equipados serão perdidos.)<8082>",
+649,27,"<8084:01><8088:02>Aviso<808E:00004041>
+<808F>Se libertar este einherjar, você
+terá menos de quatro no grupo.<8082>",
+649,28,Organizar o grupo.,
+649,29,Libertar um einherjar.,
+649,30,Escolha um personagem.,
+649,31,Escolha quem vai substituir.,
+649,33,<8099:33>Trocar Pers.,
+649,37,Hm? Era só isso que precisava de mim?,
+649,38,Chegou a hora de eu deixar o seu lado?,
+649,39,Deseja me libertar?,
+649,40,"Liberdade.
+Então já lutamos juntos o bastante?",
+649,41,Vai me libertar do meu destino?,
+649,42,Então é seguro eu me afastar de você?,
+649,43,É hora de eu partir agora?,
+649,44,Libertar? Tem certeza de que não vai se arrepender?,
+649,45,Já chegou a hora?,
+649,46,"É seu desejo
+que nos separemos?",
+649,47,Hmpf. Então é isso que você sente?,
+649,48,"Entendo. Chegou a hora, não é?",
+649,49,Vai me conceder uma nova vida?,
+649,50,"Como o tempo voa...
+Acho que chegou a minha hora.",
+649,51,Devo deixar as suas fileiras?,
+649,52,Vai me livrar deste triste destino?,
+649,53,Sério... Chegou a minha hora?,
+649,54,Então não vai mais precisar de mim?,
+649,55,"Vai me libertar!?
+Fiquei forte assim mesmo?",
+649,56,"Oba! Hora de ser livre!
+Isso está, tipo, tudo bem?",
+649,57,Devo deixar você agora?,
+649,58,"Nossa, já chegou a hora?
+Bom, então eu vou, se tudo bem.",
+649,59,É isso que você quer? Que eu vá embora?,
+649,60,Quê? Quer dizer que é hora de eu ir?,
+649,61,"Então vai me livrar do meu
+destino de einherjar?",
+649,62,Quer se livrar de mim?,
+649,63,Vai me deixar ir?,
+649,64,"Nossa, isso veio antes do esperado.",
+649,65,"Então é a minha hora de ir.
+Acho que vai ficar tudo bem, certo?",
+649,66,"Liberte-me, se quiser.",
+649,67,Já terminou de usar meus poderes?,
+649,68,Hora de eu ir?,
+649,69,"Parece tão repentino.
+Enfim chegou a hora da liberdade?",
+649,70,Hahaha... Vai mesmo me soltar?,
+649,71,Já é hora de dizer adeus?,
+649,72,"Você tem uma alma bondosa.
+Vai me livrar deste destino?",
+649,73,Então sou forte o bastante para seguir só?,
+649,74,Você me ordena começar uma nova vida?,
+649,75,"Como ansiei pela liberdade!
+Posso ir?",
+649,76,"É seu desejo que eu seja livre?
+Se for, respeitarei sua vontade.",
+649,78,"Bom, então acho que vou indo.
+Tem certeza de que vai ficar bem sem mim?",
+649,79,"Acredito que minha força é necessária.
+Tem certeza disso?",
+649,80,"Quero lutar mais ao seu lado!
+Estou pedindo demais?",
+649,81,"Não me importo de ir,
+mas tem mesmo certeza?",
+649,82,"Você é forte de verdade.
+Então tudo bem se eu for?",
+649,83,Faltam guerreiros. Isso é uma boa ideia?,
+649,84,"Você precisa de toda ajuda possível!
+Ainda quer que eu vá?",
+649,85,"Não devia deixar você com tão poucos guerreiros.
+Quer mesmo que eu vá?",
+649,86,"Confiança demais leva ao desespero.
+Tem certeza de que não precisa de mim?",
+649,87,"Espere, somos poucos demais.
+Isso é mesmo uma boa ideia?",
+649,88,"Vai me libertar?
+Acha que vai ficar bem sem mim?",
+649,89,"Reduzir as forças é uma desvantagem.
+Ainda quer fazer isso?",
+649,90,"Lamentarei deixar estas fileiras.
+Devo ir mesmo assim?",
+649,91,"Você precisaria de mais apoio.
+Já está decidido?",
+649,92,"Poucos aqui podem lutar.
+Isso é uma boa decisão?",
+649,93,Vai ser difícil! É isso que você quer?,
+649,94,"Espere! Somos poucos demais!
+Pode mesmo abrir mão de mim?",
+649,95,"Parece que não há guerreiros suficientes.
+Tem certeza de que devo ir?",
+649,96,Ei! Vai ficar bem sem mim?,
+649,97,"Nada disso! Me soltar agora não rola, benzinho!
+Tem certeza de que quer isso?",
+649,98,"Partirei se esse for seu desejo.
+Tem certeza de que é?",
+649,99,"Parece uma má jogada estratégica.
+Mas o que eu sei? Devo ir?",
+649,100,"Quê!? Não é hora de perder gente!
+Tem certeza de que sabe o que faz?",
+649,101,"Hum, você é forte o bastante mesmo?
+Eu vou, mas você vai ficar bem?",
+649,102,"Deixe-me lutar com você mais um pouco.
+Precisa mesmo me deixar ir?",
+649,103,"Se é seu desejo, obedecerei.
+É seu desejo, certo?",
+649,104,"Bom, então acho que vou<808C:000000C0>---<808D>se tiver
+certeza de que segue sem mim.",
+649,105,"Mas, hum, veja, estamos, é, com pouca gente.
+Já terminou comigo?",
+649,106,"Bom, eu vou ficar bem, com certeza. Mas
+me preocupo com você. Tem certeza?",
+649,107,"Então não se importa que eu vá,
+é a sua resposta final?",
+649,108,"Perder um membro vai prejudicar o grupo.
+Tem certeza de que quer fazer isso?",
+649,109,"Se vai ficar bem sem mim, é só dizer.",
+649,110,"Queria acompanhar você por mais tempo.
+Vai ficar bem sem mim?",
+649,111,"Vai enfrentar os deuses com tão poucos?
+Acha que consegue sem mim?",
+649,112,"Agradeço por querer me libertar,
+mas me preocupo. Vai ficar bem?",
+649,113,"Me preocupo com nosso número.
+Quer mesmo que eu vá?",
+649,114,"Você não está em condições de perder gente.
+Ainda quer que eu vá?",
+649,115,"Pare! Não devia deixar você assim.
+Preciso mesmo ir?",
+649,116,"Não me importo de ir, se ficar tudo bem.
+Consegue lidar com o resto sem mim?",
+649,117,"Este número não será suficiente.
+Insiste que eu vá?",
+649,119,Valeu por tudo. Tchauzinho!,
+649,120,Estarei para sempre em dívida com você.,
+649,121,Espero ter servido bem.,

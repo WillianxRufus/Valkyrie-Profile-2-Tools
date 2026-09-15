@@ -100,6 +100,15 @@ One row per character, one code point in `character`, and a `token` no two
 rows share. Only characters the pack's text actually uses are installed, so
 listing one costs nothing until it is written.
 
+The tokens `0x60` to `0x64` are five more slots past the end of the font,
+and `0x0880` to `0x089B` are 28 more, drawn with two bytes. The build grows
+the font to reach one when the text uses its character.
+
+A token below `0x60` replaces the character that slot drew, and the build
+refuses text that still writes it: in pt-BR, `0x3F` holds `Ó`, so `^` cannot
+be written. Keep the characters your language needs, such as `+` and `=`, and
+put the letters past the end instead.
+
 A build reads its own pack's file, so two languages may put different letters
 in the same slot. A pack without the file uses the packaged default.
 

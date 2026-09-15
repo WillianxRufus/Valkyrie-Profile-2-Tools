@@ -22,6 +22,7 @@ from . import vp2_battle_target as battle_target
 from . import fis_images
 from . import fis_screen_layout
 from . import overlay_edits
+from . import anti_cheat
 from . import vp2_shared_font as shared_font
 from .build_config import (
     FLAG_MAP, expand_flags, lint_manifest, load_manifest, report_lint,
@@ -156,12 +157,21 @@ def battle_overlay_edits(rows):
 
 
 def apply_battle_overlay_edits(iso, rows):
-    """Apply every battle overlay edit in one recompression, or ``None``."""
+    """Apply every battle overlay edit in one recompression.
+
+    The overlay's anti-cheat words go in with them, so every build runs this.
+    """
     edits = battle_overlay_edits(rows)
     label = battle_target_label(rows)
-    if not edits:
-        return None
-    result = overlay_edits.apply_to_iso(iso, edits)
+    checks = []
+
+    def turn_off_checks(output):
+        checks.extend(anti_cheat.battle_edits(output))
+        return checks
+
+    result = overlay_edits.apply_to_iso(iso, edits, turn_off_checks)
+    print("anti-cheat: battle overlay "
+          + ("turned off" if checks else "already off"))
     if label:
         print(f"battle target: Target -> {label} "
               f"({battle_target.encode_label(label).hex(' ')})")
@@ -170,9 +180,17 @@ def apply_battle_overlay_edits(iso, rows):
     if x:
         how = "centred" if given is None else "set by the pack"
         print(f"battle target: label moved {x:+g} horizontally ({how})")
-    print(f"battle overlay: {len(edits)} edit(s), {result.changed} byte(s) "
-          f"changed, {result.room} byte(s) of room left")
+    print(f"battle overlay: {len(edits) + len(checks)} edit(s), "
+          f"{result.changed} byte(s) changed, {result.room} byte(s) of room "
+          f"left")
     return result
+
+
+def apply_anti_cheat(iso):
+    """Turn the game's integrity checks off outside the battle overlay."""
+    changed = anti_cheat.apply_to_iso(iso)
+    print("anti-cheat: " + ("turned off in " + ", ".join(changed)
+                            if changed else "already off everywhere else"))
 
 
 def _copy_source_image(source_iso, partial):
@@ -460,9 +478,10 @@ def main():
         try:
             with iso_buffer.IsoFile(str(output_iso)) as merged:
                 apply_battle_overlay_edits(merged, rows)
+                apply_anti_cheat(merged)
                 merged.commit()
         except Exception as exc:
-            print(f"battle overlay edits failed: {exc}", file=sys.stderr)
+            print(f"battle overlay or anti-cheat edits failed: {exc}", file=sys.stderr)
             sys.exit(1)
         if args.keep_working_iso:
             iso = iso_buffer.IsoBuffer.from_path(str(output_iso))
@@ -494,7 +513,8 @@ def main():
 
     primary_lookup = _load_dedupe_lookup(args.scenes_dir)
 
-    install_shared_font_in_memory(iso, rows, primary_lookup=primary_lookup)
+    install_shared_font_in_memory(iso, rows, primary_lookup=primary_lookup,
+                                  renderer=True)
     if not iso.table:
         raise RuntimeError("IsoFile missing tri-Ace index")
 
@@ -613,8 +633,9 @@ def main():
 
     try:
         apply_battle_overlay_edits(iso, rows)
+        apply_anti_cheat(iso)
     except Exception as exc:
-        _fail(f"battle overlay edits failed: {exc}")
+        _fail(f"battle overlay or anti-cheat edits failed: {exc}")
 
     if not args.no_map_names:
         try:

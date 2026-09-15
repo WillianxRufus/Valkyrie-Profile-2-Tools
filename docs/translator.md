@@ -24,6 +24,11 @@ Then:
 The first build generates a local workspace from the source image and may take
 several minutes. Later builds reuse that workspace.
 
+A translated ISO has the game's anti-cheat turned off, the same change as the
+cheat patcher's **Disable Anti-Cheat Systems**: the translation changes game
+code the anti-cheat would otherwise catch. A source image that already has it
+turned off is accepted as it is.
+
 ## Command line
 
 | Command                                                    | Purpose                                                        |
@@ -86,6 +91,13 @@ different accented letter costs its space whether it appears once or fifty
 times, so rewording around a rare one usually buys more room than
 shortening several lines. Both figures are measured for that scene; either
 line is left out when it cannot be.
+
+A scene is also read back the way a build reads it, so a line the build
+would refuse is refused here. A heading the English writes inside angle
+brackets, such as `<Making Valued Customer Items>`, is drawn inside them
+whatever the translation says, so write the brackets too:
+`<Criando Itens Valorizados pelos Clientes>`. Only tags such as `<PART>`,
+`<CONT>` and `<0042>` are markup; any other `<...>` is text.
 
 This checks whether the text fits. Whether a scene plays correctly is only
 answered by playing it.

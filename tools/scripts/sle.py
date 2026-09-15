@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """tri-Ace SLE deobfuscator and decompressor."""
+from dataclasses import dataclass
 import struct
 import sys
 
@@ -73,6 +74,46 @@ def streams(data):
         if not next_offset:
             return
         if next_offset < HEADER_SIZE or offset + next_offset <= offset:
+            raise ValueError("invalid SLE next-stream offset %d" % next_offset)
+        offset += next_offset
+        number += 1
+
+
+@dataclass(frozen=True)
+class Stream:
+    number: int
+    offset: int
+    stored_size: int
+    expanded_size: int
+    next_offset: int
+    mode: int
+    encoded: bytes
+    output: bytes
+
+
+def iter_streams(data):
+    """Yield each chained SLE stream of a bare or ZLS-wrapped resource."""
+    offset = HEADER_SIZE if data[:4] == b"ZLS\0" else 0
+    number = 0
+    while offset + HEADER_SIZE <= len(data):
+        if data[offset:offset + 3] != b"SLE":
+            if number == 0:
+                raise ValueError("resource contains no SLE stream")
+            raise ValueError("expected chained SLE stream at 0x%X" % offset)
+        stored_size, expanded_size, next_offset = struct.unpack_from(
+            "<III", data, offset + 4)
+        end = offset + HEADER_SIZE + stored_size
+        if end > len(data):
+            raise ValueError("truncated SLE stream %d" % number)
+        encoded = bytes(data[offset:end])
+        output = decompress(encoded)
+        if len(output) != expanded_size:
+            raise ValueError("SLE stream %d expanded-size mismatch" % number)
+        yield Stream(number, offset, stored_size, expanded_size, next_offset,
+                     encoded[3], encoded, output)
+        if not next_offset:
+            return
+        if next_offset < HEADER_SIZE + stored_size:
             raise ValueError("invalid SLE next-stream offset %d" % next_offset)
         offset += next_offset
         number += 1

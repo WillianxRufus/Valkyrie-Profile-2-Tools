@@ -415,6 +415,47 @@ class DisableAntiCheatTests(unittest.TestCase):
             patch_memory_card_resource(resource)
 
 
+class AlreadyDisabledTests(unittest.TestCase):
+    """A translated disc arrives with the checks already off."""
+
+    def test_an_owner_already_patched_is_left_alone(self):
+        save_resource, _, _ = make_save_resource()
+        battle_resource, _, _ = make_battle_resource()
+        executable, _ = make_executable()
+        for source, patch in (
+                (make_resource_3(), patch_memory_card_resource),
+                (make_main_resource(), patch_main_resource),
+                (save_resource, patch_save_resource),
+                (battle_resource, patch_battle_resource),
+                (executable, patch_executable)):
+            with self.subTest(patch=patch.__name__):
+                once = patch(source)
+                again = patch(once.data)
+                self.assertTrue(once.change_count)
+                self.assertEqual(0, again.change_count)
+                self.assertEqual(once.data, again.data)
+
+    def test_a_half_patched_owner_is_refused(self):
+        from tools.scripts import anti_cheat
+        base = 0x00495500
+        output = bytearray(0x8000)
+        _plant(output, base, SAVE_PATCHES)
+        first = SAVE_PATCHES[0]
+        struct.pack_into("<I", output, first.address - base, first.patched)
+        with self.assertRaisesRegex(ValueError, "validation failed"):
+            anti_cheat.is_patched(output, base, SAVE_PATCHES, "save overlay")
+
+    def test_battle_edits_follow_the_overlay(self):
+        from tools.scripts import anti_cheat, overlay_edits
+        resource, _, _ = make_battle_resource()
+        output = battle_overlay.read(resource).output
+        edits = anti_cheat.battle_edits(output)
+        self.assertEqual(len(ALL_BATTLE_PATCHES), len(edits))
+        patched, _ = overlay_edits.edit_output(output, edits)
+        _assert_patches(self, output, patched, 0x0036D900, ALL_BATTLE_PATCHES)
+        self.assertEqual([], anti_cheat.battle_edits(patched))
+
+
 class CompleteBuildTests(unittest.TestCase):
     def test_all_twenty_one_patches_compose_in_one_iso(self):
         save_resource, _, _ = make_save_resource()

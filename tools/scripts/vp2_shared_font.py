@@ -6,6 +6,7 @@ import hashlib
 import os
 import struct
 
+from . import glyph_range
 from . import slz
 from . import slz_compress
 
@@ -40,6 +41,7 @@ def load_slot_assignments(path=None):
     for row in rows:
         character = row["character"]
         token = int(row["token"], 0)
+        glyph_range.glyph_for_token(token)
         if len(character) != 1:
             raise ValueError("shared-font character must be one code point: %r" % character)
         if character in assignments or token in used_tokens:
@@ -57,6 +59,24 @@ def use_slot_assignments(path):
     SHARED_EXTENSION_TOKENS.clear()
     SHARED_EXTENSION_TOKENS.update(replacement)
     return SHARED_EXTENSION_TOKENS
+
+
+def displaced_characters(accent_tokens=None):
+    """``plain -> letter`` for characters whose slot the map gives away."""
+    tokens = SHARED_EXTENSION_TOKENS if accent_tokens is None else accent_tokens
+    owners = {token: character for character, token in tokens.items()}
+    plain = {character: token
+             for token, character in dcms.ENGLISH_CONTROLS.items()
+             if token < 0x20 and isinstance(character, str)}
+    plain.update({chr(token + 0x1F): token for token in range(0x20, 0x60)})
+    return {character: owners[token] for character, token in plain.items()
+            if token in owners and character not in tokens}
+
+
+def displaced_error(label, character, letter):
+    return ValueError(
+        "%s writes %r, but this language's shared font draws %r in its slot; "
+        "write it another way" % (label, character, letter))
 
 
 def _round_up(value, alignment):
@@ -84,6 +104,7 @@ def shared_font_stream(archive):
 
 
 GLYPH_COUNT_FIELD = 0x20 + 5 * 4
+FONT_SIZE_FIELD = 0x20
 
 
 def grow_font_for(expanded, layout, wanted_count):
@@ -100,6 +121,7 @@ def grow_font_for(expanded, layout, wanted_count):
     grown = bytearray(expanded)
     grown[layout["font_end"]:layout["font_end"]] = bytes(added)
     struct.pack_into("<I", grown, GLYPH_COUNT_FIELD, wanted_count)
+    struct.pack_into("<I", grown, FONT_SIZE_FIELD, len(grown))
     return bytes(grown), subtitles.font_layout(bytes(grown))
 
 
@@ -111,7 +133,9 @@ def _composed_shared_glyph(font, layout, character):
     if recipe is None:
         return None
     base, donor, _position = recipe
-    mark = subtitles.ACCENT_MARKS.get(donor)
+    # A capital takes the mark drawn to fit above it.
+    capital = glyph_compose.capital_mark(character)
+    mark = subtitles.ACCENT_MARKS.get(capital or donor)
     if mark is None:
         return None
     base_slot = ord(base) - 0x20
@@ -122,10 +146,16 @@ def _composed_shared_glyph(font, layout, character):
         block = glyph_compose.compose_character(
             source, character, glyph_compose.unpack(mark["pixels"]),
             mark["rows"], donor_bottom=mark.get("donor_bottom"),
-            body_from=SHARED_REPLACE_BODY_START.get(base))
+            body_from=SHARED_REPLACE_BODY_START.get(base),
+            capital=capital is not None)
     except ValueError:
         return None
     return bytes(block), subtitles.glyph_metric(font, layout, base_slot)
+
+
+def glyph_compose_recipes():
+    from . import vp2_glyph_compose as glyph_compose
+    return glyph_compose.COMPOSITES
 
 
 def shared_glyph_for(font, layout, character, donors):
@@ -139,6 +169,10 @@ def shared_glyph_for(font, layout, character, donors):
     composed = _composed_shared_glyph(font, layout, character)
     if composed is not None:
         return composed
+    if character in glyph_compose_recipes():
+        raise ValueError(
+            "the authored mark for %r does not fit the shared face; the "
+            "procedural fallback is not drawn in its place" % character)
     base, mark = subtitles.ACCENTS[character]
     base_slot = ord(base) - 0x20
     source = subtitles.glyph_bitmap(font, layout, base_slot)
@@ -161,7 +195,7 @@ def patch_shared_font(archive, characters, accent_tokens=None):
     old_stored = struct.unpack_from("<I", inner, 4)[0]
     wanted_count = max(
         [layout["glyph_count"]]
-        + [accent_tokens[character] - layout["glyph_base"] + 1
+        + [glyph_range.glyph_for_token(accent_tokens[character]) + 1
            for character in requested])
     expanded, layout = grow_font_for(expanded, layout, wanted_count)
     grew_to = wanted_count if wanted_count > 95 else 0
@@ -170,7 +204,7 @@ def patch_shared_font(archive, characters, accent_tokens=None):
     installed = []
     for character in requested:
         token = accent_tokens[character]
-        target_slot = token - 1
+        target_slot = glyph_range.glyph_for_token(token)
         if not 0 <= target_slot < layout["glyph_count"]:
             raise ValueError("shared-font token 0x%02X is outside the font" % token)
         block, metric = shared_glyph_for(rebuilt_font, layout, character,
@@ -192,12 +226,6 @@ def patch_shared_font(archive, characters, accent_tokens=None):
         raise ValueError("shared-font compression round-trip failed")
     new_outer_size = _round_up(len(packed), 4)
     new_span = max(span, _round_up(0x10 + new_outer_size, 128))
-    if grew_to and new_span != span:
-        raise ValueError(
-            "shared font grown to %d glyphs compresses to %d bytes and only "
-            "%d fit inside entry 8's existing ZLS span; drop a character "
-            "from the install rather than moving the stream behind it"
-            % (grew_to, len(packed), span - 0x10))
     suffix = archive[at + span:]
     used = len(suffix.rstrip(b"\0"))
     if at + new_span + used > len(archive):
@@ -258,7 +286,10 @@ def install_glyphs(archive, characters, accent_tokens=None):
     needed = []
     for character in sorted(set(characters), key=lambda c: accent_tokens[c]):
         block, _metric = shared_glyph_for(expanded, layout, character, donors)
-        target_slot = accent_tokens[character] - 1
+        target_slot = glyph_range.glyph_for_token(accent_tokens[character])
+        if target_slot >= layout["glyph_count"]:
+            needed.append(character)
+            continue
         glyph_start = layout["font_start"] + target_slot * layout["glyph_bytes"]
         current = bytes(expanded[
             glyph_start:glyph_start + layout["glyph_bytes"]])

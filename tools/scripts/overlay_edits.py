@@ -78,10 +78,15 @@ def _room(overlay, stored_size):
     return overlay.item_span - battle_overlay.SLZ_HEADER_SIZE - stored_size
 
 
-def apply(resource, edits):
-    """Apply ``edits`` to a battle resource, recompressing its overlay once."""
+def apply(resource, edits, more=None):
+    """Apply ``edits`` to a battle resource, recompressing its overlay once.
+
+    ``more``, if given, returns further edits for the expanded overlay.
+    """
     resource = bytes(resource)
     overlay = battle_overlay.read(resource)
+    if more is not None:
+        edits = list(edits) + list(more(overlay.output))
     patched, changed = edit_output(overlay.output, edits)
     if not changed:
         return Result(resource, 0, overlay.stored_size,
@@ -95,9 +100,9 @@ def apply(resource, edits):
     return Result(rebuilt, changed, stored_size, _room(overlay, stored_size))
 
 
-def apply_to_iso(iso, edits):
+def apply_to_iso(iso, edits, more=None):
     """Apply ``edits`` to the battle resource in an open image."""
-    result = apply(iso.read_entry(RESOURCE), edits)
+    result = apply(iso.read_entry(RESOURCE), edits, more)
     if result.changed:
         iso.write_entry(RESOURCE, result.data)
     return result
