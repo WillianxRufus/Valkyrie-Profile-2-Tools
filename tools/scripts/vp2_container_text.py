@@ -333,6 +333,11 @@ def encode_codepage(text, label="codepage text", accent_tokens=None,
             continue
         character = text[position]
         token = runs[run].get(character)
+        if token is None and accent_tokens and character not in accent_tokens:
+            from . import vp2_shared_font as shared_font
+            letter = shared_font.displaced_characters(accent_tokens).get(character)
+            if letter is not None:
+                raise shared_font.displaced_error(label, character, letter)
         if token is None:
             token = (accent_tokens or {}).get(
                 character, CODEPAGE_CHARACTERS.get(character))
@@ -381,10 +386,11 @@ def shared_codepage_advances(archive, accent_tokens=None):
         if len(character) == 1:
             advances[character] = expanded[
                 font["text_end"] + (token - 1) * 2]
+    from . import glyph_range
     for character, token in (accent_tokens or {}).items():
-        if 1 <= token <= font["glyph_count"]:
-            advances[character] = expanded[
-                font["text_end"] + (token - 1) * 2]
+        glyph = glyph_range.glyph_for_token(token)
+        if glyph < font["glyph_count"]:
+            advances[character] = expanded[font["text_end"] + glyph * 2]
     return advances
 
 def codepage_wrap_warnings(translations, advances, limit):
@@ -1353,7 +1359,7 @@ def patch_resource_in_memory(iso, resource, supplied, *,
             alphabet=codepage_alphabet)
         raw, details = pack_container_entry(raw, blob, resource,
                                            subresource)
-        iso.write_entry(resource, raw)
+        _store_entry(iso, resource, raw, details)
         if font_patch and not font_patch[1].get("no_op"):
             iso.write_entry(SHARED_FONT_ENTRY, font_patch[0])
         return _finish_patch(iso, resource, raw, blob, codepage_written,
@@ -1542,16 +1548,26 @@ def patch_resource_in_memory(iso, resource, supplied, *,
         alphabet=resource_alphabet(blob, resource) or None)
     raw, details = pack_container_entry(raw, blob, resource,
                                         subresource)
-    iso.write_entry(resource, raw)
+    _store_entry(iso, resource, raw, details)
     if font_patch and not font_patch[1].get("no_op"):
         iso.write_entry(SHARED_FONT_ENTRY, font_patch[0])
     return _finish_patch(iso, resource, raw, blob, written + codepage_written,
                          details, font_patch, subresource)
 
+def _store_entry(iso, resource, raw, details):
+    """Write the rebuilt entry, or leave a grown one for the build to move."""
+    if not details.get("grown_sectors"):
+        iso.write_entry(resource, raw)
+    elif isinstance(iso, iso_buffer.IsoBuffer):
+        raise ValueError(
+            "resource #%d grows by %d sector(s); relocating it needs a "
+            "file-backed image" % (resource, details["grown_sectors"]))
+
 def _finish_patch(iso, resource, raw, expected_blob, written, details,
                   font_patch, subresource=None):
     """Verify a write against the buffer and return the patch summary dict."""
-    stored = iso.read_entry(resource)
+    grown = details.get("grown_sectors")
+    stored = raw if grown else iso.read_entry(resource)
     check = unpack_container_entry(bytes(stored), resource,
                                    subresource)
     if check != bytes(expected_blob):
@@ -1577,8 +1593,14 @@ def _finish_patch(iso, resource, raw, expected_blob, written, details,
     if font_patch:
         from . import vp2_shared_font as shared_font
         print("  " + shared_font.describe_install(font_patch[1]))
+    if grown:
+        print("  %s bank grew by %d sector(s); the build relocates it"
+              % (details["wrapper"], grown))
     print("verified in memory")
-    return {"written": written, "details": details, "font_patch": font_patch}
+    result = {"written": written, "details": details, "font_patch": font_patch}
+    if grown:
+        result.update(patched=bytes(raw), grown_sectors=grown)
+    return result
 
 def cmd_probe_643(args):
     """Build the one-byte, no-recompression resource-643 diagnostic image."""

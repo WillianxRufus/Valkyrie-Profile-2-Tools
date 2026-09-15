@@ -76,6 +76,13 @@ python -m tools.scripts.author_accent_marks --check    # preview and measure
 python -m tools.scripts.author_accent_marks --write    # write the table
 ```
 
+Capitals in the menu font have less room above them, so they use their own
+marks: `CAPITAL_SHAPES`, pointed at by `CAPITAL_DONOR_SHAPES`, and
+`CAPITAL_MARKS` in `vp2_glyph_compose.py` says which capital mark each
+lowercase mark becomes. `CAPITAL_TILDE_SCALE` sizes the capital tilde. A
+character whose mark does not fit stops the build rather than being drawn
+some other way.
+
 Two things to know while iterating. A mark's apparent size is its **bright
 core**, not its ink box — shorten the path before touching the weight. And a
 wave needs roughly twice its own stroke thickness of amplitude, or crest and

@@ -240,14 +240,44 @@ LOWERCASE_EXTRA_OVERLAP = 1
 
 NO_LOWERCASE_OVERLAP = frozenset({"å"})
 
+#: The capital-height mark for each lowercase donor, used where a face's
+#: capitals leave no room for the lowercase marks.
+CAPITAL_MARKS = {
+    "á": "Á", "é": "Á", "ó": "Á", "ú": "Á",
+    "à": "À",
+    "â": "Â", "ê": "Â", "ô": "Â",
+    "ã": "Ã", "õ": "Ã",
+}
+
+CAPITAL_MARK_OVERLAP = 1
+CAPITAL_MARK_HORIZONTAL_SHIFTS = {"Á": 1, "À": -1}
+CAPITAL_OVER_INK_MARKS = frozenset({"Ã"})
+
+
+def capital_mark(character):
+    """The capital mark ``character`` takes in a capital-height face, or ``None``."""
+    base, donor, position = COMPOSITES[character]
+    if position != "above" or not base.isupper():
+        return None
+    return CAPITAL_MARKS.get(donor)
+
 
 def compose_character(body_block, character, mark_grid, mark_rows,
-                      donor_bottom=None, body_from=None):
+                      donor_bottom=None, body_from=None, capital=False):
     """Compose ``character`` with its recipe-specific placement.
 
     ``body_from`` overrides a replacement recipe's face-specific boundary.
+    ``capital`` says ``mark_grid`` is ``capital_mark(character)``'s.
     """
     base, donor, position = COMPOSITES[character]
+    if capital:
+        cap = capital_mark(character)
+        if cap is None:
+            raise ValueError("%r takes no capital mark" % character)
+        return compose(body_block, mark_grid, mark_rows,
+                       clearance=DEFAULT_CLEARANCE - CAPITAL_MARK_OVERLAP,
+                       dx_shift=CAPITAL_MARK_HORIZONTAL_SHIFTS.get(cap, 0),
+                       over_ink=cap in CAPITAL_OVER_INK_MARKS)
     shift = MARK_VERTICAL_SHIFTS.get(donor, 0)
     sideways = MARK_HORIZONTAL_SHIFTS.get(donor, 0)
     if base.islower() and donor not in NO_LOWERCASE_OVERLAP:

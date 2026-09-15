@@ -15,6 +15,7 @@ import uuid
 from collections import defaultdict
 from pathlib import Path
 
+from . import einherjar_roster
 from .translation_pack import (
     PackError,
     _csv_files,
@@ -170,12 +171,15 @@ def _copy_reference_rows(
     source: Path,
     target: Path,
     fields: tuple[str, ...],
+    hidden=None,
 ) -> int:
     _source_fields, rows = _read_csv(source)
+    skipped = hidden(rows) if hidden else set()
     visible = [
         {field: row.get(field) or "" for field in fields}
         for row in rows
-        if row.get("original_en") or row.get("original_jp")
+        if (row.get("original_en") or row.get("original_jp"))
+        and row.get("message_id") not in skipped
     ]
     _write_csv_atomic(target, list(fields), visible)
     return len(visible)
@@ -284,7 +288,7 @@ def write_reference_tree(
             resource = int(match.group(1))
             dialogue_rows += _copy_reference_rows(
                 source, staging / "dialogue" / f"scene-{resource:04d}.csv",
-                SCENE_REFERENCE_FIELDS)
+                SCENE_REFERENCE_FIELDS, einherjar_roster.hidden_message_ids)
 
         for resource in sorted(int(item) for item in DIALOGUE_CONTAINERS):
             source = (original_dir / "containers"

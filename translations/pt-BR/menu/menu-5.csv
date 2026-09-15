@@ -1,41 +1,47 @@
 resource,message_id,translated,notes
-649,122,,
-649,123,,
-649,124,,
-649,125,,
-649,126,,
-649,127,,
-649,128,,
-649,129,,
-649,130,,
-649,131,,
-649,132,,
-649,133,,
-649,134,,
-649,135,,
-649,136,,
-649,137,,
-649,138,,
-649,139,,
-649,140,,
-649,141,,
-649,142,,
-649,143,,
-649,144,,
-649,145,,
-649,146,,
-649,147,,
-649,148,,
-649,149,,
-649,150,,
-649,151,,
-649,152,,
-649,153,,
-649,154,,
-649,155,,
-649,156,,
-649,157,,
-649,158,,
+649,122,"Bom, adeus. Agradeço pelas lembranças.",
+649,123,"Enfim, livre deste destino de guerra.",
+649,124,Foi divertido enquanto durou. Boa sorte!,
+649,125,É uma honra ter lutado ao seu lado.,
+649,126,E-e-espere! É o fim?,
+649,127,"Então não precisa de mim, afinal.
+Bom, farei o que eu quiser, então.",
+649,128,"Com sorte, nos veremos de novo um dia.",
+649,129,Queria um pouco mais de ação.,
+649,130,Que siga o caminho do guerreiro até a glória.,
+649,131,"Aconteça o que acontecer, siga seu coração.",
+649,132,"Espero ter ajudado, nem que só um pouco.",
+649,133,Desejo o melhor para você sem mim.,
+649,134,"Daqui em diante, faça o que achar certo.",
+649,135,Será que servi bem mesmo?,
+649,136,Então é o fim. Vou sentir saudade.,
+649,137,Espero que não se arrependa.,
+649,138,"Siga seus sonhos, benzinho!",
+649,139,O resto é com você. Acredite em si.,
+649,140,Não há mais nada que eu possa fazer. Boa sorte!,
+649,141,Foram bons tempos. Até mais!,
+649,142,Talvez eu comece minha próxima geringonça.,
+649,143,Conhecer você foi um feliz acaso.,
+649,144,Partir é uma tristeza tão doce.,
+649,145,"Fico feliz em ser livre,
+mas agora não sei o que fazer.",
+649,146,Você vai ficar bem sem ninguém.,
+649,147,Vá em paz. Estará nas minhas preces.,
+649,148,E assim termina.,
+649,149,Guardarei com carinho a vida que me deu.,
+649,150,"É isso? Acabou, assim do nada?",
+649,151,Agora posso terminar minha pesquisa em paz.,
+649,152,"Suponho que farei o que quiser, então.",
+649,153,"Foi tanta coisa, tão de repente.
+Agradeço por toda a ajuda.",
+649,154,Viverei para servir Midgard.,
+649,155,"Acha que já não tenho utilidade?
+Vai se arrepender depois.",
+649,156,"Lembre que, mesmo se os corpos se separarem,
+nossos espíritos seguem juntos.",
+649,157,"Mesmo com um novo corpo, não posso voltar para casa.",
+649,158,"Estou profundamente em dívida.
+Rezo para que o destino esteja ao seu lado.",
 650,4,Exp.,
 650,7,FOR,
 650,8,INT,
@@ -58,101 +64,145 @@ resource,message_id,translated,notes
 650,59,Ver feit. aprendidos.,
 650,60,Ver perfil.,
 650,61,Ver histórico.,
-650,63,,
-650,1676,,
-650,1613,,
-650,1617,,
-650,1620,,
-650,1627,,
-650,1628,,
-650,1678,,
-650,1685,,
-650,1686,,
-650,1690,,
-650,1716,,
-650,1719,,
-650,1728,,
-650,1732,,
-650,1735,,
-650,1737,,
-650,1740,,
-650,1743,,
-650,1777,,
-650,1778,,
-650,1779,,
-650,1783,,
-650,1784,,
-650,1785,,
-650,1786,,
-650,1787,,
-650,1788,,
-650,1789,,
-650,1790,,
-650,1791,,
-650,1794,,
-650,1795,,
-650,1796,,
-650,1797,,
-650,1798,,
-650,1800,,
-650,1801,,
-650,1802,,
-650,1804,,
-650,1805,,
-650,1806,,
-650,1807,,
-650,1808,,
-650,1809,,
-650,1810,,
-650,1811,,
-650,1813,,
-650,1814,,
-650,1823,,
-650,1847,,
-650,1848,,
-650,1853,,
-650,1854,,
-650,1857,,
-650,1858,,
-650,1865,,
-650,1866,,
-650,1867,,
-650,1868,,
-650,1870,,
-650,1872,,
-650,1873,,
-650,1874,,
-650,1877,,
-650,1878,,
-650,1879,,
-650,1882,,
-650,1883,,
-650,1885,,
-650,1888,,
-650,1896,,
-650,1897,,
-650,1900,,
-650,1917,,
-650,1918,,
-650,1919,,
-650,1920,,
-650,1923,,
-650,1924,,
-650,1925,,
-650,1926,,
-650,1940,,
-650,1941,,
-650,1942,,
-650,1943,,
-650,1944,,
-650,1958,,
-650,1959,,
-650,1960,,
-650,1961,,
-650,1962,,
-650,1963,,
-650,1964,,
-650,1965,,
+650,63,<8099:21>Info <8099:0B><8099:0C>Pers.,
+650,1676,Feiticeiro,
+650,1613,Cavaleiro de Dipan,
+650,1617,Donzela de Batalha,
+650,1620,Criadora da Vida,
+650,1627,Vaso dos Deuses,
+650,1628,Einherjar,
+650,1678,21 <0066>em anos humanos<0067>,
+650,1685,25 <0066>em anos humanos<0067>,
+650,1686,23 <0066>em anos humanos<0067>,
+650,1690,26 <0066>em anos humanos<0067>,
+650,1716,20,
+650,1719,35,
+650,1728,17 <0066>na verdade 58<0067>,
+650,1732,21,
+650,1735,19,
+650,1737,34,
+650,1740,42,
+650,1743,38,
+650,1777,324 C.C.,
+650,1778,445 C.C.,
+650,1779,550 C.C.,
+650,1783,567 C.C.,
+650,1784,636 C.C.,
+650,1785,634 C.C.,
+650,1786,704 C.C.,
+650,1787,350 C.C.,
+650,1788,464 C.C.,
+650,1789,546 C.C.,
+650,1790,548 C.C.,
+650,1791,549 C.C.,
+650,1794,582 C.C.,
+650,1795,630 C.C.,
+650,1796,754 C.C.,
+650,1797,308 C.C.,
+650,1798,564 C.C.,
+650,1800,627 C.C.,
+650,1801,730 C.C.,
+650,1802,748 C.C.,
+650,1804,773 C.C.,
+650,1805,705 C.C.,
+650,1806,555 C.C.,
+650,1807,112 C.C.,
+650,1808,390 C.C.,
+650,1809,423 C.C.,
+650,1810,539 C.C.,
+650,1811,554 C.C.,
+650,1813,563 C.C.,
+650,1814,573 C.C.,
+650,1823,800 C.C.,
+650,1847,346 C.C.,
+650,1848,468 C.C.,
+650,1853,599 C.C.,
+650,1854,659 C.C.,
+650,1857,375 C.C.,
+650,1858,489 C.C.,
+650,1865,662 C.C.,
+650,1866,776 C.C.,
+650,1867,333 C.C.,
+650,1868,622 C.C.,
+650,1870,650 C.C.,
+650,1872,769 C.C.,
+650,1873,796 C.C.,
+650,1874,802 C.C.,
+650,1877,146 C.C.,
+650,1878,418 C.C.,
+650,1879,450 C.C.,
+650,1882,586 C.C.,
+650,1883,601 C.C.,
+650,1885,681 C.C.,
+650,1888,<0068>80<0069><006A>54<0069><006B>80,
+650,1896,<0068>84<0069><006A>56<0069><006B>83,
+650,1897,Média das três irmãs,
+650,1900,<0068>88<0069><006A>58<0069><006B>87,
+650,1917,<0068>83<0069><006A>60<0069><006B>85,
+650,1918,<0068>82<0069><006A>58<0069><006B>84,
+650,1919,<0068>86<0069><006A>60<0069><006B>85,
+650,1920,<0068>82<0069><006A>57<0069><006B>82,
+650,1923,<0068>79<0069><006A>55<0069><006B>80,
+650,1924,<0068>86<0069><006A>60<0069><006B>84,
+650,1925,<0068>79<0069><006A>55<0069><006B>78,
+650,1926,<0068>83<0069><006A>59<0069><006B>84,
+650,1940,<0068>80<0069><006A>56<0069><006B>81,
+650,1941,<0068>84<0069><006A>58<0069><006B>85,
+650,1942,<0068>83<0069><006A>58<0069><006B>85,
+650,1943,<0068>88<0069><006A>62<0069><006B>86,
+650,1944,<0068>79<0069><006A>54<0069><006B>78,
+650,1958,"Uma das três valquírias, deusas que governam o destino.
+ 
+Silmeria deveria ter renascido como Alicia, princesa de Dipan<808C:000000C0>---<808D>mas, devido a um Rito Soberano incompleto (o feitiço que comanda o renascimento das valquírias), renasceu dentro de Alicia com suas memórias de valquíria e parte de seus poderes, junto com os einherjar que a acompanhavam.
+ 
+As almas entrelaçadas de Alicia e Silmeria sofrem incontáveis provações como duas almas que coexistem no mesmo corpo.
+ 
+Coexistindo dentro de Alicia, Silmeria consegue trazer sua consciência à tona e assumir o controle do corpo, mas sua condição instável a impede de manter esse poder por muito tempo.
+ 
+Quando controla o corpo, Silmeria pode usar seus poderes de valquíria de materialização e projeção de fótons.",
+650,1959,"O mais poderoso dos mortos-vivos, muitas vezes chamado de Lorde dos Mortos Vivos.
+ 
+Brahms é alvo de Odin em sua busca pelo Orbe do Dragão, uma das Quatro Relíquias. Os dois já travaram, e ainda travam, muitas batalhas.
+ 
+Se o Orbe do Dragão ficar longe de Midgard por muito tempo, não haverá apenas caos: o próprio mundo ficará à beira da destruição. Sem querer que Midgard fosse destruída por completo, Odin decidiu substituir o orbe por uma alma poderosa e, embora saiba que um substituto talvez não contenha o caos, ele deve ajudar a manter o mundo em ordem. Brahms seria esse substituto, mas, quando estava prestes a ser capturado por Odin, Silmeria veio em seu socorro.
+ 
+Com um ferimento quase fatal, Brahms transferiu sua alma para Dylan, um einherjar de Silmeria, em busca de um lugar para descansar e se curar. Depois de se materializar como Dylan, decidiu acompanhar Silmeria, que compartilha seu desejo de punir Odin e a quem ele deve a vida, sempre ocultando sua identidade.",
+650,1960,"Um jovem viajante que vaga pelo mundo como bem entende.
+ 
+Retido em Solde a caminho de Dipan, Rufus recebe de Alicia o convite para se juntar a ela (por ordem de Silmeria).
+ 
+Rufus deve ter algum motivo para ir a Dipan, mas isso ainda não está claro...",
+650,1961,"Um feiticeiro que trabalhava com os Três Magos, auxiliando em seus diversos experimentos.
+ 
+Lezard tinha poder e conhecimento iguais aos dos magos, que tinham grandes expectativas a seu respeito.
+ 
+No entanto, ele passou a se preocupar e a se incomodar com as pesquisas perigosas que conduziam, e começou a tramar em segredo um plano para interrompê-las. Foi nessa época que soube que Alicia e seus companheiros haviam entrado no castelo.
+ 
+Aproveitando a oportunidade, salvou Alicia e seus amigos teletransportando-os, e a si mesmo, para fora de Dipan. Ele os acompanha na jornada em busca do Orbe do Dragão<808C:000000C0>---<808D>um item necessário para deter a pesquisa dos Três Magos.",
+650,1962,"Um mercenário que viaja com Leone.
+ 
+Embora Arngrim diga aceitar qualquer trabalho que pague, ele tem dignidade e recusa qualquer serviço em que não veja mérito.
+ 
+Não conhece Leone há muito tempo, mas a respeita muito, pois reconheceu de imediato a força dela como guerreira.",
+650,1963,"Um einherjar materializado por Silmeria, e um leal soldado de Dipan que viveu há cerca de 150 anos.
+ 
+Dylan por acaso acompanhava Silmeria quando ela foi transmigrada pelo Rito Soberano, e assim também passou a residir dentro de Alicia.
+ 
+Enquanto as almas dos outros einherjar transferidos se deterioraram, a de Dylan permaneceu forte, assim como seu corpo ao se materializar. Por isso, ele foi invocado para proteger a princesa de Dipan, Alicia.",
+650,1964,"Uma guerreira que viaja com Arngrim. Por trás do jeito amigável e feminino de Leone, esconde-se uma guerreira implacável.
+ 
+No entanto, com o mundo em paz, ela usa suas habilidades de combate como caçadora de tesouros, explorando ruínas em busca de riquezas.
+ 
+Em suas viagens, ela conhece Alicia e os outros e decide acompanhá-los na busca pelo Orbe do Dragão.",
+650,1965,"A mais velha das três deusas do destino e a atual Valquíria. Uma súdita leal de Odin.
+ 
+Hrist recebe a ordem de procurar o Orbe do Dragão em forma humana, até que Odin descobre que Silmeria despertou incompleta em Midgard. Ela então recebe a ordem de encontrá-la e levá-la de volta aos céus.
+ 
+Quando Odin descobre que Silmeria busca o Orbe do Dragão para salvar Midgard, ele muda suas ordens e manda Hrist deixá-la em paz. Hrist assume a forma humana de Leone e se aproxima de Alicia e seus amigos, acompanhada do mercenário Arngrim.
+ 
+Hrist sabia que Silmeria enxergava através de seu disfarce, mas continuou no papel de Leone ao perceber que Silmeria temia um confronto. Depois disso, conseguiu tomar o Orbe do Dragão no Palácio do Dragão Venerado.
+ 
+No entanto, mais tarde ela reflete sobre o tempo que passou com Alicia e seus companheiros e decide se aliar a eles para salvar o mundo, entrando no reino distorcido de Lezard.",
 650,1966,"A segunda das três deusas do destino.
  
 No entanto, esta não é a Lenneth do presente, mas sim outra Lenneth vinda do futuro.
@@ -162,9 +212,25 @@ Lenneth torna-se a criadora da nova era após o Ragnarok, mas começa a perceber
 Ao perceber que essas mudanças surgiam devido a acontecimentos no passado, ela suspeita que o alquimista Lezard esteja por trás de tudo.
  
 Para salvar o mundo da destruição, ela retorna ao passado para salvar, com as próprias mãos, o mundo daqueles que ama.",
-650,1967,,
-650,1968,,
-650,1969,,
+650,1967,"A única e verdadeira valquíria, criada pela fusão de Hrist, Lenneth e Silmeria, as três deusas do destino.
+ 
+Tem mais poder do que muitos deuses juntos e, literalmente, o poder de controlar até o próprio destino.",
+650,1968,"A filha do Rei Barbarossa e da Rainha Malabeth de Dipan, primeira na linha de sucessão ao trono.
+ 
+Alicia carrega a maldição de uma dupla personalidade: seu corpo abriga a alma da valquíria Silmeria.
+ 
+Pouco depois do nascimento de Alicia, Silmeria despertou e começou a instruí-la. Alicia então repetia o que lhe era dito<808C:000000C0>---<808D>coisas que nenhuma criança poderia saber.
+ 
+Na época, o pai tomou aquilo por tagarelice infantil, mas quando Alicia começou a contar a trágica história transmitida pela realeza de Dipan, o rei passou a suspeitar que Alicia pudesse ser Silmeria.
+ 
+A consciência de Silmeria vinha à tona cada vez mais conforme Alicia crescia. Quando Silmeria passou a usar seus poderes especiais, Barbarossa sentiu que não poderia mais esconder o segredo de Alicia e a declarou morta.
+ 
+Ele então a enviou em segredo para um lugar remoto, onde ela ficou confinada até o início de sua jornada.",
+650,1969,"Primeira na linha de sucessão ao trono de Dipan, a cidade destruída pelos deuses.
+ 
+Quando Silmeria a deixa, ela duvida de suas capacidades, mas jura recuperar o Orbe do Dragão e salvar Midgard para que uma tragédia como a de Dipan nunca se repita.
+ 
+Alicia está decidida a fazer o que for preciso, seja enfrentar Odin ou até sacrificar a própria vida.",
 650,1970,"Uma deusa que serve a Odin.
  
 Freya possui a total confiança de Odin; ele a encarrega de cumprir todas as suas ordens.
@@ -172,48 +238,306 @@ Freya possui a total confiança de Odin; ele a encarrega de cumprir todas as sua
 As pessoas a veneram como a Deusa da Fertilidade, pois ela possui o poder de criar matéria a partir do nada.
  
 No entanto, além do poder da criação, ela também detém o poder da destruição. Aqueles que a desafiam estão destinados a se ajoelhar diante de sua ira.",
-650,1977,,
-650,1978,,
-650,1987,,
-650,1988,,
-650,1989,,
-650,1990,,
-650,1991,,
-650,1992,,
-650,1993,,
-650,1994,,
-650,1995,,
-650,1996,,
-650,1997,,
-650,1998,,
-650,1999,,
-650,2000,,
-650,2001,,
-650,2002,,
-650,2003,,
-650,2004,,
-650,2005,,
-650,2006,,
-650,2007,,
-650,2008,,
-650,2009,,
-650,2010,,
-650,2011,,
-650,2012,,
-650,2013,,
-650,2014,,
-650,2015,,
-650,2016,,
-650,2017,,
-650,2018,,
-650,2019,,
-650,2020,,
-650,2021,,
-650,2022,,
-650,2023,,
-650,2024,,
-650,2025,,
-650,2026,,
+650,1977,"Meio-elfo como Odin, Rufus é um vaso dos deuses.
+ 
+Os meio-elfos são raros; Rufus e Odin são hoje os únicos de sua raça. Seu propósito como vaso é abrigar a alma de Odin caso o corpo de Odin pereça.
+ 
+Como vaso de Odin, ele foi selado nas profundezas da Floresta dos Espíritos pelos outros elfos, mas conseguiu escapar e vaga pelas terras humanas como bem entende.
+ 
+Ainda assim, em seu dedo brilha o Anel de Mylinn, um lembrete impossível de remover de que ele é o vaso de Odin.
+ 
+Resignado com seu destino, Rufus segue viajando. Um dia, ouve o boato de que Dipan conduz pesquisas para se vingar dos deuses e vê nisso a chance de escapar de seu destino.
+ 
+A caminho de Dipan, ele conhece Alicia no porto de Solde.",
+650,1978,"Um mercenário que empunha uma espada gigante.
+ 
+Ao perceber que Leone era uma valquíria que o usava desde o início, Arngrim a desafia, mas ela o derrota com facilidade e o transforma em einherjar.
+ 
+A contragosto, ele se torna einherjar de Hrist no ataque a Dipan. Depois disso, porém, passa a se incomodar com a arrogância indiferente dos deuses para com os mortais.
+ 
+É nessa época que ele reencontra Alicia e Rufus no Salão de Valhalla. Respeitando a determinação deles de enfrentar Odin, parte com eles mais uma vez.",
+650,1987,"Membro da Truth, um bando de caçadores de tesouros espalhado por todo o continente.
+ 
+Caçadora de tesouros dos pés à cabeça, Lwyn viajou com o pai desde pequena, abatendo inúmeros monstros e descobrindo incontáveis relíquias e ruínas.
+ 
+Ela deu notícias pela última vez em 346 C.C., na região desértica ao sul do Passo de Artolia.
+ 
+Desapareceu pouco depois de informar à sede da Truth que havia descoberto o túmulo real de uma antiga dinastia.",
+650,1988,"Criada por uma família de comerciantes da região de Nethov.
+ 
+Uma moça de criação tão próspera jamais deveria ter conhecido a brutalidade do mundo, mas um dia seu destino mudou de repente. Seu pai, o homem mais rico da cidade, caiu em uma armadilha que lhe custou toda a fortuna<808C:000000C0>---<808D>e a vida.
+ 
+Seu noivo rompeu o noivado quando a família faliu. Diante da fome, Jessica decidiu se tornar aventureira.
+ 
+Em 468 C.C., ela encontrou uma pedra preciosa enorme enquanto explorava umas ruínas. Sem saber que a pedra selava o espírito de um dragão maligno, ela a tirou de seu lugar.",
+650,1989,"Capitã dos Cavaleiros do Lírio Branco, a guarda real do Conde Leon. O domínio do conde era o território ocidental do antigo Reino de Arkdain, no nordeste do continente.
+ 
+Richelle foi um dos renomados ""Dezessete Comandantes"" de Camille na Guerra da Colina Camille e depois ficou conhecida como ""Richelle do Samito Cintilante"". Em 574 C.C., sob as ordens do conde, lutou na Guerra da Colina Camille. Sua esgrima superior salvou uma linha de defesa à beira do colapso e empurrou o inimigo de volta às montanhas, garantindo a vitória.
+ 
+Ela comandou as patrulhas da linha de frente por dois anos após a guerra e acabou sendo chamada de volta para casa em 577 C.C. No entanto, no caminho, toda a guarda desapareceu após visitar uma cidade da região de Gorhla.",
+650,1990,"Capitã dos Cavaleiros do Lírio Branco, a guarda real do Conde Leon. O Conde Leon era o irmão mais novo do Rei de Arkdain, reino que existiu no noroeste do continente.
+ 
+Em 579 C.C., Fraudir acompanhou o conde na revolta contra o rei e seus modos corruptos. Nas batalhas conhecidas como a Revolta de Arkdain, que duraram até 581 C.C., ela lutou como braço direito do Conde Leon.
+ 
+Após a invasão do centro de Arkdain, ela enfrentou em duelo um capitão dos Cavaleiros da Espada Sangrenta e perdeu a vida sem ter a chance de desembainhar a espada.
+ 
+Ainda assim, morreu com uma expressão serena no rosto, sabendo que o conde havia alcançado seu objetivo.",
+650,1991,"Celes liderou as tropas de Dipan na Guerra da Colina Camille, de 573 C.C. a 576 C.C.
+ 
+Suas inúmeras táticas de batalha lhe renderam um lugar entre os Dezessete Comandantes de Camille e também o apelido de ""Princesa Guerreira Celes"".
+ 
+Após a guerra, ela se casou com o senhor de Lassen e levou uma vida pacífica. Porém, em 581 C.C., a Dinastia Rosetta, uma potência do sul do continente, lançou uma invasão e a capturou enquanto o marido estava ausente.
+ 
+Essa batalha, conhecida como a Invasão de Lassen, deu origem à Guerra de Um Ano, que acabou envolvendo o continente inteiro. Celes participou dessa guerra como General do Eclipse dos Cavaleiros do Sol, lutando contra a marinha de Dipan, que diziam ser dez vezes maior que seu exército.
+ 
+Perto do fim da Guerra de Um Ano, ela foi ferida na Batalha de Rosetta pela própria irmã, Phyress, Rainha de Dipan. Morreu dois anos depois em decorrência do ferimento.",
+650,1992,"Uma aristocrata de Gerabellum.
+ 
+Crescent tinha apenas dez anos quando a cidade vizinha atacou de repente, em 572 C.C. Ela conseguiu escapar com a ajuda de um mercenário.
+ 
+Esse ataque abriu uma era de guerra que mais tarde seria chamada de Guerra da Colina Camille, uma batalha que durou quatro anos. Por ser muito jovem, porém, Crescent foi usada pelo reino apenas como moeda de troca para fins políticos.
+ 
+Após a guerra, ela voltou para casa e descobriu que a madrasta ainda governava as terras de seu pai.
+ 
+Aquela que um dia chamou de mãe a ameaçou. Ao perceber que o próprio ataque havia sido uma trama da madrasta, Crescent se vingou. Depois disso, ela e seu heroico mercenário viajaram pelo mundo. Em 580 C.C., ela se alistou na Dinastia Rosetta, uma potência que existiu no sul do continente.
+ 
+Ela entrou para a guarda real, os Cavaleiros do Sol, e foi nomeada General do Meridiano. Em 581 C.C., entrou na Guerra de Um Ano.
+ 
+Ela desapareceu após a Batalha do Passo de Artolia. Seu corpo nunca foi encontrado.",
+650,1993,"Atendente da Rainha Phyress de Dipan desde que se entende por gente, Sylphide permaneceu ao lado da rainha sem questionar e acabou lutando na Guerra de Um Ano, que se alastrou por todo o continente.
+ 
+Embora não fosse feita para a guerra, dizem que a magia de cura que usava salvou a Rainha Phyress de inúmeros perigos.
+ 
+Sylphide quase perdeu a vida perto do fim da guerra, na Batalha de Rosetta, mas foi arrancada das garras da morte por um companheiro.
+ 
+Ao voltar, passou seus dias em silêncio na capela de Dipan, mas foi encontrada assassinada por mortos-vivos durante a ""Névoa de Nifleheim""<808C:000000C0>---<808D>a era sombria que começou em 599 C.C.",
+650,1994,"Criada em Lassen, uma cidade no sudoeste do continente.
+ 
+Tyrith dizia ser descendente da Princesa Guerreira Celes, uma heroína que viveu mais de 100 anos antes. Ela se aliou a Arkdain, reino que existiu no noroeste do continente, e contribuiu imensamente na batalha contra Villnore.
+ 
+Ela se tornou tão famosa e tão forte quanto Celes, se não mais, e dava coragem a seus soldados para lutar mesmo quando estavam exaustos.
+ 
+Em 658 C.C., durante a Batalha do Templo do Lago, a estratégia do exército de Villnore afundou o templo, matando Tyrith.
+ 
+Embora dissesse ser parente da General Celes, ela era, na verdade, apenas filha de um comerciante.",
+650,1995,"Vinda das minas da região noroeste do continente. Circe era ao mesmo tempo guerreira e uma lendária forjadora de espadas.
+ 
+Dizia-se que, com a Lei Secreta dos Princípios, suas espadas cortavam a mais dura das rochas e suas armaduras repeliam até as flechas mais afiadas.
+ 
+Uma das fundadoras de Villnore. Morreu em batalha aos 24 anos, antes de poder transmitir seu conhecimento da Lei Secreta.",
+650,1996,"Da cidade desértica de Kalstad.
+ 
+Rasheeka esteve entre os heróis que protegeram a cidade das forças em expansão da poderosa Crell Monferaigne.
+ 
+Com seu conhecimento da região e o controle do abastecimento de água, ela conseguiu proteger a cidade do colossal exército de Crell Monferaigne. Em 724 C.C., sofreu um ferimento fatal durante a Quarta Invasão de Kalstad e morreu nos braços da pessoa que amava.
+ 
+Quando o exército de Crell Monferaigne soube de sua morte, logo lamentou ter perdido a oportunidade de tomar Kalstad.",
+650,1997,"Um aventureiro dos arredores de Gerabellum.
+ 
+Culpando os mortos-vivos pela morte dos pais, Falx passou a vida inteira em busca de vingança, tentando derrotar Brahms, o Lorde dos Mortos Vivos.
+ 
+Falx não só se destacava com a espada, como também usava seu conhecimento de engenhocas e feitiçaria a seu favor nas batalhas.
+ 
+Quando suas extraordinárias habilidades de combate finalmente chamaram a atenção de Brahms, ele logo perdeu a vida.",
+650,1998,"Um guerreiro de Nethov, cidade vital para o Principado de Paltierre, potência que governava o nordeste do continente.
+ 
+Gerald foi um dos muitos que se ofereceram para matar um dragão<808C:000000C0>---<808D>uma ameaça que aparecia com frequência perto da cidade.
+ 
+Ele e outros 99 voluntários invadiram o covil do dragão, prontos para lutar. Quando sua espada perfurou o peito da fera, um jorro de sangue venenoso brotou da ferida, matando não só os soldados ali presentes, mas todos os seres vivos da região de Nethov.",
+650,1999,"Guilm participou da Guerra da Colina Camille para auxiliar a Rainha Celes, líder do exército de Dipan.
+ 
+Ele foi considerado um dos Dezessete Comandantes e recebeu o apelido de ""Guilm, o Barão da Lâmina"".
+ 
+Após a guerra, renunciou ao posto de general e serviu seu país como simples soldado. No entanto, na Invasão de Lassen, seis anos depois, voltou à batalha ao lado da irmã da Rainha Celes, a Rainha Phyress.
+ 
+Em 581 C.C., durante a Batalha de Rosetta, perto do fim da Guerra de Um Ano, ele deu a própria vida para devolver a vida a um amigo que havia perdido.",
+650,2000,"Capitão dos Cavaleiros da Espada Sangrenta, defensores da coroa do Reino de Arkdain, que um dia se estendeu pelo noroeste do continente.
+ 
+Roland foi um dos renomados Dezessete Comandantes de Camille na Guerra da Colina Camille e depois ficou conhecido como ""Roland do Brado Trovejante"".
+ 
+Em 574 C.C., por ordem do rei de Arkdain, Roland lutou na Guerra da Colina Camille. Seu comando estratégico sem igual salvou uma linha de defesa à beira do colapso e empurrou o inimigo de volta às montanhas.
+ 
+Ele comandou as patrulhas da linha de frente por dois anos após a guerra e acabou sendo chamado de volta para casa em 577 C.C. No entanto, desapareceu, e foi visto pela última vez na região de Gorhla.",
+650,2001,"Antes um mercenário que atuava sobretudo na região de Gerabellum, Ehlen fez parte do Exército de Libertação de Gerabellum na Guerra da Colina Camille, que começou em 572 C.C.
+ 
+Seu nome aparecia com frequência no topo da lista dos Dezessete Comandantes de Camille, que incluía apenas os guerreiros mais poderosos. Era um lutador que nunca desistia e que havia passado por muita coisa na vida. As pessoas o olhavam com admiração e medo, e por isso ele recebeu o apelido de ""Ehlen, o Semideus"".
+ 
+Ele vagou pelas terras após a guerra, mas, em 580 C.C., aliou-se à Dinastia Rosetta, que existiu no sul do continente. Foi nomeado General do Horizonte da guarda real, os Cavaleiros do Sol, e participou da Guerra de Um Ano, que começou no ano seguinte.
+ 
+Durante a guerra, demonstrou suas incríveis habilidades de combate ao fazer frente às duas grandes potências<808C:000000C0>---<808D>Paltierre e Dipan. No entanto, na Batalha do Passo de Artolia, deu a vida para proteger seus amigos de uma emboscada dos mortos-vivos.",
+650,2002,"Antes um mercenário errante.
+ 
+Adonis participou da Guerra da Colina Camille, onde se tornou um dos Dezessete Comandantes de Camille e ganhou o apelido de ""Adonis, a Lâmina Negra"".
+ 
+Ele raramente lutava por um lado específico e costumava fechar acordos com as tropas da região onde estivesse. Dizem que certa vez destruiu tropas às quais havia se aliado apenas dois dias antes. As pessoas o consideravam um dos guerreiros mais fortes da época.
+ 
+Após a Guerra da Colina Camille, ele se aliou à Dinastia Rosetta, que existiu no sul do continente, e liderou a Tropa do Eclipse dos Cavaleiros do Sol.
+ 
+Ele fez parte das tropas invasoras na Invasão de Lassen.
+ 
+Após um duelo feroz, foi decapitado pela Princesa Guerreira Celes, outra integrante dos Dezessete Comandantes.",
+650,2003,"Capitão dos Cavaleiros da Espada Sangrenta, defensores da coroa do Reino de Arkdain, que um dia se estendeu pelo noroeste do continente.
+ 
+Mesmo percebendo que o rei havia perdido o juízo, ele se manteve fiel a seu dever de cavaleiro e continuou a guerrear contra as tropas do irmão do rei.
+ 
+Em 581 C.C., ele matou em duelo uma capitã das tropas do irmão do rei, os Cavaleiros do Lírio Branco. Após a guerra, porém, recusou tratamento para seus ferimentos e morreu em silêncio.",
+650,2004,"Um sacerdote guerreiro de Dipan.
+ 
+Dyn foi um dos heróis que se tornaram lendários por sua contribuição durante a Névoa de Nifleheim (iniciada em 599 C.C.).
+ 
+Segundo os menestréis da cidade, ele arriscou a vida para fechar a passagem entre Nifleheim e Midgard.",
+650,2005,"Natural de um vilarejo remoto no norte do continente, Kraad foi um dos fundadores de Villnore. Dizem que sua espada partia inimigos com armadura e tudo, e que seu corpo de aço repelia flechas em pleno voo.
+ 
+Conta-se que o primeiro rei de Villnore deu a Kraad sua própria espada e armadura ao ver o equipamento surrado dele, pois as sucessivas batalhas da fundação haviam cobrado seu preço.
+ 
+Três anos após a fundação do país, Kraad foi atingido por uma flecha envenenada enquanto reprimia uma rebelião, o que acabou levando à sua morte.",
+650,2006,"Um aventureiro de Quiryl, uma pequena cidade perto da Colina Loahm.
+ 
+Zunde ficou famoso por descobrir a lendária espada Grande Ferrão em um antigo santuário pelo qual passou em sua jornada.
+ 
+Mais tarde, viajando com os amigos pela Colina Camille, recebeu um pedido para exterminar os monstros da área. Partiu cheio de confiança e nunca mais se ouviu falar dele.",
+650,2007,"Membro dos Tehm, uma pequena tribo do norte do continente.
+ 
+A tribo se destacava na arte de lidar com cavalos. Seus membros cavalgavam tão rápido quanto o vento e cruzavam montanhas como pássaros.
+ 
+O costume dos Tehm exige uma Protetora, que é sacrificada em troca das bênçãos dos deuses. No entanto, a Protetora da época quebrou as leis de pureza ao ter um filho. Atrasia era essa Protetora.
+ 
+Sem uma Protetora, a tribo foi atacada por um grupo de mortos-vivos e dizimada. Atrasia conseguiu fugir com o filho para uma cidade próxima, mas morreu de exaustão e pelos ferimentos.",
+650,2008,"Uma antiga rainha de Dipan.
+ 
+Phyress participou da Guerra de Um Ano, iniciada em 581 C.C., com apenas dois companheiros. Foi uma heroína na Batalha de Paltierre, na Revolta de Arkdain, na Batalha do Passo de Artolia e na Batalha de Rosetta. Não fosse por ela, as quatro potências vizinhas não teriam conseguido cercar Rosetta por completo.
+ 
+Na Batalha de Rosetta, perto do fim da Guerra de Um Ano, ela perdeu um braço e decidiu abandonar a vida de guerreira. Casou-se com seu amigo de infância, o Rei Cyphel de Paltierre, e o apoiou no governo do país, mas, em 622 C.C., contraiu uma doença endêmica e faleceu.
+ 
+De luto pela esposa, o rei de Paltierre morreu cinco anos depois. Phyress tinha a habilidade e o conhecimento de uma grande artesã de arcos. Ela também reuniu os escritos de alquimia espalhados pelo continente para criar o Tomo das Verdades.",
+650,2009,"A única filha do Rei Cyphel de Paltierre, reino que existiu no nordeste do continente.
+ 
+Em 598 C.C., Chrystie deixou o país para seguir um menestrel que havia passado pelo palácio. Em 599 C.C., durante os três anos da Névoa de Nifleheim, ela e o menestrel viajaram por muitas terras selando e destruindo mortos-vivos.
+ 
+No entanto, ela nunca voltou a seu país, mesmo depois que a porta para Nifleheim foi fechada. Simplesmente desapareceu e nunca mais foi vista.",
+650,2010,"Natural de uma ilha sem nome, muito ao sudoeste do continente. Habilidosa com as mãos, Sha-kon criava bonecas mecânicas com diversos componentes complexos.
+ 
+Ela viajou sozinha até o continente na esperança de aprender a necromancia que permitia controlar a alma de um morto. Seu desejo era pôr essas almas em suas bonecas, dando-lhes vida.
+ 
+Após uma jornada longa e dolorosa, ela conseguiu aprender o feitiço e, depois de muitos experimentos, criou uma boneca com alma.
+ 
+...Ou assim pensava. Sua criação final era apenas uma boneca que usava a alma como energia para se mover.",
+650,2011,"Filha de um senhor de Crell Monferaigne. Lylia era uma criança sagrada, abençoada por Freya ao nascer.
+ 
+Em 746 C.C., estava prestes a se casar com o rei, mas fugiu no meio da cerimônia.
+ 
+Apesar de uma busca minuciosa pela nova rainha, ela não foi encontrada. O tempo passou, e as pessoas começaram a esquecer que ela existira. Porém, seis anos depois, em 752 C.C., houve um alvoroço quando ela foi avistada na região de Salerno.
+ 
+Ela voltou a Crell Monferaigne, mas com a mente fragilizada. Algum tempo depois, atirou-se do alto das muralhas do castelo diante do rei.",
+650,2012,"Filha da rainha de Crell Monferaigne. Lydia sofreu vergonha e desprezo por não ser filha legítima do rei.
+ 
+Para encontrar um propósito na vida, treinou duro e mostrou grande habilidade no campo de batalha desde jovem.
+ 
+No entanto, seu meio-irmão mais novo, o Príncipe Cain, invejava suas habilidades de guerreira e contratou um bando de ladrões para matá-la.
+ 
+Embora tenha morrido jovem, sua destreza como arqueira era lendária. Dizem que, em certa batalha, ela salvou um aliado ao desarmar um inimigo a cem metros de distância.",
+650,2013,"Sophalla cresceu em um bairro pobre de Gerabellum.
+ 
+Criada como assassina por uma guilda de ladrões, chamou a atenção do senhor local e se casou aos 16 anos. Sua vida mudou por completo quando entrou para a classe alta da noite para o dia.
+ 
+Sem conseguir apagar o passado, porém, passou a receber cartas de ameaça e chantagem da guilda. Depois de confessar tudo ao marido, os dois tramaram um plano para destruir a guilda.
+ 
+Em 790 C.C., no entanto, o senhor foi assassinado por um membro da guilda. Depois disso, Sophalla continuou a combater a guilda sozinha.
+ 
+Em 792 C.C., ela foi sequestrada pela guilda, que esmagou sua garganta e a vendeu como escrava.",
+650,2014,"Millidia levava uma vida simples em Gerabellum com a irmã mais velha. Tudo mudou quando a irmã chamou a atenção do senhor local.
+ 
+A partir de então, ela pôde viver a vida com que só sonhara<808C:000000C0>---<808D>enfim, um teto e comida farta.
+ 
+Desacostumada ao luxo, porém, pediu para morar em uma casa num canto da cidade, onde levava uma vida simples. Pouco tempo depois, começou a notar mudanças na irmã.
+ 
+Talvez por não estar acostumada ao luxo, ou por querer apagar o passado, a irmã passou a demonstrar desprezo pelos pobres.
+ 
+Com a morte do marido, a atitude da irmã para com os pobres só piorou. Ela renegou Millidia como irmã e chegou a incendiar o bairro pobre onde as duas um dia moraram.
+ 
+Com a ajuda da guilda de ladrões, Millidia trocou de lugar com a irmã para impedir tamanhas atrocidades. Depois que passou a governar, Gerabellum viveu em paz.
+ 
+Em 802 C.C., por um motivo desconhecido, ela incendiou o esconderijo dos ladrões e morreu queimada junto com metade da guilda. A verdadeira causa de sua morte foi encoberta, e ao povo disseram que ela morrera em um incêndio no teatro.",
+650,2015,"Criada na cidade desértica de Kalstad, Arcana foi uma das heroínas que salvaram a cidade de Crell Monferaigne, um reino que tentava estender seu poder pelo continente.
+ 
+Com seu profundo conhecimento do clima, ela evitava batalhas durante a desfavorável estação das chuvas e impediu que as tropas de Crell Monferaigne tomassem a cidade.
+ 
+Em 724 C.C., durante a Quarta Invasão de Kalstad, sofreu um ferimento grave e morreu nos braços de sua amiga mais leal. Morreu jovem, e dizem que até o batalhão de Crell Monferaigne lamentou sua morte.",
+650,2016,"Ehrde foi nomeado General do Crepúsculo dos Cavaleiros do Sol da Dinastia Rosetta durante a Guerra de Um Ano, iniciada em 581 C.C.
+ 
+Foi ele quem capturou a temida Princesa Guerreira Celes na Invasão de Lassen. Ele permaneceu em Lassen e lutou contra as tropas de Arkdain, vindas do noroeste do continente.
+ 
+No entanto, depois que as forças de Paltierre tomaram o Passo de Artolia, a leste, suas tropas ficaram isoladas. Apesar de lutar com bravura, ele perdeu a vida.
+ 
+Ehrde não só ganhou fama como general, como também realizou muitas missões de espionagem para Rosetta. Há rumores de que esteve diretamente envolvido no assassinato do rei de Arkdain.",
+650,2017,"Liderou o exército de Fraelgard, país que existiu na ilha ao sul do continente de 80 C.C. a 234 C.C.
+ 
+Dizem que Mithra estava por trás da construção de fortalezas ocultas em pontos estratégicos da ilha, que repeliam os invasores vindos do continente. No entanto, um erro de um subordinado levantou suspeitas de traição contra o rei durante uma batalha em 145 C.C. Mithra foi deixado para morrer no campo de batalha e acabou capturado.
+ 
+Durante o ano inteiro em que ficou preso numa masmorra, Mithra foi submetido a torturas indescritíveis, mas nunca disse uma palavra. Quando seu cadáver foi devolvido a Fraelgard sem olhos, orelhas ou língua, conta-se que o rei caiu em prantos, envergonhado de sua própria insensatez.",
+650,2018,"Um feiticeiro de Solde.
+ 
+Originalmente soldado de Dipan, Aegis ficou famoso por sua extraordinária contribuição na batalha contra o Principado de Paltierre, que existiu no nordeste do continente.
+ 
+Mestre em ler o oceano, dizia-se que enfrentava qualquer número de inimigos no mar. Mas, se era invencível sobre as águas, não era dentro delas: não sabia nadar. Durante uma escaramuça com piratas em 418 C.C., caiu na água e morreu afogado.",
+650,2019,"Um feiticeiro genial do Principado de Paltierre, que existiu no nordeste do continente.
+ 
+Psoron criou Tempestade de Fogo, o feitiço de ataque mais usado, e Reforço de Guarda, um dos feitiços de defesa mais básicos.
+ 
+Ele era o feiticeiro da corte do rei de Paltierre. Depois de criar esses dois feitiços para combater os mortos-vivos, desapareceu.
+ 
+Mais da metade dos feitiços existentes nunca teria surgido sem os dois feitiços básicos criados por Psoron.",
+650,2020,"Originalmente apenas o senhor de uma pequena região de Gorhla, Khanon passou a frequentar Arkdain após as muitas baixas da Guerra da Colina Camille, iniciada em 575 C.C. Com o tempo, ganhou poder suficiente para decidir sobre assuntos de Estado.
+ 
+Ele criou uma facção clerical neutra, que se opunha aos dois lados que causaram a Guerra da Colina Camille: o do rei e o de seu irmão. Ao mesmo tempo, criou a Divisão da Santa Cruz, uma tropa ligada à igreja. Esse direito inalienável deu à sua facção uma base política sólida.
+ 
+Em 581 C.C., Khanon foi atingido no coração por uma flecha enquanto era ungido no templo do lago, no sudoeste do Reino de Arkdain.",
+650,2021,"Farant era natural de Lassen, uma cidade no sudoeste do continente.
+ 
+Farant criou uma organização formada pelos soldados que restaram das tropas que lutaram na Guerra de Um Ano, a partir de 581 C.C., para resistir a qualquer potência que tentasse tomar o controle de Lassen. Suas tropas usavam táticas de guerrilha e venceram com apenas 100 soldados um exército de 5000.
+ 
+Até os generais da Dinastia Rosetta, que governava Lassen, temiam o poder de Farant e pediram reforços para lidar com ele.
+ 
+Na Batalha do Passo de Artolia, perto do fim da Guerra de Um Ano, ele comandou uma manobra de distração. O plano deu certo, mas ele foi morto pela General do Meridiano dos Cavaleiros do Sol.
+ 
+Morreu sem ver Lassen libertada.",
+650,2022,"Em 578 C.C., Xehnon era um servo da Dinastia Rosetta, que existiu no sul do continente.
+ 
+Por acaso, ele pôs as mãos em um livro divino, o Manuscrito da Manifestação, e foi possuído por seus imensos poderes divinos.
+ 
+Sob seu domínio, tornou-se feiticeiro da corte para se aproximar do Rei de Rosetta e, com o tempo, convenceu o rei a invadir o restante do continente.
+ 
+Xehnon ficou possuído por três anos e meio, até o livro ser queimado pela Rainha Phyress de Dipan.
+ 
+Uma vez livre, começou a percorrer as terras em busca de um meio de consertar o estado do mundo, mas, em 586 C.C., foi atacado e morto por um bando de desordeiros.",
+650,2023,"O segundo príncipe do Principado de Paltierre, que um dia governou o nordeste do continente.
+ 
+Alm era filho de Sigmund Escama de Dragão, um dos Dezessete Comandantes de Camille. Seus olhos eram como os do pai<808C:000000C0>---<808D>semelhantes aos de um dragão. Era conhecido por seu vasto conhecimento de magia.
+ 
+Quando o irmão e o pai partiram para o continente em 581 C.C., para a Guerra de Um Ano, ele ficou para manter a ordem no país.
+ 
+Na Névoa de Nifleheim, que começou em 599 C.C., comandou um regimento e repeliu os mortos-vivos que invadiam o país. Numa das batalhas que se seguiram, foi atacado e morto pelo rei dragão do submundo.",
+650,2024,"Criado em Rand, uma pequena cidade ao longo do Passo de Artolia.
+ 
+Durante a Guerra de Um Ano, iniciada em 581 C.C., Rand foi atacada por um bando de rebeldes, bandos que haviam se multiplicado com a queda da segurança pública.
+ 
+Seluvia foi o único sobrevivente de Rand. Ele foi resgatado por uma mulher que mais tarde se tornaria a Rainha Phyress do Principado de Paltierre.
+ 
+Em 593 C.C., desapareceu, temendo que sua existência provocasse uma guerra entre os herdeiros do trono. Tornou-se então menestrel e viajou por muitas terras, selando mortos-vivos pelo caminho.",
+650,2025,"Masato era natural de uma ilha sem nome, muito ao sudoeste do continente.
+ 
+Masato não só se destacava na magia, como também dominava a arte secreta de inscrever runas para criar barreiras.
+ 
+Ele planejou assassinar o tirano que governava na época, mas foi traído por seu melhor amigo e atravessou o oceano para fugir de seus perseguidores.
+ 
+Ao chegar ao continente, levou uma vida pacífica, afugentando os mortos-vivos que atacavam os vilarejos.
+ 
+No entanto, seu corpo começou a definhar por causa de um feitiço fracassado. Ele acabou morrendo, com o corpo reduzido a um mero esqueleto.",
+650,2026,"Um alquimista cruel que sequestrou a Rainha de Crell Monferaigne em 746 C.C.
+ 
+Escondido no interior de Salerno, dizia-se que Woltar passava dias e noites absorto em experimentos horripilantes.
+ 
+No entanto, em 752 C.C., ele foi encontrado e punido por oficiais de Crell Monferaigne. Um mês depois de ser resgatada de sua prisão, a rainha tirou a própria vida, atirando-se do alto da muralha do castelo.",
 651,2,Semi-auto,
 651,3,Manualç,
 651,4,Cãmera de Batalha Horizontal,

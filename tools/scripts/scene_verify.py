@@ -45,6 +45,21 @@ def collapse(text):
     return " ".join(
         text.replace(FRAGMENT_MARKER, " %s " % FRAGMENT_MARKER).split())
 
+@contextlib.contextmanager
+def _image(image):
+    """An image to read entries from: an open reader, or a path to open."""
+    if image is None or hasattr(image, "read_entry"):
+        yield image
+        return
+    with open(image, "rb") as handle:
+        _, total, table = triace.load_table(handle)
+        yield FileIso(handle, table, total)
+
+def page_breaks(text):
+    """Page breaks a translation asks for, counted run by run as written."""
+    return sum(len(PAGE_BREAK_SPELLING.findall(canonical_page_breaks(part)))
+               for part in text.split(FRAGMENT_MARKER))
+
 def verify_chapter_title(args, resource):
     """Compare the chapter title on the patched image against the expected one."""
     title = (getattr(args, "chapter_title", None) or "").strip()
@@ -52,17 +67,9 @@ def verify_chapter_title(args, resource):
         return False
     from . import vp2_title_face as title_face
     message_id = int(getattr(args, "chapter_title_message"))
-    with contextlib.ExitStack() as stack:
-        source = stack.enter_context(open(args.iso, "rb"))
-        _, total, table = triace.load_table(source)
-        donor = None
-        if args.reference_iso:
-            handle = stack.enter_context(open(args.reference_iso, "rb"))
-            _, donor_total, donor_table = triace.load_table(handle)
-            donor = FileIso(handle, donor_table, donor_total)
+    with _image(args.iso) as source, _image(args.reference_iso) as donor:
         actual = title_face.decode_title(
-            FileIso(source, table, total), resource, message_id, title,
-            donor_iso=donor)
+            source, resource, message_id, title, donor_iso=donor)
     if actual.lower() != title.lower():
         raise ValueError("chapter title decoded as %s, expected %s"
                          % (ascii(actual), ascii(title)))
@@ -84,16 +91,9 @@ def verify_scene_sheet(args):
         raise ValueError("verified rows must belong to one resource; found %s"
                          % ", ".join(str(index) for index in sorted(resources)))
     resource = resources.pop()
-    reference_file = (open(args.reference_iso, "rb")
-                      if args.reference_iso else None)
-    try:
-        reference = None
-        if reference_file is not None:
-            _, reference_total, reference_table = triace.load_table(reference_file)
-            reference = FileIso(reference_file, reference_table, reference_total)
-        with open(args.iso, "rb") as source:
-            _, total, table = triace.load_table(source)
-            iso = FileIso(source, table, total)
+    with contextlib.ExitStack() as stack:
+        reference = stack.enter_context(_image(args.reference_iso))
+        with _image(args.iso) as iso:
             (_, _, _, expanded, layout,
              alphabet) = iso_alphabet(iso, resource, reference)
             require_local_font(resource, layout, alphabet)
@@ -107,7 +107,7 @@ def verify_scene_sheet(args):
             resource_raw = iso.read_entry(resource)
         source_font = None
         source_view = None
-        if reference_file is not None:
+        if reference is not None:
             _, _, _, source_expanded, source_layout, source_alphabet = iso_alphabet(
                 reference, resource)
             source_font = (source_expanded, source_layout)
@@ -129,9 +129,6 @@ def verify_scene_sheet(args):
                               for _, message_id, offset in source_pointers}
             source_view = (source_expanded, source_metadata, source_display,
                            source_offsets, source_next)
-    finally:
-        if reference_file is not None:
-            reference_file.close()
     metadata = {
         "table_start": struct.unpack_from("<I", expanded, 0x24)[0],
         "text_start": struct.unpack_from("<I", expanded, 0x28)[0],
@@ -172,8 +169,7 @@ def verify_scene_sheet(args):
         actual, breaks = rendered_record(
             expanded, metadata, display, offsets, next_offset, message_id)
         expected_layout = None
-        wanted_breaks = len(PAGE_BREAK_SPELLING.findall(
-            canonical_page_breaks(row["translated"])))
+        wanted_breaks = page_breaks(row["translated"])
         max_lines = dialogue_max_lines(display_types.get(message_id, ()))
         structured_local = False
         if FRAGMENT_MARKER in row["translated"]:
@@ -194,8 +190,7 @@ def verify_scene_sheet(args):
             row["translated"], advances, max_lines,
             structured_local=structured_local)
         if expected_layout is not None:
-            wanted_breaks = len(PAGE_BREAK_SPELLING.findall(
-                canonical_page_breaks(expected_layout)))
+            wanted_breaks = page_breaks(expected_layout)
         if breaks != wanted_breaks:
             fused.append((row["audio_id"], message_id, wanted_breaks, breaks))
         expected = (expected_layout if expected_layout is not None

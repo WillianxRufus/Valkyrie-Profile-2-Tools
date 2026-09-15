@@ -8,8 +8,10 @@ from pathlib import Path
 
 from tools.scripts.translation_pack import (
     LEGACY_PACK_FIELDS,
+    MISC_FIELDS,
     PACK_FIELDS,
     PackError,
+    load_misc,
     load_pack,
     source_hash,
 )
@@ -38,6 +40,27 @@ def write_manifest(path, format_number=2):
 
 
 class TranslationPackTests(unittest.TestCase):
+    def test_misc_csv_is_separate_from_message_translations(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pack = Path(temporary)
+            write_manifest(pack)
+            write_csv(pack / "misc.csv", MISC_FIELDS, [{
+                "key": "battle_target", "translated": "Alvo",
+                "notes": "Floating label",
+            }])
+            self.assertEqual({}, load_pack(pack))
+            self.assertEqual("Alvo",
+                             load_misc(pack)["battle_target"]["translated"])
+
+    def test_misc_csv_rejects_duplicate_keys(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pack = Path(temporary)
+            write_manifest(pack)
+            row = {"key": "battle_target", "translated": "Alvo", "notes": ""}
+            write_csv(pack / "misc.csv", MISC_FIELDS, [row, row])
+            with self.assertRaisesRegex(PackError, "duplicate misc key"):
+                load_misc(pack)
+
     def test_structured_pack_is_minimal_and_blank_rows_are_valid(self):
         with tempfile.TemporaryDirectory() as temporary:
             pack = Path(temporary)

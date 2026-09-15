@@ -135,10 +135,18 @@ class AccentTests(unittest.TestCase):
         into = directory / "plain"
         into.mkdir()
         target = check._sheet_without("ç", "c", sheet, into)
-        rows = list(csv.DictReader(io.open(target, encoding="utf-8-sig",
-                                           newline="")))
+        with io.open(target, encoding="utf-8-sig", newline="") as handle:
+            rows = list(csv.DictReader(handle))
         self.assertEqual(rows[0]["translated"], "esperanca")
         self.assertEqual(rows[1]["translated"], "")
+
+    def test_the_lookup_copy_leaves_claims_alone(self):
+        lookup = {("dialogue", "hope", ""): "esperança",
+                  ("claim", "dialogue", "37", "hope", ""): True}
+        self.assertEqual(
+            check._lookup_without("ç", "c", lookup),
+            {("dialogue", "hope", ""): "esperanca",
+             ("claim", "dialogue", "37", "hope", ""): True})
 
     def test_the_copy_keeps_the_name(self):
         import tempfile

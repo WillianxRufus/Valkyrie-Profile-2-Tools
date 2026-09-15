@@ -25,6 +25,8 @@ FLAG_MAP = {
         'shared-font-glyphs': '--shared-font-glyphs',
     },
     'image': {},
+    'chapter-label': {},
+    'misc': {},
 }
 
 def expand_flags(row, kind):

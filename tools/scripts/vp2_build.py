@@ -18,6 +18,11 @@ from . import vp2_iso_buffer as iso_buffer
 from . import vp2_iso_space as iso_space
 from . import vp2_container_text as container_text
 from . import vp2_map_names as map_names
+from . import vp2_battle_target as battle_target
+from . import fis_images
+from . import fis_screen_layout
+from . import overlay_edits
+from . import anti_cheat
 from . import vp2_shared_font as shared_font
 from .build_config import (
     FLAG_MAP, expand_flags, lint_manifest, load_manifest, report_lint,
@@ -27,6 +32,7 @@ from .build_patchers import (
     _scene_args_from_row, audit_args, collect_shared_font_characters,
     install_shared_font_in_memory, install_shared_font_once, patch_args,
     patch_container_resource_in_memory, patch_fontless_resource_in_memory,
+    patch_chapter_label_in_memory,
     patch_image_resource_in_memory, patch_scene_resource_in_memory,
     patch_worldmap_resource_in_memory, preflight, run, verify_args,
     verify_scene_in_memory, wants_verify,
@@ -35,7 +41,8 @@ from .build_translations import (
     CHAPTERS_CSV, MAX_CONFLICTS_SHOWN, SCENES_DIR, WORKSPACE_DIR,
     _build_dedupe_lookup, _load_dedupe_lookup,
     _load_workspace_translations, _read_sheet_with_dedupe,
-    apply_chapter_titles, repair_manifest_sheets, sheet_kind, workspace_kind,
+    apply_chapter_titles, read_misc, repair_manifest_sheets, sheet_kind,
+    workspace_kind,
 )
 
 
@@ -92,6 +99,99 @@ def apply_map_area_names(iso, built, scenes_dir):
         raise ValueError(
             f"{len(refused)} map-screen area name(s) do not fit: {summary}")
     return patched
+
+#: Rows that write no record bank of their own.
+NON_TEXT_KINDS = ('image', 'chapter-label', 'misc')
+
+
+def text_resources(rows):
+    """Resources a row writes a record bank for."""
+    return {str(row['resource']).strip() for row in rows
+            if row['kind'] not in NON_TEXT_KINDS}
+
+
+def _battle_target_misc(rows):
+    """The merged ``misc`` sheets the rows name, key to value."""
+    values = {}
+    for row in rows:
+        if row.get('kind') != 'misc':
+            continue
+        if str(row.get('resource')).strip() != str(overlay_edits.RESOURCE):
+            raise ValueError(f"misc {row.get('resource')}: misc labels live "
+                             f"in resource {overlay_edits.RESOURCE}")
+        values.update(read_misc(row['sheet']))
+    return values
+
+
+def battle_target_label(rows):
+    """The Target label a ``misc`` row names, or ``None``."""
+    label = _battle_target_misc(rows).get(battle_target.KEY)
+    return battle_target.validate_label(label) if label else None
+
+
+def battle_target_x(rows):
+    """The Target label's horizontal offset a ``misc`` row names, or ``None``."""
+    return battle_target.parse_x(
+        _battle_target_misc(rows).get(battle_target.X_KEY))
+
+
+def battle_overlay_edits(rows):
+    """Every edit this build makes to the battle overlay's code and data."""
+    edits = list(battle_target.edits(battle_target_label(rows),
+                                     battle_target_x(rows)))
+    folders = []
+    for row in rows:
+        folder = (row.get('sheet') or '').strip()
+        if (row.get('kind') == 'image'
+                and str(row.get('resource')).strip() == str(overlay_edits.RESOURCE)
+                and folder and folder not in folders):
+            folders.append(folder)
+    for folder in folders:
+        path, layouts = fis_images.screen_layouts(folder)
+        for name, groups in layouts:
+            try:
+                edits += fis_screen_layout.edits(name, groups)
+            except ValueError as exc:
+                raise ValueError(f"{path} image {name}: {exc}") from exc
+    return edits
+
+
+def apply_battle_overlay_edits(iso, rows):
+    """Apply every battle overlay edit in one recompression.
+
+    The overlay's anti-cheat words go in with them, so every build runs this.
+    """
+    edits = battle_overlay_edits(rows)
+    label = battle_target_label(rows)
+    checks = []
+
+    def turn_off_checks(output):
+        checks.extend(anti_cheat.battle_edits(output))
+        return checks
+
+    result = overlay_edits.apply_to_iso(iso, edits, turn_off_checks)
+    print("anti-cheat: battle overlay "
+          + ("turned off" if checks else "already off"))
+    if label:
+        print(f"battle target: Target -> {label} "
+              f"({battle_target.encode_label(label).hex(' ')})")
+    given = battle_target_x(rows)
+    x = battle_target.label_x(label, given)
+    if x:
+        how = "centred" if given is None else "set by the pack"
+        print(f"battle target: label moved {x:+g} horizontally ({how})")
+    print(f"battle overlay: {len(edits) + len(checks)} edit(s), "
+          f"{result.changed} byte(s) changed, {result.room} byte(s) of room "
+          f"left")
+    return result
+
+
+def apply_anti_cheat(iso):
+    """Turn the game's integrity checks off outside the battle overlay."""
+    changed = anti_cheat.apply_to_iso(iso)
+    print("anti-cheat: " + ("turned off in " + ", ".join(changed)
+                            if changed else "already off everywhere else"))
+
 
 def _copy_source_image(source_iso, partial):
     """Copy the pristine image, printing coarse progress."""
@@ -202,6 +302,9 @@ def main():
     parser.add_argument('--shared-font-slots',
                         help='Character-to-token map for the shared font '
                              '(default: the packaged table).')
+    parser.add_argument('--battle-target', type=battle_target.validate_label,
+                        metavar='LABEL',
+                        help='replace the floating battle Target label')
     parser.add_argument('--record-candidate-extents', action='store_true',
                         help='When a resource ends past its recorded ceiling, '
                              'record the extent it reached as kind=candidate '
@@ -309,6 +412,8 @@ def main():
             str(working_iso), rows, dry_run=True)
         for row in rows:
             warn_unknown_flags(row, row['kind'])
+            if row['kind'] == 'misc':
+                continue
             if row['kind'] == 'container':
                 print(f"$ [in-memory] patch container resource "
                       f"{row['resource']} from {row['sheet']}")
@@ -326,6 +431,9 @@ def main():
             vargs = verify_args(str(working_iso), row, str(reference_iso))
             if vargs:
                 run(vargs, dry_run=True)
+        overlay = battle_overlay_edits(rows)
+        if overlay:
+            print(f"$ [in-memory] apply {len(overlay)} battle overlay edit(s)")
         print(f"dry run: would write {output_iso}")
         return
 
@@ -340,7 +448,8 @@ def main():
     use_parallel = (
         args.parallel
         and len(rows) > 1
-        and all(r['kind'] in ('container', 'fontless', 'worldmap', 'scene')
+        and all(r['kind'] in ('container', 'fontless', 'worldmap', 'scene',
+                              'misc')
                 for r in rows)
     )
 
@@ -355,7 +464,8 @@ def main():
         primary_lookup = _load_dedupe_lookup(args.scenes_dir)
         try:
             build_parallel.run_parallel(
-                str(source_iso), str(output_iso), rows,
+                str(source_iso), str(output_iso),
+                [r for r in rows if r['kind'] != 'misc'],
                 jobs=jobs,
                 cache_root=Path(args.preinstall_cache),
                 force_preinstall=args.no_preinstall_cache,
@@ -364,6 +474,14 @@ def main():
             )
         except Exception as exc:
             print(f"parallel build failed: {exc}", file=sys.stderr)
+            sys.exit(1)
+        try:
+            with iso_buffer.IsoFile(str(output_iso)) as merged:
+                apply_battle_overlay_edits(merged, rows)
+                apply_anti_cheat(merged)
+                merged.commit()
+        except Exception as exc:
+            print(f"battle overlay or anti-cheat edits failed: {exc}", file=sys.stderr)
             sys.exit(1)
         if args.keep_working_iso:
             iso = iso_buffer.IsoBuffer.from_path(str(output_iso))
@@ -395,7 +513,8 @@ def main():
 
     primary_lookup = _load_dedupe_lookup(args.scenes_dir)
 
-    install_shared_font_in_memory(iso, rows, primary_lookup=primary_lookup)
+    install_shared_font_in_memory(iso, rows, primary_lookup=primary_lookup,
+                                  renderer=True)
     if not iso.table:
         raise RuntimeError("IsoFile missing tri-Ace index")
 
@@ -418,11 +537,19 @@ def main():
 
         warn_unknown_flags(row, kind)
 
-        if kind in ('container', 'fontless', 'worldmap', 'scene', 'image'):
+        if kind == 'misc':
+            print(f"{step} with the battle overlay edits")
+            continue
+
+        if kind in ('container', 'fontless', 'worldmap', 'scene', 'image',
+                    'chapter-label'):
             row_log = io.StringIO()
             try:
                 with contextlib.redirect_stdout(row_log):
-                    if kind == 'image':
+                    if kind == 'chapter-label':
+                        details = patch_chapter_label_in_memory(
+                            iso, row, reference=reference_reader)
+                    elif kind == 'image':
                         details = patch_image_resource_in_memory(
                             iso, row, primary_lookup=primary_lookup)
                     elif kind == 'container':
@@ -504,10 +631,16 @@ def main():
         suffix = (f" {written} records" if written is not None else "")
         print(f"{step} ok ({elapsed:.1f}s){suffix}")
 
+    try:
+        apply_battle_overlay_edits(iso, rows)
+        apply_anti_cheat(iso)
+    except Exception as exc:
+        _fail(f"battle overlay or anti-cheat edits failed: {exc}")
+
     if not args.no_map_names:
         try:
             named = apply_map_area_names(
-                iso, {row['resource'] for row in rows}, args.scenes_dir)
+                iso, text_resources(rows), args.scenes_dir)
         except Exception as exc:
             _fail(f"map-screen area names failed: {exc}")
         if named:

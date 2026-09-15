@@ -42,9 +42,22 @@ source text.
 ## Build profile
 
 `build-profile.csv` lists the resources this language's build writes, one row
-each. Its `kind` is `scene`, `container`, `fontless`, or `image`. A build only
-touches what this file names, so a pack translating one menu lists one
-resource and finishes in seconds.
+each. Its `kind` is `scene`, `container`, `fontless`, `image`, `chapter-label`,
+or `misc`. A build only touches what this file names, so a pack translating one
+menu lists one resource and finishes in seconds.
+
+A chapter title is written with its scene's row. The word above every chapter
+number is not: it needs one `chapter-label` row for each resource that draws
+it, naming `chapter.csv`. `misc.csv` needs a `misc` row naming resource 1781.
+Leave these rows out to test a few scenes quickly:
+
+```csv
+"chapter-label","60","chapter.csv","","",""
+"misc","1781","misc.csv","","",""
+```
+
+The chapter-label resources are 60, 1196, 1200, 1202, 1212, 1282, 1298, 1302,
+1304, 1312 and 1356.
 
 An `image` row is the one that does not name a CSV: parts of the interface are
 drawn rather than written, and its `sheet` column names the pack directory
@@ -56,6 +69,18 @@ A resource may hold more than one bank of text. Where it does, the row's
 `subresource` column names the one it means, and a row that leaves it blank
 takes the resource's only bank. The end-credits roll is the one that needs
 it today.
+
+## Misc labels
+
+`misc.csv` holds text that is not a message record, one `key` per row:
+
+- `battle_target` is the word over the selected enemy in battle, at most eight
+  unaccented letters.
+- `battle_target_x` moves that word left or right, in screen pixels: negative
+  to the left, positive to the right. Left blank, the word is centred over the
+  arrow below it the way `Target` is; `0` starts it where `Target` starts.
+  Set it only to nudge the centred position. Whole numbers and quarters are
+  accepted.
 
 ## Shared-font slots
 
@@ -74,6 +99,15 @@ character,token
 One row per character, one code point in `character`, and a `token` no two
 rows share. Only characters the pack's text actually uses are installed, so
 listing one costs nothing until it is written.
+
+The tokens `0x60` to `0x64` are five more slots past the end of the font,
+and `0x0880` to `0x089B` are 28 more, drawn with two bytes. The build grows
+the font to reach one when the text uses its character.
+
+A token below `0x60` replaces the character that slot drew, and the build
+refuses text that still writes it: in pt-BR, `0x3F` holds `Ó`, so `^` cannot
+be written. Keep the characters your language needs, such as `+` and `=`, and
+put the letters past the end instead.
 
 A build reads its own pack's file, so two languages may put different letters
 in the same slot. A pack without the file uses the packaged default.

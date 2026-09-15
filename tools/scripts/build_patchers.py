@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 from .paths import FROZEN, PROJECT_ROOT
+from . import triace_ps2_unpack as triace
 from . import vp2_container_text
 from . import vp2_iso_buffer as iso_buffer
 from . import vp2_shared_font as shared_font
@@ -48,8 +49,8 @@ def verify_scene_in_memory(iso_path, row, reference_iso,
     subtitles.verify_scene_sheet(argparse.Namespace(
         csv=row['sheet'],
         resource=int(row['resource']),
-        iso=str(iso_path),
-        reference_iso=str(reference_iso),
+        iso=iso_path,
+        reference_iso=reference_iso,
         en_names=None,
         primary_lookup=primary_lookup,
         chapter_title=row.get('chapter_title') or None,
@@ -104,7 +105,7 @@ def install_shared_font_once(working_iso, rows, *, dry_run=False):
     print("shared-font: " + shared_font.describe_install(info))
 
 def install_shared_font_in_memory(iso, rows, *, dry_run=False,
-                                  primary_lookup=None):
+                                  primary_lookup=None, renderer=False):
     """Pre-install shared-font accents inside an IsoBuffer."""
     needed = collect_shared_font_characters(
         rows, primary_lookup=primary_lookup)
@@ -122,6 +123,22 @@ def install_shared_font_in_memory(iso, rows, *, dry_run=False,
     if not info.get("no_op"):
         iso.write_entry(shared_font.SHARED_FONT_ENTRY, rebuilt)
     print("shared-font: " + shared_font.describe_install(info))
+    if renderer:
+        install_glyph_range_renderer(iso, needed)
+
+def install_glyph_range_renderer(iso, characters):
+    """Rewrite the glyph routine when a letter draws from the second range."""
+    from . import glyph_range
+    tokens = shared_font.SHARED_EXTENSION_TOKENS
+    if not any(glyph_range.is_range_token(tokens[character])
+               for character in characters):
+        return
+    original = bytes(iso.read_entry(glyph_range.RESOURCE))
+    rebuilt = glyph_range.patch_renderer(original)
+    if rebuilt != original:
+        iso.write_entry(glyph_range.RESOURCE, rebuilt)
+    print("shared-font: resource %d glyph routine reads codes from 0x%X "
+          "as entry-8 glyphs" % (glyph_range.RESOURCE, glyph_range.BASE))
 
 def patch_container_resource_in_memory(iso, row, *, primary_lookup=None):
     """Read a container row's sheet and patch the resource in *iso*."""
@@ -293,6 +310,51 @@ def preflight(reference_iso, rows, *, dry_run, verbose=False):
             print(audit_log.getvalue(), end='')
     print(f"== pre-flight ok: {len(scene_rows)} row(s) ==")
 
+def _label_word(sheet):
+    """The label word from a pack's chapter sheet, or ``''``."""
+    from . import chapter_label
+    if not sheet or not os.path.isfile(sheet):
+        return ''
+    with open(sheet, newline='', encoding='utf-8-sig') as handle:
+        for row in csv.DictReader(handle):
+            if ((row.get('resource') or '').strip()
+                    == str(chapter_label.CARRIERS[0])
+                    and (row.get('message_id') or '').strip()
+                    == str(chapter_label.FIRST_MESSAGE)):
+                return (row.get('translated') or '').strip()
+    return ''
+
+_LABEL_CACHE = {}
+
+def patch_chapter_label_in_memory(iso, row, *, reference=None):
+    """Cut the chapter-introduction label for this pack's word."""
+    from . import chapter_label
+    resource = int(row['resource'])
+    word = (row.get('chapter_label') or '').strip() or _label_word(row.get('sheet'))
+    if not word:
+        return {'written': 0, 'details': 'no label word in the pack'}
+    raw = bytes(iso.read_entry(resource))
+    found = chapter_label.label_row(raw)
+    if found is None:
+        raise ValueError(
+            f'resource {resource} carries no chapter label to translate')
+    index, offset, length, blob = found
+    key = (word, blob)
+    if key not in _LABEL_CACHE:
+        _LABEL_CACHE[key] = chapter_label.cut_for_word(
+            reference if reference is not None else iso, blob, word)[0]
+    cut = _LABEL_CACHE[key]
+    if cut == blob:
+        return {'written': 0, 'details': 'the disc already spells it that way'}
+    rebuilt = chapter_label.rewrite_row(raw, index, offset, length, cut)
+    back = chapter_label.label_row(rebuilt)
+    if back is None or back[3] != cut:
+        raise ValueError(
+            f'resource {resource} did not read back as the new label')
+    iso.write_entry(resource, rebuilt)
+    print(f"  chapter label {word}: {length} -> {back[2]} stored byte(s)")
+    return {'written': 1, 'details': word}
+
 
 def patch_image_resource_in_memory(iso, row, *, primary_lookup=None):
     from . import fis_images
@@ -311,10 +373,15 @@ def patch_image_resource_in_memory(iso, row, *, primary_lookup=None):
     changed = [name for name, count in applied if count]
     if not changed:
         return {'written': 0, 'details': 'no image differed from the disc'}
-    if len(built) != len(raw):
-        raise ValueError(f'resource {resource} changed length')
-    iso.write_entry(resource, built)
     for name, count in applied:
         if count:
             print(f"  image {name}: {count} byte(s) changed")
-    return {'written': len(changed), 'details': ', '.join(changed)}
+    details = {'written': len(changed), 'details': ', '.join(changed)}
+    if len(built) == len(raw):
+        iso.write_entry(resource, built)
+        return details
+    if len(built) < len(raw) or len(built) % triace.SECTOR:
+        raise ValueError(f'resource {resource} changed length')
+    grown = (len(built) - len(raw)) // triace.SECTOR
+    print(f"  image entry grew by {grown} sector(s)")
+    return dict(details, patched=built, grown_sectors=grown)

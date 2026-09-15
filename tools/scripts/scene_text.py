@@ -69,9 +69,11 @@ def encode_shared_header(text, source_tokens, metadata, alphabet):
     if left is None or right is None or left >= right:
         raise ValueError("shared UI heading has no preserved chevron frame")
     stripped = text.strip()
-    inner = (stripped[1:-1]
-             if stripped.startswith("<") and stripped.endswith(">")
-             else stripped)
+    if not (stripped.startswith("<") and stripped.endswith(">")):
+        raise ValueError(
+            "%r is a heading the game draws inside < and >; write them "
+            "around the translation, as in <%s>" % (stripped, stripped))
+    inner = stripped[1:-1]
     body = visible_text_tokens(
         inner, alphabet, metadata["glyph_base"], codepage=True)
     return pack_tokens(
@@ -213,6 +215,8 @@ def encode_subtitle(row, alphabet, glyph_base, source_alphabet=None,
 def _encode_characters(segment, char_to_token, missing,
                        materialize_blank_rows=False):
     """Tokens for a stretch of plain text, digits decided run by run."""
+    from . import vp2_shared_font
+    displaced = vp2_shared_font.displaced_characters()
     tokens = []
     position = 0
     while position < len(segment):
@@ -239,8 +243,14 @@ def _encode_characters(segment, char_to_token, missing,
                 space = char_to_token.get(" ", CODEPAGE_TOKENS[" "])
                 tokens.extend((space, space))
             tokens.append(0x8080)
-        elif character in char_to_token:
+        elif (character in char_to_token
+              and not (character in displaced
+                       and char_to_token[character]
+                       == CODEPAGE_TOKENS.get(character))):
             tokens.append(char_to_token[character])
+        elif character in displaced:
+            raise vp2_shared_font.displaced_error(
+                "the text", character, displaced[character])
         elif character in CODEPAGE_ONLY:
             tokens.append(CODEPAGE_TOKENS[character])
         else:

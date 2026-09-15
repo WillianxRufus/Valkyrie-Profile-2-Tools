@@ -1,6 +1,8 @@
 """The build hands a row's chapter title to the read-back gate."""
 import argparse
+import contextlib
 import csv
+import io
 import os
 import sys
 import tempfile
@@ -257,12 +259,14 @@ class TitleOnlyResourceTests(unittest.TestCase):
 
     def test_a_sheet_with_neither_rows_nor_a_title_is_still_skipped(self):
         sheet = self.empty_sheet()
+        stderr = io.StringIO()
         with mock.patch("tools.scripts.vp2_cutscene_subtitles."
-                        "patch_resource_in_memory") as patch:
+                        "patch_resource_in_memory") as patch,                 contextlib.redirect_stderr(stderr):
             details = build_patchers.patch_scene_resource_in_memory(
                 mock.Mock(), self.row(sheet, title=""))
         self.assertFalse(patch.called)
         self.assertEqual(0, details["written"])
+        self.assertIn("no translatable rows", stderr.getvalue())
 
     def test_verify_runs_the_title_gate_when_there_are_no_rows(self):
         args = argparse.Namespace(

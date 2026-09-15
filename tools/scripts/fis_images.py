@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 r"""Read and write the disc's `FIS` image container."""
+import functools
+import json
 import os
 import struct
 import zlib
 
 from . import encrypted_entry
+from . import gs_memory
 from . import package_archive
 from . import protected_package
 from . import sle
@@ -16,7 +19,7 @@ from .slz import decompress
 MAGIC = b"FIS\0"
 HEAD = 0x10
 PACKET_AT = 0x90
-PSMT8, PSMT4 = 0x13, 0x14
+PSMCT32, PSMT8, PSMT4 = 0x00, 0x13, 0x14
 FORMAT_BITS = {PSMT8: 8, PSMT4: 4}
 CSM1_4 = list(range(0, 8)) + list(range(16, 24))
 EXPANSION_CAP = 32 << 20
@@ -31,16 +34,17 @@ def _bits(value, low, width):
     return (value >> low) & ((1 << width) - 1)
 
 
-def clut_extent(item):
-    at, shape = PACKET_AT, None
+def _transfer(item, at):
+    """``(data offset, data bytes, {register: value})`` of a GIF packet."""
+    registers = {}
     while at + 16 <= len(item):
         low, high = struct.unpack_from("<QQ", item, at)
         nloop, flg = _bits(low, 0, 15), _bits(low, 58, 2)
         nreg = _bits(low, 60, 4) or 16
         at += 16
-        if flg == 2:                                   # IMAGE: the CLUT
-            return at, nloop * 16
-        if flg == 0:                                   # PACKED registers
+        if flg == 2:
+            return at, nloop * 16, registers
+        if flg == 0:
             regs = [_bits(high, i * 4, 4) for i in range(nreg)]
             for _ in range(nloop):
                 for reg in regs:
@@ -48,14 +52,22 @@ def clut_extent(item):
                         raise FisError("GIF packet runs past the item")
                     dlow, dhigh = struct.unpack_from("<QQ", item, at)
                     at += 16
-                    if ((dhigh & 0xFF) if reg == 0x0E else reg) == 0x52:
-                        shape = (_bits(dlow, 0, 12), _bits(dlow, 32, 12))
+                    registers[(dhigh & 0xFF) if reg == 0x0E else reg] = dlow
         elif flg == 1:
             at += ((nloop * nreg + 1) // 2) * 16
         else:
             at += nloop * 16
-    raise FisError("no CLUT transfer in the GIF packet%s"
-                   % ("" if shape is None else " (TRXREG said %sx%s)" % shape))
+    return None, 0, registers
+
+
+def clut_extent(item):
+    at, size, registers = _transfer(item, PACKET_AT)
+    if at is None:
+        shape = registers.get(0x52)
+        raise FisError("no CLUT transfer in the GIF packet%s"
+                       % ("" if shape is None else " (TRXREG said %sx%s)"
+                          % (_bits(shape, 0, 12), _bits(shape, 32, 12))))
+    return at, size
 
 
 def descriptor(item):
@@ -100,15 +112,85 @@ def palette(item, meta):
             for i in range(256)]
 
 
+def upload(item, meta):
+    """How the pixels reach GS memory: the packet the descriptor points at."""
+    at, size, registers = _transfer(item, meta["offset"])
+    if at is None or 0x50 not in registers or 0x52 not in registers:
+        raise FisError("no pixel upload where the descriptor points (0x%X)"
+                       % meta["offset"])
+    if at + size > len(item):
+        raise FisError("the pixel upload runs %d bytes past the item"
+                       % (at + size - len(item)))
+    bitblt, region = registers[0x50], registers[0x52]
+    return {
+        "at": at, "size": size,
+        "format": _bits(bitblt, 56, 6), "buffer_width": _bits(bitblt, 46, 6),
+        "width": _bits(region, 0, 12), "height": _bits(region, 32, 12),
+    }
+
+
+@functools.lru_cache(maxsize=64)
+def _layout(bits, width, height, fmt, upload_width, upload_height, buffer_width):
+    """Where each texel's index sits in the uploaded data, or ``None`` for raster."""
+    texels = width * height
+    if fmt == (PSMT8 if bits == 8 else PSMT4):
+        if (upload_width, upload_height) != (width, height):
+            raise FisError("the texture is %dx%d and its upload %dx%d"
+                           % (width, height, upload_width, upload_height))
+        return None
+    if fmt != PSMCT32:
+        raise FisError("pixel upload format 0x%02X is not one this reads" % fmt)
+    units = upload_width * upload_height * 4 * (1 if bits == 8 else 2)
+    if units != texels:
+        raise FisError("a %dx%d PSMCT32 upload cannot carry a %dx%d %d-bit "
+                       "texture" % (upload_width, upload_height, width,
+                                    height, bits))
+    words_across = max(1, buffer_width)
+    owner = {}
+    for y in range(upload_height):
+        for x in range(upload_width):
+            base = gs_memory.word32(x, y, words_across) * 4
+            first = (y * upload_width + x) * 4
+            for k in range(4):
+                owner[base + k] = first + k
+    texels_across = 2 * words_across
+    out = []
+    for v in range(height):
+        for u in range(width):
+            if bits == 8:
+                unit = owner.get(gs_memory.byte8(u, v, texels_across))
+            else:
+                nibble = gs_memory.nibble4(u, v, texels_across)
+                unit = owner.get(nibble >> 1)
+                unit = None if unit is None else unit * 2 + (nibble & 1)
+            if unit is None:
+                raise FisError("texel (%d, %d) reads memory its upload does "
+                               "not write" % (u, v))
+            out.append(unit)
+    if len(set(out)) != texels:
+        raise FisError("the upload and the texture do not cover each other")
+    return tuple(out)
+
+
+def _units(item, meta):
+    transfer = upload(item, meta)
+    layout = _layout(meta["bits"], meta["width"], meta["height"],
+                     transfer["format"], transfer["width"],
+                     transfer["height"], transfer["buffer_width"])
+    texels = meta["width"] * meta["height"]
+    room = transfer["size"] * (1 if meta["bits"] == 8 else 2)
+    if room < texels:
+        raise FisError("the upload carries %d texel(s) of %d" % (room, texels))
+    return transfer, (range(texels) if layout is None else layout)
+
+
 def indices(item, meta):
-    block = item[meta["offset"]:meta["offset"] + meta["size"]]
+    """The texture's palette indices in raster order."""
+    transfer, units = _units(item, meta)
+    data = item[transfer["at"]:transfer["at"] + transfer["size"]]
     if meta["bits"] == 8:
-        return block
-    out = bytearray(len(block) * 2)
-    for at, byte in enumerate(block):
-        out[at * 2] = byte & 0x0F
-        out[at * 2 + 1] = byte >> 4
-    return out
+        return bytes(data[unit] for unit in units)
+    return bytes((data[unit >> 1] >> (4 * (unit & 1))) & 0x0F for unit in units)
 
 
 def png(path, width, height, rows):
@@ -334,20 +416,27 @@ def encode(item, path):
                 approximated += 1
             values[y * width + x] = index
 
-    block = bytearray(meta["size"])
-    if meta["bits"] == 8:
-        block[:] = values
-    else:
-        for at in range(len(block)):
-            block[at] = values[at * 2] | (values[at * 2 + 1] << 4)
+    transfer, units = _units(item, meta)
+    start = transfer["at"]
+    data = bytearray(item[start:start + transfer["size"]])
+    for texel, unit in enumerate(units):
+        if meta["bits"] == 8:
+            data[unit] = values[texel]
+        else:
+            shift = 4 * (unit & 1)
+            data[unit >> 1] = ((data[unit >> 1] & ~(0x0F << shift) & 0xFF)
+                               | (values[texel] << shift))
     out = bytearray(item)
-    out[meta["offset"]:meta["offset"] + meta["size"]] = block
+    out[start:start + len(data)] = data
     if len(out) != len(item):
         raise FisError("the item changed length")
     return bytes(out), approximated
 
 
 PACK_DIRECTORY = "images"
+DTT_MAGIC = b"DTT\0"
+DTT_HEAD = 0x10
+DTT_RECORD = 0x10
 
 
 def pack_name(resource, route, offset):
@@ -355,27 +444,56 @@ def pack_name(resource, route, offset):
     return "fis-%04d-%s-%X.png" % (int(resource), safe, offset)
 
 
-def _put_slz(blob, at, packed):
+def _item_ends(blob):
+    for reader in (package_archive.layout, protected_package.layout):
+        try:
+            return reader(bytes(blob)).offsets
+        except Exception:                                        # noqa: BLE001
+            continue
+    ends = []
+    for _tag, offset, length in parse_pk1(bytes(blob)):
+        ends += [offset, offset + length]
+    return tuple(ends)
+
+
+def _put_slz(blob, at, packed, grow=False):
     room = len(blob) - at
-    for other, _data in _slz_streams(blob):
-        start = int(other.split("@")[1], 16)
-        if at < start < at + room:
-            room = start - at
+    starts = [int(other.split("@")[1], 16) for other, _data in _slz_streams(blob)]
+    for end in starts + list(_item_ends(blob)):
+        if at < end < at + room:
+            room = end - at
+    # An entry that is only this stream may grow by whole sectors.
+    if len(packed) > room and grow and at == 0 and room == len(blob):
+        sectors = -(-len(packed) // triace.SECTOR)
+        blob = bytes(blob) + bytes(sectors * triace.SECTOR - len(blob))
+        room = len(blob)
+    if len(packed) > room:
+        try:
+            protected = protected_package.layout(blob)
+        except protected_package.ProtectedPackageError:
+            protected = None
+        if protected is not None and at + room == protected.payload_end:
+            required = (at + len(packed) + 0x1F) & ~0x1F
+            if required <= len(blob):
+                blob, _layout = protected_package.extend_payload_end(
+                    blob, required)
+                room = required - at
     if len(packed) > room:
         raise FisError(
-            "the rebuilt stream is %d bytes and has room for %d; a texture "
-            "keeps its own length, so this is the compressor, not the picture"
+            "the repainted picture compresses to %d bytes and its slot holds "
+            "%d; keep more of the original picture's pixels unchanged"
             % (len(packed), room))
     out = bytearray(blob)
     out[at:at + len(packed)] = packed
     return bytes(out)
 
 
-def _rewrite(blob, label, child):
+def _rewrite(blob, label, child, grow=False):
     """Put a modified *child* back into the blob it was unwrapped from."""
     if label.startswith("slz@"):
         at = int(label.split("@")[1], 16)
-        return _put_slz(blob, at, slz_compress.compress(bytes(child), mode=2))
+        return _put_slz(blob, at, slz_compress.compress(bytes(child), mode=2),
+                        grow)
     if label.startswith("item") and label.endswith(".slz"):
         index = int(label[4:-4])
         parsed = package_archive.layout(bytes(blob))
@@ -435,9 +553,10 @@ def views(raw, resource=None):
                 if not nested or hash(nested) in seen:
                     continue
                 route = ("%s/%s" % (where, label) if where != "raw" else label)
+                entry = depth == 0 and where in ("raw", "decrypted")
                 queue.append((route, nested, depth + 1,
-                              lambda new, _b=blob, _l=label, _w=write:
-                              _w(_rewrite(_b, _l, new))))
+                              lambda new, _b=blob, _l=label, _w=write,
+                              _g=entry: _w(_rewrite(_b, _l, new, _g))))
     return out
 
 
@@ -450,21 +569,253 @@ def pack_files(folder, resource):
                   if name.startswith(prefix) and name.endswith(".png"))
 
 
-def _by_shape(current, resource, folder, wanted, applied):
+def _offset_of(name):
+    """The item offset a pack file name ends with, or ``None``."""
+    try:
+        return int(name[:-len(".png")].rsplit("-", 1)[1], 16)
+    except (IndexError, ValueError):
+        return None
+
+
+def _dtt_tables(blob):
+    """Valid DTT rectangle tables in *blob*, as ``(offset, records)``."""
+    out, at = [], 0
+    while True:
+        at = blob.find(DTT_MAGIC, at)
+        if at < 0:
+            return out
+        if at + DTT_HEAD <= len(blob):
+            body = struct.unpack_from("<I", blob, at + 4)[0]
+            end = at + DTT_HEAD + body
+            if body and body % DTT_RECORD == 0 and end <= len(blob):
+                records = [at + DTT_HEAD + index * DTT_RECORD
+                           for index in range(body // DTT_RECORD)]
+                out.append((at, records))
+        at += 4
+
+
+def _dtt_geometry(blob, at):
+    """``(box, x scale, y scale)`` encoded by a canonical DTT record."""
+    left, top, right, bottom, width, height = struct.unpack_from(
+        "<6H", blob, at + 4)
+
+    def axis(first, last, extent):
+        if extent < 2 or last <= first:
+            return None
+        span = last - first
+        if span % (extent - 1):
+            return None
+        scale = span // (extent - 1)
+        bias = scale // 2
+        if not scale or scale % 2 or first % scale != bias \
+                or last % scale != bias:
+            return None
+        return (first - bias) // scale, (last - bias) // scale, scale
+
+    horizontal = axis(left, right, width)
+    vertical = axis(top, bottom, height)
+    if horizontal is None or vertical is None:
+        return None
+    x0, x1, x_scale = horizontal
+    y0, y1, y_scale = vertical
+    return (x0, y0, x1, y1), x_scale, y_scale
+
+
+def _dtt_box(blob, at):
+    """Inclusive source-pixel box encoded by one DTT record, if canonical."""
+    geometry = _dtt_geometry(blob, at)
+    return geometry[0] if geometry is not None else None
+
+
+LAYOUT_FILE = "fis-image-layouts.json"
+_LAYOUT_KEYS = {
+    "file": {"version", "images"},
+    "image": {"mode", "name", "size", "regions", "dtt", "screen"},
+    "dtt": {"records"},
+    "dtt record": {"index", "name", "from", "to"},
+    "screen": {"groups"},
+    "screen group": {"name", "records", "from", "to"},
+}
+
+
+def _integers(value, count):
+    return (isinstance(value, list) and len(value) == count
+            and all(isinstance(item, int) and not isinstance(item, bool)
+                    for item in value))
+
+
+def _object(value, kind, where):
+    if not isinstance(value, dict):
+        raise FisError("%s: %s must be an object" % (where, kind))
+    unknown = sorted(set(value) - _LAYOUT_KEYS[kind])
+    if unknown:
+        raise FisError("%s: unknown %s key(s) %s"
+                       % (where, kind, ", ".join(unknown)))
+    return value
+
+
+def _checked_dtt(dtt, where):
+    _object(dtt, "dtt", where)
+    records = dtt.get("records")
+    if not isinstance(records, list) or not records:
+        raise FisError("%s: dtt.records must be a non-empty list" % where)
+    seen = set()
+    for row in records:
+        _object(row, "dtt record", where)
+        index = row.get("index")
+        if (not isinstance(index, int) or isinstance(index, bool) or index < 1
+                or index in seen):
+            raise FisError("%s: invalid or repeated DTT record index %r"
+                           % (where, index))
+        seen.add(index)
+        for label in ("from", "to"):
+            if not _integers(row.get(label), 4):
+                raise FisError("%s: DTT record %d needs four integer %s values"
+                               % (where, index, label))
+
+
+def _checked_screen(screen, where):
+    _object(screen, "screen", where)
+    groups = screen.get("groups")
+    if not isinstance(groups, list) or not groups:
+        raise FisError("%s: screen.groups must be a non-empty list" % where)
+    seen = set()
+    for row in groups:
+        _object(row, "screen group", where)
+        records = row.get("records")
+        if (not isinstance(records, list) or not records
+                or not all(isinstance(index, int) and not isinstance(index, bool)
+                           and index > 0 for index in records)
+                or len(set(records)) != len(records)):
+            raise FisError("%s: a screen group needs unique positive integer "
+                           "records" % where)
+        overlap = seen.intersection(records)
+        if overlap:
+            raise FisError("%s: repeats screen record(s) %s"
+                           % (where, ", ".join(str(i) for i in sorted(overlap))))
+        seen.update(records)
+        for label in ("from", "to"):
+            if not _integers(row.get(label), 2):
+                raise FisError("%s: screen group %r needs two integer %s values"
+                               % (where, records, label))
+
+
+def load_layout(folder):
+    """``(path, {image name: entry})`` from the pack beside ``folder``, validated."""
+    pack = os.path.dirname(os.path.normpath(os.fspath(folder)))
+    path = os.path.join(pack, LAYOUT_FILE)
+    if not os.path.isfile(path):
+        return path, {}
+    try:
+        with open(path, encoding="utf-8") as handle:
+            document = json.load(handle)
+    except (OSError, ValueError) as exc:
+        raise FisError("cannot read %s: %s" % (path, exc))
+    _object(document, "file", path)
+    if document.get("version") != 1:
+        raise FisError("%s must be a version 1 layout" % path)
+    images = document.get("images")
+    if not isinstance(images, dict):
+        raise FisError("%s needs an images object" % path)
+    for name, image in images.items():
+        where = "%s image %s" % (path, name)
+        _object(image, "image", where)
+        if "dtt" in image:
+            _checked_dtt(image["dtt"], where)
+        if "screen" in image:
+            _checked_screen(image["screen"], where)
+    return path, images
+
+
+def _layout_records(folder, name, size):
+    """Runtime sprite-box edits for ``name``, checked against its size."""
+    path, images = load_layout(folder)
+    dtt = (images.get(name) or {}).get("dtt")
+    if dtt is None:
+        return None
+    checked = []
+    for row in dtt["records"]:
+        index, before, after = row["index"], row["from"], row["to"]
+        for label, (left, top, right, bottom) in (("from", before),
+                                                  ("to", after)):
+            if not (0 <= left <= right < size[0]
+                    and 0 <= top <= bottom < size[1]):
+                raise FisError("%s record %d %s box is outside the %dx%d image"
+                               % (path, index, label, size[0], size[1]))
+        checked.append((index, tuple(before), tuple(after)))
+    return path, checked
+
+
+def screen_layouts(folder):
+    """``(path, [(image name, [(records, from, to)])])`` for pictures in ``folder``."""
+    path, images = load_layout(folder)
+    layouts = []
+    for name in sorted(images):
+        screen = images[name].get("screen")
+        if screen is None or not os.path.isfile(os.path.join(folder, name)):
+            continue
+        layouts.append((name, [(tuple(group["records"]), tuple(group["from"]),
+                                tuple(group["to"]))
+                               for group in screen["groups"]]))
+    return path, layouts
+
+
+def _patch_dtt_layout(blob, folder, name, size):
+    """Apply *name*'s guarded DTT registry entry in its decoded view."""
+    configured = _layout_records(folder, name, size)
+    if configured is None:
+        return bytes(blob), 0
+    path, wanted = configured
+    matches = []
+    for table_at, records in _dtt_tables(blob):
+        if all(index <= len(records)
+               and _dtt_box(blob, records[index - 1]) in (before, after)
+               for index, before, after in wanted):
+            matches.append((table_at, records))
+    if len(matches) != 1:
+        raise FisError(
+            "%s matched %d DTT tables; expected exactly one table carrying "
+            "the guarded source boxes" % (path, len(matches)))
+    _table_at, records = matches[0]
+    out = bytearray(blob)
+    for index, _before, after in wanted:
+        at = records[index - 1]
+        geometry = _dtt_geometry(blob, at)
+        if geometry is None:  # The guarded table match makes this unreachable.
+            raise FisError("%s record %d has non-canonical DTT coordinates"
+                           % (path, index))
+        _current, x_scale, y_scale = geometry
+        left, top, right, bottom = after
+        struct.pack_into("<4H", out, at + 4,
+                         left * x_scale + x_scale // 2,
+                         top * y_scale + y_scale // 2,
+                         right * x_scale + x_scale // 2,
+                         bottom * y_scale + y_scale // 2)
+        struct.pack_into("<2H", out, at + 12,
+                         right - left + 1, bottom - top + 1)
+    changed = sum(a != b for a, b in zip(blob, out))
+    return bytes(out), changed
+
+
+def _by_shape(current, resource, folder, wanted, applied, offset=False):
+    """Place a file whose name matched nothing, if one item fits it."""
     for name in wanted:
         path = os.path.join(folder, name)
         try:
             width, height, _rows = read_png(path)
         except FisError:
             continue
+        inside = _offset_of(name) if offset else None
+        if offset and inside is None:
+            continue
         matches = []
         for route, blob, write in views(current, resource):
             for at, item in items_in(blob):
+                if offset and at != inside:
+                    continue
                 try:
                     meta = descriptor(item)
                 except FisError:
-                    continue
-                if meta["width"] != meta["draw_width"]:
                     continue
                 if (meta["width"], meta["height"]) == (width, height):
                     matches.append((route, at, item, blob, write))
@@ -475,13 +826,15 @@ def _by_shape(current, resource, folder, wanted, applied):
             built, _approximated = encode(item, path)
         except FisError:
             continue
-        if built == item:
-            applied.append((name, 0))
-            continue
         patched = bytearray(blob)
         patched[at:at + len(built)] = built
-        current = write(bytes(patched))
-        changed = sum(1 for a, b in zip(item, built) if a != b)
+        patched, _layout_changed = _patch_dtt_layout(
+            bytes(patched), folder, name, (width, height))
+        changed = sum(1 for a, b in zip(blob, patched) if a != b)
+        if not changed:
+            applied.append((name, 0))
+            continue
+        current = write(patched)
         applied.append((name, changed))
     return current
 
@@ -503,13 +856,17 @@ def apply_pack(raw, resource, folder):
                 if not os.path.exists(path):
                     continue
                 built, _approximated = encode(item, path)
-                if built == item:
-                    applied.append((name, 0))
-                    continue
                 patched = bytearray(blob)
                 patched[at:at + len(built)] = built
-                current = write(bytes(patched))
-                changed = sum(1 for a, b in zip(item, built) if a != b)
+                meta = descriptor(item)
+                patched, _layout_changed = _patch_dtt_layout(
+                    bytes(patched), folder, name,
+                    (meta["width"], meta["height"]))
+                changed = sum(1 for a, b in zip(blob, patched) if a != b)
+                if not changed:
+                    applied.append((name, 0))
+                    continue
+                current = write(patched)
                 applied.append((name, changed))
                 progressed = True
                 break
@@ -517,10 +874,13 @@ def apply_pack(raw, resource, folder):
                 break
         if not progressed:
             break
-    placed = {name for name, _count in applied}
-    left = [name for name in pack_files(folder, resource) if name not in placed]
-    if left:
-        current = _by_shape(current, resource, folder, left, applied)
+    for offset in (True, False):
+        placed = {name for name, _count in applied}
+        left = [name for name in pack_files(folder, resource)
+                if name not in placed]
+        if left:
+            current = _by_shape(current, resource, folder, left, applied,
+                                offset=offset)
     placed = {name for name, _count in applied}
     for name in pack_files(folder, resource):
         if name not in placed:

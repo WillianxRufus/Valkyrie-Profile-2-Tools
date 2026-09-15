@@ -35,6 +35,10 @@ MENU_PATH_RE = re.compile(r"^menu/menu-([1-5])\.csv$")
 PACK_FORMAT = 2
 PACK_PROFILE = "build-profile.csv"
 PACK_SLOTS = "shared-font-slots.csv"
+PACK_MISC = "misc.csv"
+PACK_CHAPTERS = "chapter.csv"
+MISC_FIELDS = ("key", "translated", "notes")
+MISC_KEY_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 
 class PackError(ValueError):
@@ -101,6 +105,31 @@ def _read_csv(path: Path) -> tuple[list[str], list[dict[str, str]]]:
         raise PackError(f"cannot read {path}: {exc}") from exc
 
 
+def load_misc(directory: str | os.PathLike[str]) -> dict[str, dict[str, str]]:
+    """Read optional non-message translations from ``misc.csv``."""
+    path = Path(directory) / PACK_MISC
+    if not path.is_file():
+        return {}
+    fields, records = _read_csv(path)
+    if tuple(fields) != MISC_FIELDS:
+        raise PackError(f"{path}: expected columns {', '.join(MISC_FIELDS)}")
+    rows = {}
+    for line, row in enumerate(records, 2):
+        where = f"{path}:{line}"
+        key = (row.get("key") or "").strip()
+        if not MISC_KEY_RE.fullmatch(key):
+            raise PackError(f"{where}: invalid misc key {key!r}")
+        if key in rows:
+            raise PackError(f"{where}: duplicate misc key {key!r}")
+        translated = (row.get("translated") or "").strip()
+        if translated:
+            rows[key] = {
+                "translated": translated,
+                "notes": row.get("notes") or "",
+            }
+    return rows
+
+
 def _write_csv_atomic(path: Path, fields: list[str], rows: list[dict[str, str]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary = tempfile.mkstemp(
@@ -121,7 +150,7 @@ def _write_csv_atomic(path: Path, fields: list[str], rows: list[dict[str, str]])
 
 def _path_kind(path: Path, base: Path) -> tuple[str, int | None]:
     relative = path.relative_to(base).as_posix()
-    if relative == "chapter.csv":
+    if relative == PACK_CHAPTERS:
         return "chapter", None
     match = SCENE_PATH_RE.fullmatch(relative)
     if match:
@@ -201,7 +230,8 @@ def load_pack(
         raise PackError(f"language pack directory does not exist: {base}")
     files = [path for path in _csv_files(base)
              if path.relative_to(base).as_posix() not in (PACK_PROFILE,
-                                                          PACK_SLOTS)]
+                                                          PACK_SLOTS,
+                                                          PACK_MISC)]
     legacy = base / "translations.csv"
     if legacy in files:
         if files != [legacy]:

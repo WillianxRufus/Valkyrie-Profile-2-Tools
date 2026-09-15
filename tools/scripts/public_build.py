@@ -25,13 +25,19 @@ from pathlib import Path
 from .paths import BUILD_DIR, PROJECT_ROOT, WORKSPACE_DIR, output_root
 from .workspace_extract import generate_workspace
 from .translation_layout import rename_tree
+from . import chapter_label
+from . import overlay_edits
+from . import vp2_battle_target
 from .translation_pack import (
+    PACK_CHAPTERS,
+    PACK_MISC,
     PACK_PROFILE,
     PACK_SLOTS,
     PackError,
     _expanded_targets,
     _menu_units,
     is_language_pack,
+    load_misc,
     load_pack,
 )
 
@@ -46,6 +52,15 @@ SHEET_NAME_RE = re.compile(
 MENU_LAYOUT = PROJECT_ROOT / "data" / "menu-layout.csv"
 WORKSPACE = WORKSPACE_DIR
 TRANSLATIONS = PROJECT_ROOT / "translations"
+
+#: Profile rows that name a pack file instead of a generated sheet: the
+#: file, and the resources the row may name.
+PACK_FILE_ROWS = {
+    "chapter-label": (PACK_CHAPTERS, frozenset(chapter_label.CARRIERS)),
+    "misc": (PACK_MISC, frozenset({overlay_edits.RESOURCE})),
+}
+PROFILE_KINDS = ("scene", "container", "fontless", "image",
+                 *PACK_FILE_ROWS)
 
 
 def installed_locales() -> list[str]:
@@ -140,6 +155,25 @@ def _pack_locale(pack: Path) -> str:
     return value.strip()
 
 
+def _pack_battle_target(pack: Path) -> str | None:
+    misc = load_misc(pack)
+    offset = misc.get(vp2_battle_target.X_KEY)
+    if offset is not None:
+        try:
+            vp2_battle_target.parse_x(offset["translated"])
+        except ValueError as exc:
+            raise PackError(f"{pack / PACK_MISC}: {exc}") from exc
+    row = misc.get("battle_target")
+    if row is None:
+        return None
+    value = row["translated"]
+    try:
+        vp2_battle_target.encode_label(value)
+    except ValueError as exc:
+        raise PackError(f"{pack / PACK_MISC}: {exc}") from exc
+    return value
+
+
 def _record_key(row: dict[str, str]) -> tuple[str, str, str, str]:
     resource = (row.get("resource") or "0").strip()
     return (
@@ -162,15 +196,13 @@ def _profile_rows(path: Path) -> list[dict[str, str]]:
     return rows
 
 
-def check_pack_profile(pack: str | os.PathLike[str]) -> int:
-    """Validate one pack's build profile on its own, and count its rows."""
-    path = resolve_pack(pack) / PACK_PROFILE
+def _checked_profile(path: Path) -> list[dict[str, str]]:
     rows = _profile_rows(path)
     seen: set[tuple[str, str]] = set()
     for line, row in enumerate(rows, 2):
         where = f"{path}:{line}"
         kind = (row.get("kind") or "").strip()
-        if kind not in ("scene", "container", "fontless", "image"):
+        if kind not in PROFILE_KINDS:
             raise PackError(f"{where}: unknown kind {kind!r}")
         try:
             resource = str(int((row.get("resource") or "").strip(), 0))
@@ -178,12 +210,26 @@ def check_pack_profile(pack: str | os.PathLike[str]) -> int:
             raise PackError(f"{where}: invalid resource "
                             f"{row.get('resource')!r}") from exc
         name = Path(row.get("sheet") or "").name
-        if kind != "image" and not SHEET_NAME_RE.fullmatch(name):
+        if kind in PACK_FILE_ROWS:
+            sheet, resources = PACK_FILE_ROWS[kind]
+            if name != sheet:
+                raise PackError(f"{where}: a {kind} row names {sheet}")
+            if int(resource) not in resources:
+                raise PackError(
+                    f"{where}: resource {resource} has no {kind} to write "
+                    f"(it may name {', '.join(map(str, sorted(resources)))})")
+        elif kind != "image" and not SHEET_NAME_RE.fullmatch(name):
             raise PackError(f"{where}: {name!r} is not a generated sheet name")
         if (kind, resource) in seen:
             raise PackError(f"{where}: duplicate {kind} resource {resource}")
         seen.add((kind, resource))
-    return len(rows)
+        row["kind"] = kind
+    return rows
+
+
+def check_pack_profile(pack: str | os.PathLike[str]) -> int:
+    """Validate one pack's build profile on its own, and count its rows."""
+    return len(_checked_profile(resolve_pack(pack) / PACK_PROFILE))
 
 
 def _input_sheet(records: Path, row: dict[str, str]) -> Path:
@@ -241,6 +287,7 @@ def compile_build_workspace(
             f"generate <USA.iso>` first")
 
     locale = _pack_locale(pack_path)
+    battle_target = _pack_battle_target(pack_path)
     translations = load_pack(pack_path, ignore_reference_columns=True)
     expanded = _expanded_targets(
         translations, _menu_units(os.fspath(menu_layout)))
@@ -259,8 +306,11 @@ def compile_build_workspace(
     matched: set[tuple[str, str, str, str]] = set()
     matched_chapters: set[tuple[str, str, str, str]] = set()
     try:
-        profile_rows = _profile_rows(profile_path)
-        text_rows = [row for row in profile_rows if row["kind"] != "image"]
+        profile_rows = _checked_profile(profile_path)
+        text_rows = [row for row in profile_rows
+                     if row["kind"] not in ("image", *PACK_FILE_ROWS)]
+        listed = {kind: [row for row in profile_rows if row["kind"] == kind]
+                  for kind in PACK_FILE_ROWS}
         profile_sheets = {Path(row["sheet"]).name for row in text_rows}
         missing = [row for row in text_rows
                    if not _input_sheet(records, row).is_file()]
@@ -299,6 +349,8 @@ def compile_build_workspace(
                 f"{unmatched[:5]!r}")
 
         for profile_row in profile_rows:
+            if profile_row["kind"] in PACK_FILE_ROWS:
+                continue
             if profile_row["kind"] == "image":
                 folder = pack_path / (profile_row.get("sheet")
                                       or IMAGE_DIRECTORY)
@@ -345,6 +397,29 @@ def compile_build_workspace(
                 matched_chapters.add(key)
             manifest_rows.append(manifest)
 
+        label_key = next(
+            (key for key in chapters
+             if key[1] == str(chapter_label.CARRIERS[0])
+             and key[2] == str(chapter_label.FIRST_MESSAGE)), None)
+        wanted = {"chapter-label": label_key is not None,
+                  "misc": battle_target is not None}
+        for kind, (name, _resources) in PACK_FILE_ROWS.items():
+            if not (wanted[kind] and listed[kind]):
+                continue
+            shutil.copyfile(pack_path / name, staging / name)
+            for profile_row in listed[kind]:
+                manifest_rows.append({
+                    "kind": kind,
+                    "resource": str(int(profile_row["resource"], 0)),
+                    "sheet": os.fspath(build_root / name),
+                    "flags": "", "verify": "", "subresource": "",
+                    "chapter_title": "", "chapter_title_message": "",
+                })
+        if label_key is not None and listed["chapter-label"]:
+            matched_chapters.add(label_key)
+        if not listed["misc"]:
+            battle_target = None
+
         profile_pairs = {
             (_record_key({
                 "kind": "container" if Path(row["sheet"]).name.startswith(
@@ -357,7 +432,8 @@ def compile_build_workspace(
         }
         ignored_chapters = set(chapters) - matched_chapters
         ignored = (sum(key[:2] not in profile_pairs for key in exact)
-                   + len(ignored_chapters))
+                   + len(ignored_chapters)
+                   + (wanted["misc"] and not listed["misc"]))
         if not manifest_rows:
             raise PackError(f"{profile_path} lists no resources")
 
@@ -373,6 +449,7 @@ def compile_build_workspace(
         metadata = {
             "format": 1,
             "locale": locale,
+            "battle_target": battle_target,
             "resources": len(manifest_rows),
             "exact_translations": len(matched),
             "outside_profile": ignored,

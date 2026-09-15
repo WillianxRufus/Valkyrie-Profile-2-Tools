@@ -53,6 +53,12 @@ def parse_resources(value):
 def encode_english_text(text, accent_tokens=None):
     """Encode a confirmed ASCII subset of the USA mcps2lib 1.50 code page."""
     accent_tokens = accent_tokens or {}
+    if accent_tokens:
+        from . import vp2_shared_font as shared_font
+        displaced = shared_font.displaced_characters(accent_tokens)
+        for char in text:
+            if char in displaced:
+                raise shared_font.displaced_error("text", char, displaced[char])
     unsupported = sorted(set(text) - SUPPORTED_CHARS - set(accent_tokens))
     if unsupported:
         details = ", ".join("U+%04X %r" % (ord(char), char) for char in unsupported)
@@ -60,7 +66,11 @@ def encode_english_text(text, accent_tokens=None):
     output = bytearray()
     for char in text:
         if char in accent_tokens:
-            output.append(accent_tokens[char])
+            token = accent_tokens[char]
+            if token < 0x80:
+                output.append(token)
+            else:
+                output.extend(struct.pack("<H", token))
         elif char in CONTROL_TO_TOKEN:
             token = CONTROL_TO_TOKEN[char]
             if token < 0x80:

@@ -14,8 +14,10 @@ from .translation_pack import is_language_pack
 
 PAYLOAD_TREES = (
     ("data", "**/*.csv"),
+    ("data", "**/*.json"),
     ("data", "**/*.md"),
     ("translations", "**/*.csv"),
+    ("translations", "*/fis-image-layouts.json"),
     ("translations", "**/*.toml"),
     ("tools/scripts", "*.csv"),
 )
@@ -74,10 +76,10 @@ def self_check(stream=None) -> int:
     tables = sorted(p.name for p in DATA_DIR.glob("*.csv")) if DATA_DIR.is_dir() else []
     notes.append(f"structural tables : {len(tables)}")
     for required in ("menu-layout.csv", "record-limits.csv",
-                     "authored-marks.csv", "authored-glyphs.csv"):
+                     "authored-marks.csv", "authored-glyphs.csv",
+                     "einherjar-rosters.csv"):
         if required not in tables:
             problems.append(f"missing structural table: {required}")
-
     packs = _packs(PROJECT_ROOT)
     if not packs:
         problems.append("no language pack is bundled")
