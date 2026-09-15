@@ -26,7 +26,8 @@ BANNERS = {
     "fis-1781-unprotected-slz-0xDD740-98C80.png": {
         (1, 2): Banner("Guard Break", (90, 160), (
             (0x004DB070, 0, _V0_LUI),  # animation target X
-            (0x004DB09C, 0, _V1_LUI),  # animation completion X
+            (0x004DB09C, 0, _V1_LUI),  # animation clamp X
+            (0x004DB0DC, 0, _V1_LUI),  # animation completion X
             (0x004DB594, 1, _V1_LUI),  # animation anchor Y
         )),
         (5, 6, 7): Banner("Over Attack!", (225, 358), (
