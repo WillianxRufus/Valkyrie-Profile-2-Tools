@@ -450,7 +450,10 @@ def _item_ends(blob):
             return reader(bytes(blob)).offsets
         except Exception:                                        # noqa: BLE001
             continue
-    return ()
+    ends = []
+    for _tag, offset, length in parse_pk1(bytes(blob)):
+        ends += [offset, offset + length]
+    return tuple(ends)
 
 
 def _put_slz(blob, at, packed, grow=False):
