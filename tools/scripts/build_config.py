@@ -26,6 +26,7 @@ FLAG_MAP = {
     },
     'image': {},
     'chapter-label': {},
+    'misc': {},
 }
 
 def expand_flags(row, kind):

@@ -135,8 +135,8 @@ class AccentTests(unittest.TestCase):
         into = directory / "plain"
         into.mkdir()
         target = check._sheet_without("ç", "c", sheet, into)
-        rows = list(csv.DictReader(io.open(target, encoding="utf-8-sig",
-                                           newline="")))
+        with io.open(target, encoding="utf-8-sig", newline="") as handle:
+            rows = list(csv.DictReader(handle))
         self.assertEqual(rows[0]["translated"], "esperanca")
         self.assertEqual(rows[1]["translated"], "")
 

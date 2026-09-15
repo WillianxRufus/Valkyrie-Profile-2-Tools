@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 from .paths import FROZEN, PROJECT_ROOT
+from . import triace_ps2_unpack as triace
 from . import vp2_container_text
 from . import vp2_iso_buffer as iso_buffer
 from . import vp2_shared_font as shared_font
@@ -293,15 +294,17 @@ def preflight(reference_iso, rows, *, dry_run, verbose=False):
             print(audit_log.getvalue(), end='')
     print(f"== pre-flight ok: {len(scene_rows)} row(s) ==")
 
-LABEL_ROW = 'label'
-
 def _label_word(sheet):
-    """The label word from a chapters sheet, or ``''``."""
+    """The label word from a pack's chapter sheet, or ``''``."""
+    from . import chapter_label
     if not sheet or not os.path.isfile(sheet):
         return ''
     with open(sheet, newline='', encoding='utf-8-sig') as handle:
         for row in csv.DictReader(handle):
-            if (row.get('resource') or '').strip().lower() == LABEL_ROW:
+            if ((row.get('resource') or '').strip()
+                    == str(chapter_label.CARRIERS[0])
+                    and (row.get('message_id') or '').strip()
+                    == str(chapter_label.FIRST_MESSAGE)):
                 return (row.get('translated') or '').strip()
     return ''
 
@@ -354,10 +357,15 @@ def patch_image_resource_in_memory(iso, row, *, primary_lookup=None):
     changed = [name for name, count in applied if count]
     if not changed:
         return {'written': 0, 'details': 'no image differed from the disc'}
-    if len(built) != len(raw):
-        raise ValueError(f'resource {resource} changed length')
-    iso.write_entry(resource, built)
     for name, count in applied:
         if count:
             print(f"  image {name}: {count} byte(s) changed")
-    return {'written': len(changed), 'details': ', '.join(changed)}
+    details = {'written': len(changed), 'details': ', '.join(changed)}
+    if len(built) == len(raw):
+        iso.write_entry(resource, built)
+        return details
+    if len(built) < len(raw) or len(built) % triace.SECTOR:
+        raise ValueError(f'resource {resource} changed length')
+    grown = (len(built) - len(raw)) // triace.SECTOR
+    print(f"  image entry grew by {grown} sector(s)")
+    return dict(details, patched=built, grown_sectors=grown)

@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "images": {
+    "fis-1781-unprotected-slz-0xDD740-98C80.png": {
+      "mode": "canvas",
+      "name": "Guard Break banner",
+      "size": [128, 128],
+      "screen": {
+        "groups": [
+          {
+            "name": "DEFESA QUEBRADA",
+            "records": [1, 2],
+            "from": [90, 160],
+            "to": [84, 160]
+          },
+          {
+            "name": "ATAQUE EXCESSIVO!",
+            "records": [5, 6, 7],
+            "from": [225, 358],
+            "to": [188, 358]
+          }
+        ]
+      },
+      "dtt": {
+        "records": [
+          {
+            "index": 1,
+            "name": "DEFESA",
+            "from": [3, 3, 124, 28],
+            "to": [2, 2, 124, 29]
+          },
+          {
+            "index": 2,
+            "name": "QUEBRADA",
+            "from": [2, 31, 113, 56],
+            "to": [2, 31, 124, 58]
+          },
+          {
+            "index": 5,
+            "name": "ATAQUE",
+            "from": [2, 59, 67, 81],
+            "to": [1, 57, 123, 85]
+          },
+          {
+            "index": 6,
+            "name": "EXCESSIVO",
+            "from": [2, 84, 100, 105],
+            "to": [2, 84, 117, 105]
+          },
+          {
+            "index": 7,
+            "name": "!",
+            "from": [103, 84, 109, 105],
+            "to": [117, 84, 123, 105]
+          }
+        ]
+      }
+    },
+    "fis-1721-decrypted-slz-0x0-80.png": {
+      "mode": "canvas",
+      "name": "Battle victory labels",
+      "size": [512, 256],
+      "dtt": {
+        "records": [
+          {
+            "index": 2,
+            "name": "EXPERIENCIA",
+            "from": [4, 68, 97, 93],
+            "to": [4, 68, 103, 93]
+          },
+          {
+            "index": 3,
+            "name": "CRISTAIS MAGICOS",
+            "from": [114, 69, 235, 93],
+            "to": [114, 69, 249, 93]
+          },
+          {
+            "index": 5,
+            "name": "ADQUIRIDOS",
+            "from": [253, 68, 331, 92],
+            "to": [253, 68, 347, 92]
+          }
+        ]
+      }
+    }
+  }
+}

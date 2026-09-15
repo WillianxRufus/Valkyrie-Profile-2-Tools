@@ -132,6 +132,14 @@ def _build_dedupe_lookup(scenes_dir=None, *, en_only=False, conflicts=None,
                     (fname, row.get("message_id")))
     return lookup
 
+def read_misc(path):
+    """``key -> translated`` from a misc sheet, leaving out blank rows."""
+    with open(path, encoding="utf-8-sig", newline="") as handle:
+        return {(row.get("key") or "").strip():
+                (row.get("translated") or "").strip()
+                for row in csv.DictReader(handle)
+                if (row.get("translated") or "").strip()}
+
 CHAPTERS_CSV = WORKSPACE_DIR / "chapters.csv"
 
 def apply_chapter_titles(rows, path=None):

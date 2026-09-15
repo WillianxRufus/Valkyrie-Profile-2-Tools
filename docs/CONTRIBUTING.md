@@ -29,10 +29,14 @@ A language pack's `translated` column is the only script you may add.
 A pack row is a record identity and your text. Keep the identity columns as
 generated; `check-pack` verifies them.
 
-Adding a language: copy an existing pack, change `pack.toml`, clear the
-`translated` column, and reduce `build-profile.csv` to the resources you mean
-to translate — a build writes what that file names and nothing else. Format
-details are in [translation-format.md](translation-format.md).
+Adding a language: copy `translations/_template` to a folder named for your
+locale and set `locale` and `name` in its `pack.toml`. The template has every
+table and row a pack needs, with nothing written in it. Two files are yours to
+fill: `shared-font-slots.csv`, with the characters your language needs in the
+menus, and `build-profile.csv`, with a row for each resource you start
+translating (copy the row from an existing pack) — a build writes what that
+file names and nothing else. Format details are in
+[translation-format.md](translation-format.md).
 
 A translation may be your own expression while still being based on a
 third-party work — you license only the rights you hold, and no license here

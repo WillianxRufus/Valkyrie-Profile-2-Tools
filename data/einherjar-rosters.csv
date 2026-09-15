@@ -1,70 +1,99 @@
-resource,einherjar,area
-167,Jessica,Royal Underground Passage
-167,Richelle,Royal Underground Passage
-167,Sylphide,Royal Underground Passage
-173,Roland,Royal Underground Passage
-173,Kraad,Royal Underground Passage
-233,Celes,Serdberg Mountain Ruins
-233,Tyrith,Serdberg Mountain Ruins
-233,Alm,Serdberg Mountain Ruins
-233,Woltar,Serdberg Mountain Ruins
-243,Celes,Serdberg Mountain Ruins
-243,Tyrith,Serdberg Mountain Ruins
-243,Alm,Serdberg Mountain Ruins
-243,Woltar,Serdberg Mountain Ruins
-253,Phyress,Audoula Temple on the Lake
-253,Ehrde,Audoula Temple on the Lake
-253,Khanon,Audoula Temple on the Lake
-255,Phyress,Audoula Temple on the Lake
-255,Ehrde,Audoula Temple on the Lake
-255,Khanon,Audoula Temple on the Lake
-273,Sophalla,Surts Volcano Caverns
-273,Arcana,Surts Volcano Caverns
-273,Psoron,Surts Volcano Caverns
-273,Farant,Surts Volcano Caverns
-283,Sophalla,Surts Volcano Caverns
-283,Arcana,Surts Volcano Caverns
-283,Psoron,Surts Volcano Caverns
-283,Farant,Surts Volcano Caverns
-313,Fraudir,Crawsus Forest Ruins
-313,Circe,Crawsus Forest Ruins
-313,Rasheeka,Crawsus Forest Ruins
-313,Falx,Crawsus Forest Ruins
-313,Adonis,Crawsus Forest Ruins
-319,Fraudir,Crawsus Forest Ruins
-319,Circe,Crawsus Forest Ruins
-319,Rasheeka,Crawsus Forest Ruins
-319,Falx,Crawsus Forest Ruins
-319,Adonis,Crawsus Forest Ruins
-339,Lwyn,Palace of the Venerated Dragon
-339,Crescent,Palace of the Venerated Dragon
-339,Gerald,Palace of the Venerated Dragon
-339,Guilm,Palace of the Venerated Dragon
-339,Ehlen,Palace of the Venerated Dragon
-339,Xehnon,Palace of the Venerated Dragon
-339,Masato,Palace of the Venerated Dragon
-361,Lwyn,Palace of the Venerated Dragon
-361,Crescent,Palace of the Venerated Dragon
-361,Gerald,Palace of the Venerated Dragon
-361,Guilm,Palace of the Venerated Dragon
-361,Ehlen,Palace of the Venerated Dragon
-361,Xehnon,Palace of the Venerated Dragon
-361,Masato,Palace of the Venerated Dragon
-371,Lwyn,Palace of the Venerated Dragon
-371,Crescent,Palace of the Venerated Dragon
-371,Gerald,Palace of the Venerated Dragon
-371,Guilm,Palace of the Venerated Dragon
-371,Ehlen,Palace of the Venerated Dragon
-371,Xehnon,Palace of the Venerated Dragon
-371,Masato,Palace of the Venerated Dragon
-565,Chrystie,Ancient Forest
-565,Sha-kon,Ancient Forest
-579,Seluvia,Chateau Obsession
-599,Lylia,Turgen Mine
-599,Millidia,Turgen Mine
-1155,Aaron,Sahma Desert
-1155,Dyn,Sahma Desert
-1155,Zunde,Sahma Desert
-1179,Atrasia,Dragonscrypt
-1179,Lydia,Dragonscrypt
-1191,Aegis,Sukavia Gorge
+resource,einherjar,role,weapon_type,area,alternatives
+39,Celes,release,,"House, Solde",
+39,Tyrith,release,,"House, Solde",
+47,Ehrde,release,,"Cathedral, Solde",
+47,Phyress,release,,"Cathedral, Solde",
+49,Aegis,release,,"House, Solde",
+83,Aaron,release,,"Inn, Coriander",
+83,Dyn,release,,"Inn, Coriander",
+83,Zunde,release,,"Inn, Coriander",
+87,Jessica,release,,"House, Coriander Village",
+87,Richelle,release,,"House, Coriander Village",
+87,Sylphide,release,,"House, Coriander Village",
+101,Adonis,release,,"House, Villnore",
+101,Falx,release,,"House, Villnore",
+103,Kraad,release,,"House, Villnore",
+103,Roland,release,,"House, Villnore",
+111,Circe,release,,"House, Kalstad",
+111,Fraudir,release,,"House, Kalstad",
+111,Rasheeka,release,,"House, Kalstad",
+113,Arcana,release,,"House, Kalstad",
+113,Sophalla,release,,"House, Kalstad",
+135,Lylia,release,,"House, Crell Monferaigne",
+135,Millidia,release,,"House, Crell Monferaigne",
+139,Atrasia,release,,"House, Crell Monferaigne",
+139,Lydia,release,,"House, Crell Monferaigne",
+167,Jessica,fallback,,every weapon location,
+167,Jessica,weapon,Light Warrior,Royal Underground Passage,
+167,Richelle,weapon,Light Warrior,Royal Underground Passage,
+167,Sylphide,weapon,Light Warrior,Royal Underground Passage,
+173,Jessica,fallback,,every weapon location,
+173,Kraad,weapon,Heavy Warrior,Royal Underground Passage,
+173,Roland,weapon,Heavy Warrior,Royal Underground Passage,
+197,Mithra,release,,Lost Forest,
+233,Jessica,fallback,,every weapon location,
+233,Celes,weapon,Light Warrior,Serdberg Mountain Ruins,
+233,Tyrith,weapon,Light Warrior,Serdberg Mountain Ruins,
+243,Jessica,fallback,,every weapon location,
+243,Alm,weapon,Sorcerer,Serdberg Mountain Ruins,
+243,Woltar,weapon,Sorcerer,Serdberg Mountain Ruins,
+253,Jessica,fallback,,every weapon location,
+253,Khanon,weapon,Sorcerer,Audoula Temple on the Lake,
+255,Jessica,fallback,,every weapon location,
+255,Ehrde,weapon,Archer,Audoula Temple on the Lake,
+255,Phyress,weapon,Archer,Audoula Temple on the Lake,
+265,Seluvia,release,,Audoula Temple on the Lake,
+273,Jessica,fallback,,every weapon location,
+273,Arcana,weapon,Archer,Surts Volcano Caverns,
+273,Sophalla,weapon,Archer,Surts Volcano Caverns,
+283,Jessica,fallback,,every weapon location,
+283,Farant,weapon,Sorcerer,Surts Volcano Caverns,
+283,Psoron,weapon,Sorcerer,Surts Volcano Caverns,
+313,Jessica,fallback,,every weapon location,
+313,Circe,weapon,Light Warrior,Crawsus Forest Ruins,
+313,Fraudir,weapon,Light Warrior,Crawsus Forest Ruins,
+313,Rasheeka,weapon,Light Warrior,Crawsus Forest Ruins,
+319,Jessica,fallback,,every weapon location,
+319,Adonis,weapon,Heavy Warrior,Crawsus Forest Ruins,
+319,Falx,weapon,Heavy Warrior,Crawsus Forest Ruins,
+339,Jessica,fallback,,every weapon location,
+339,Masato,weapon,Sorcerer,Palace of the Venerated Dragon,
+339,Xehnon,weapon,Sorcerer,Palace of the Venerated Dragon,
+361,Jessica,fallback,,every weapon location,
+361,Ehlen,weapon,Heavy Warrior,Palace of the Venerated Dragon,
+361,Gerald,weapon,Heavy Warrior,Palace of the Venerated Dragon,
+361,Guilm,weapon,Heavy Warrior,Palace of the Venerated Dragon,
+371,Jessica,fallback,,every weapon location,
+371,Crescent,weapon,Light Warrior,Palace of the Venerated Dragon,
+371,Lwyn,weapon,Light Warrior,Palace of the Venerated Dragon,
+423,Crescent,release,,Forest of Spirits,
+423,Lwyn,release,,Forest of Spirits,
+557,Ehlen,release,,Ancient Forest,
+557,Gerald,release,,Ancient Forest,
+557,Guilm,release,,Ancient Forest,
+565,Jessica,fallback,,every weapon location,
+565,Chrystie,weapon,Archer,Ancient Forest,
+565,Sha-kon,weapon,Archer,Ancient Forest,
+571,Alm,release,,Chateau Obsession,
+571,Woltar,release,,Chateau Obsession,
+579,Jessica,fallback,,every weapon location,
+579,Seluvia,weapon,Sorcerer,Chateau Obsession,
+589,Farant,release,,Turgen Mine,
+589,Psoron,release,,Turgen Mine,
+599,Jessica,fallback,,every weapon location,
+599,Lylia,weapon,Archer,Turgen Mine,
+599,Millidia,weapon,Archer,Turgen Mine,
+1155,Jessica,fallback,,every weapon location,
+1155,Masato,release,,Sahma Desert,
+1155,Xehnon,release,,Sahma Desert,
+1155,Aaron,weapon,Heavy Warrior,Sahma Desert,
+1155,Dyn,weapon,Heavy Warrior,Sahma Desert,
+1155,Zunde,weapon,Heavy Warrior,Sahma Desert,
+1159,Chrystie,release,,Kythena Plains,
+1159,Sha-kon,release,,Kythena Plains,
+1179,Jessica,fallback,,every weapon location,
+1179,Atrasia,weapon,Archer,Dragonscrypt,
+1179,Lydia,weapon,Archer,Dragonscrypt,
+1183,Khanon,release,,Sukavia Gorge,
+1191,Jessica,fallback,,every weapon location,
+1191,Aegis,weapon,Sorcerer,Sukavia Gorge,

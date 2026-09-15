@@ -147,6 +147,8 @@ Tower of Lezard Valeth 11 - Rufus takes Gungnir, Arngrim takes the orb, Brahms d
 
 ### Einherjar locations
 
+- Fallback at every weapon location: Jessica (her line and "joined the party" show when the party is full and a new einherjar cannot join)
+
 Lost Forest (0197, after cutscene 1219)
 
 - Mithra: (100% Skill: Break Up)
@@ -161,7 +163,9 @@ Royal Underground Passage (0167)
 
 - Sylphide (50% Skill: Free Item)
 
-- Released location: House, Coriander Village (...)
+- Weapon Type: Light Warrior
+
+- Released location: House, Coriander Village (0087)
 
 Royal Underground Passage (0173)
 
@@ -169,23 +173,121 @@ Royal Underground Passage (0173)
 
 - Roland (50% Skill: Spirit Control)
 
-- Released location: House, Villnore (...)
+- Weapon Type: Heavy Warrior
 
-Serdberg Mountain Ruins (0233 or 0243)
+- Released location: House, Villnore (0103)
+
+Serdberg Mountain Ruins (0233)
 
 - Celes (30% Skill: Body Passage)
 
 - Tyrith (70% Skill: Adversity)
 
-- Released location: House, Solde (...)
+- Weapon Type: Light Warrior
 
-Serdberg Mountain Ruins (0233 or 0243)
+- Released location: House, Solde (0039)
+
+Serdberg Mountain Ruins (0243)
 
 - Alm (50% Skill: Overload)
 
 - Woltar (50% Skill: Plant Killer)
 
+- Weapon Type: Sorcerer
+
 - Released location: Chateau Obsession (0571)
+
+Audoula Temple on the Lake (0253)
+
+- Khanon (100% Skill: Solitary Struggle)
+
+- Weapon Type: Sorcerer
+
+- Released location: Sukavia Gorge (1183)
+
+Audoula Temple on the Lake (0255)
+
+- Phyress (90% Skill: Feint)
+
+- Ehrde (10% Skill: Magic Slayer)
+
+- Weapon Type: Archer
+
+- Released location: Cathedral, Solde (0047)
+
+Surts Volcano Caverns (0273)
+
+- Arcana (50% Skill: Heroism)
+
+- Sophalla (50% Skill: Cure Condition)
+
+- Weapon Type: Archer
+
+- Released location: House, Kalstad (0113)
+
+Surts Volcano Caverns (0283)
+
+- Farant (60% Skill: Resist Magic)
+
+- Psoron (40% Skill: Mind Burst)
+
+- Weapon Type: Sorcerer
+
+- Released location: Turgen Mine (0589)
+
+Crawsus Forest Ruins (0313)
+
+- Fraudir (40% Skill: Guard Motion)
+
+- Circe (40% Skill: Hard Body)
+
+- Rasheeka (20% Skill: Missile Protection)
+
+- Weapon Type: Light Warrior
+
+- Released location: House, Kalstad (0111)
+
+Crawsus Forest Ruins (0319)
+
+- Adonis (60% Skill: Observation)
+
+- Falx (40% Skill: Ghostbuster)
+
+- Weapon Type: Heavy Warrior
+
+- Released location: House, Villnore (0101)
+
+Palace of the Venerated Dragon (0339)
+
+- Xehnon (90% Skill: Magic Control)
+
+- Masato (10% Skill: Insect slayer)
+
+- Weapon Type: Sorcerer
+
+- Released location: Sahma Desert (1155)
+
+Palace of the Venerated Dragon (0361)
+
+- Gerald (20% Skill: Dragon Slayer)
+
+- Guilm (50% Skill: Toughness, First Aid)
+
+- Ehlen (30% Skill: Double Edge)
+
+- Weapon Type: Heavy Warrior
+
+- Released location: Ancient Forest (0557)
+
+Palace of the Venerated Dragon (0371)
+
+- Crescent (60% Skill: Guts)
+
+- Lwyn (40% Skill: Unholy Slayer)
+
+- Weapon Type: Light Warrior
+
+- Released location: Forest of Spirits (0423)
 
 Ancient Forest (0565)
 
@@ -193,7 +295,17 @@ Ancient Forest (0565)
 
 - Chrystie (10% Skill: Protect Magic)
 
+- Weapon Type: Archer
+
 - Released location: Kythena Plains (1159)
+
+Chateau Obsession (0579)
+
+- Seluvia (100% Skill: God Slayer)
+
+- Weapon Type: Sorcerer
+
+- Released location: Audoula Temple on the Lake (0265)
 
 Turgen Mine (0599)
 
@@ -201,21 +313,9 @@ Turgen Mine (0599)
 
 - Millidia (50% Skill: Demon Slayer)
 
-- Released location: House, Crell Monferaigne (...)
+- Weapon Type: Archer
 
-Audoula Temple on the Lake (0253 or 0255)
-
-- Phyress (90% Skill: Feint)
-
-- Ehrde (10% Skill: Magic Slayer)
-
-- Released location: Cathedral, Solde (...)
-
-Audoula Temple on the Lake (0253 or 0255)
-
-- Khanon (100% Skill: Solitary Struggle)
-
-- Released location: Sukavia Gorge (1183)
+- Released location: House, Crell Monferaigne (0135)
 
 Sahma Desert (1155)
 
@@ -225,47 +325,9 @@ Sahma Desert (1155)
 
 - Dyn (50% Skill: Regeneration Heal)
 
-- Released location: Inn, Coriander (...)
+- Weapon Type: Heavy Warrior
 
-Surts Volcano Caverns (0273 or 0283)
-
-- Arcana (50% Skill: Heroism)
-
-- Sophalla (50% Skill: Cure Condition)
-
-- Released location: House, Kalstad (...)
-
-Surts Volcano Caverns (0273 or 0283)
-
-- Farant (60% Skill: Resist Magic)
-
-- Psoron (40% Skill: Mind Burst)
-
-- Released location: Turgen Mine (0589)
-
-Chateau Obsession (0579)
-
-- Seluvia (100% Skill: God Slayer)
-
-- Released location: Audoula Temple on the Lake (0265)
-
-Crawsus Forest Ruins (0313 or 0319)
-
-- Fraudir (40% Skill: Guard Motion)
-
-- Circe (40% Skill: Hard Body)
-
-- Rasheeka (20% Skill: Missile Protection)
-
-- Released location: House, Kalstad (...)
-
-Crawsus Forest Ruins (0313 or 0319)
-
-- Adonis (60% Skill: Observation)
-
-- Falx (40% Skill: Ghostbuster)
-
-- Released location: House, Villnore (...)
+- Released location: Inn, Coriander (0083)
 
 Dragonscrypt (1179)
 
@@ -273,36 +335,14 @@ Dragonscrypt (1179)
 
 - Atrasia (50% Skill: Beast Slayer)
 
-- Released location: House, Crell Monferaigne (...)
+- Weapon Type: Archer
 
-Palace of the Venerated Dragon (0339 or 0361 or 0371)
-
-- Crescent (60% Skill: Guts)
-
-- Lwyn (40% Skill: Unholy Slayer)
-
-- Released location: Forest of Spirits (0423)
-
-Palace of the Venerated Dragon (0339 or 0361 or 0371)
-
-- Gerald (20% Skill: Dragon Slayer)
-
-- Guilm (50% Skill: Toughness, First Aid)
-
-- Ehlen (30% Skill: Double Edge)
-
-- Released location: Ancient Forest (0557)
-
-Palace of the Venerated Dragon (0339 or 0361 or 0371)
-
-- Xehnon (90% Skill: Magic Control)
-
-- Masato (10% Skill: Insect slayer)
-
-- Released location: Sahma Desert (1155)
+- Released location: House, Crell Monferaigne (0139)
 
 Sukavia Gorge (1191):
 
 - Aegis (100% Skill: Scale Slasher)
 
-- Released location: House, Solde (...)
+- Weapon Type: Sorcerer
+
+- Released location: House, Solde (0049)

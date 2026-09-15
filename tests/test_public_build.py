@@ -84,6 +84,17 @@ class PackProfileTests(unittest.TestCase):
             resolve_pack("xx-XX")
         self.assertIn("pt-BR", str(raised.exception))
 
+    def test_battle_target_comes_from_misc_csv(self):
+        import tempfile
+        from tools.scripts.public_build import _pack_battle_target
+        with tempfile.TemporaryDirectory() as folder:
+            pack = Path(folder)
+            (pack / "misc.csv").write_text(
+                "key,translated,notes\n"
+                "battle_target,Alvo,Floating label\n",
+                encoding="utf-8")
+            self.assertEqual("Alvo", _pack_battle_target(pack))
+
 
 class UnlistedFolderTests(unittest.TestCase):
     """A `_` folder under translations/ is a starting point, not a language."""
@@ -114,6 +125,29 @@ class UnlistedFolderTests(unittest.TestCase):
             self.assertIn("translations/xx-XX/chapter.csv", bundled)
             self.assertEqual(
                 [], [name for name in bundled if "/_draft/" in name])
+
+    def test_translation_pack_image_layout_json_is_bundled(self):
+        import tempfile
+        from tools.scripts import public_release
+        with tempfile.TemporaryDirectory() as elsewhere:
+            root = Path(elsewhere)
+            pack = root / "translations" / "xx-XX"
+            pack.mkdir(parents=True)
+            (pack / "pack.toml").write_text(
+                'format = 2\nlocale = "xx-XX"\nname = "Test"\n',
+                encoding="utf-8")
+            layout = pack / "fis-image-layouts.json"
+            layout.write_text('{"version": 1, "images": {}}',
+                              encoding="utf-8")
+            generated = pack / "replacements" / "manifest.json"
+            generated.parent.mkdir()
+            generated.write_text("{}", encoding="utf-8")
+            bundled = [name for _source, name
+                       in public_release.payload_members(root)]
+            self.assertIn(
+                "translations/xx-XX/fis-image-layouts.json", bundled)
+            self.assertNotIn(
+                "translations/xx-XX/replacements/manifest.json", bundled)
 
 
 class ChapterProfileSelectionTests(unittest.TestCase):
@@ -184,6 +218,101 @@ class ChapterProfileSelectionTests(unittest.TestCase):
         self.assertEqual("Included Title", manifest["chapter_title"])
         self.assertEqual("900", manifest["chapter_title_message"])
         self.assertEqual(1, compiled["outside_profile"])
+
+
+class PackFileRowTests(unittest.TestCase):
+    """The chapter label and misc labels build only when the profile asks."""
+
+    CARRIERS = ("60", "1196")
+
+    def compile(self, extra_rows):
+        import csv
+        import json
+        import tempfile
+        from tools.scripts import public_build
+
+        def write_csv(path, fields, rows):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fields)
+                writer.writeheader()
+                writer.writerows(rows)
+
+        profile = [{"kind": "scene", "resource": "43",
+                    "sheet": "resource-0043-scenes.csv", "flags": "",
+                    "verify": ""}] + extra_rows
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            workspace = root / "workspace"
+            records = workspace / "internal" / "records" / "scenes"
+            records.mkdir(parents=True)
+            (workspace / "internal" / "generation.json").write_text(
+                json.dumps({"format": 2}), encoding="utf-8")
+            write_csv(records / "resource-0043-scenes.csv",
+                      ["kind", "resource", "message_id", "message_index",
+                       "translated"],
+                      [{"kind": "scene", "resource": "43", "message_id": "1",
+                        "message_index": "", "translated": ""}])
+            pack = root / "xx-XX"
+            pack.mkdir()
+            (pack / "pack.toml").write_text(
+                'format = 2\nlocale = "xx-XX"\nname = "Test"\n',
+                encoding="utf-8")
+            write_csv(pack / "build-profile.csv",
+                      ["kind", "resource", "sheet", "flags", "verify"],
+                      profile)
+            write_csv(pack / "chapter.csv",
+                      ["resource", "message_id", "translated", "notes"],
+                      [{"resource": "60", "message_id": "51",
+                        "translated": "KAPITEL", "notes": ""}])
+            write_csv(pack / "misc.csv", ["key", "translated", "notes"],
+                      [{"key": "battle_target", "translated": "Sikta",
+                        "notes": ""}])
+            menu_layout = root / "menu-layout.csv"
+            write_csv(menu_layout, ["menu", "unit", "resource",
+                                    "message_id", "message_index"], [])
+            compiled = public_build.compile_build_workspace(
+                workspace, pack, menu_layout=menu_layout)
+            with Path(compiled["manifest"]).open(
+                    encoding="utf-8-sig", newline="") as handle:
+                manifest = list(csv.DictReader(handle))
+            for row in manifest:
+                if row["kind"] in ("chapter-label", "misc"):
+                    self.assertTrue(Path(row["sheet"]).is_file(), row)
+        return compiled, manifest
+
+    def test_a_scene_alone_writes_no_label_and_no_target(self):
+        compiled, manifest = self.compile([])
+        self.assertEqual(["scene"], [row["kind"] for row in manifest])
+        self.assertIsNone(compiled["battle_target"])
+        self.assertEqual(2, compiled["outside_profile"])
+
+    def test_listed_rows_reach_the_manifest(self):
+        rows = [{"kind": "chapter-label", "resource": carrier,
+                 "sheet": "chapter.csv", "flags": "", "verify": ""}
+                for carrier in self.CARRIERS]
+        rows.append({"kind": "misc", "resource": "1781", "sheet": "misc.csv",
+                     "flags": "", "verify": ""})
+        compiled, manifest = self.compile(rows)
+        self.assertEqual(
+            [("scene", "43"), ("chapter-label", "60"),
+             ("chapter-label", "1196"), ("misc", "1781")],
+            [(row["kind"], row["resource"]) for row in manifest])
+        self.assertEqual("Sikta", compiled["battle_target"])
+        self.assertEqual(0, compiled["outside_profile"])
+
+    def test_a_row_naming_the_wrong_resource_or_file_is_refused(self):
+        from tools.scripts.translation_pack import PackError
+        for row, message in (
+                ({"kind": "misc", "resource": "273", "sheet": "misc.csv"},
+                 "has no misc"),
+                ({"kind": "chapter-label", "resource": "43",
+                  "sheet": "chapter.csv"}, "has no chapter-label"),
+                ({"kind": "misc", "resource": "1781",
+                  "sheet": "chapter.csv"}, "names misc.csv")):
+            with self.subTest(row=row):
+                with self.assertRaisesRegex(PackError, message):
+                    self.compile([dict(row, flags="", verify="")])
 
 
 class ChildProcessTests(unittest.TestCase):
@@ -375,12 +504,13 @@ class CandidateExtentWiringTests(unittest.TestCase):
             seen.append(list(arguments))
             raise RuntimeError("far enough")
 
+        compiled = {"locale": "pt-BR", "manifest": "m.csv",
+                    "sheets": "sheets", "slots": None}
         with mock.patch.object(public_build, "workspace_is_ready",
                                return_value=True), \
                 mock.patch.object(
                     public_build, "compile_build_workspace",
-                    return_value={"locale": "pt-BR", "manifest": "m.csv",
-                                  "sheets": "sheets", "slots": None}), \
+                    return_value=compiled), \
                 mock.patch.object(public_build, "ensure_glyph_pool",
                                   return_value=None), \
                 mock.patch.object(public_build, "runtime_command",

@@ -2,8 +2,5 @@
 # modules. Tkinter/Tcl-Tk is supplied by the Python installation or operating
 # system rather than PyPI.
 #
-# The packages below are needed only to make PCSX2 texture replacements.
-numpy>=2.0
-Pillow>=11.0
-etcpak>=0.9.15
-pyoxipng>=9.1
+# The optional glyph contact-sheet command (`vp2_jp_glyphs sheets`) imports
+# Pillow when it runs; nothing else needs a third-party package.
