@@ -37,7 +37,38 @@ Circe cresceu nas minas daqui perto, e é assim que esse lugar surgiu.",
 97,22,,
 97,23,,
 97,24,,
-97,26,,
+97,26,"<Guia Tático>
+ <PART> Lançamento de Feitiços <PART>
+Um verdadeiro feiticeiro sabe não apenas como lançar
+feitiços, mas também quando e onde. <PART>
+---
+ <PART> <Guia Tático>
+ <PART> Lançamento de Feitiços <PART>
+Normalmente, um personagem vai lançar um feitiço pré-definido para
+agilizar ataques e se integrar bem com
+ios aliados. No entanto, sem tempo para a devida
+concentração espiritual, os alcances e efeitos
+desses feitiços não atingem seu pleno potencial. <PART>
+---
+ <PART> <Manual Tático>
+ <PART> Lançamento de Feitiços <PART>
+Para aumentar a força da própria magia, você deve
+ficar parado, abrir o livro de feitiços com <PART> e
+examinar a invocação a ser realizada.
+No entanto, isso impede que você se combine com
+aliados.
+Quanto ao método de ataque a ser usado, você precisará
+de aplicar seu conhecimento em cada situação. <PART>
+---
+ <PART> <Manual Tático>
+ <PART> Lançamento de Feitiços <PART>
+Existem Grandes Magias neste mundo que superam
+os feitiços comuns. A Grande Magia pode aniquilar
+vários inimigos de uma vez.
+
+Mas os inimigos também podem usá-la. Quando
+atacado com Grande Magia, fique atento ao estado
+daquele ao lado do personagem alvo.",
 97,1,Sair,not displayed by the event script
 97,10,,
 97,11,,

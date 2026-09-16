@@ -1,16 +1,45 @@
 resource,message_id,translated,notes
 87,9,"<Manual Tático>
  <PART>
-Na batalha, a vida dos aliados está nas
-mãos do comandante.
-Vós que desejais comandar, conhecei de
-coração estes segredos...",
+Na batalha, a vida dos aliados está nas mãos do comandante.
+Vós que desejais comandar, conhecei de coração estes segredos...",
 87,10,,
 87,3,,
 87,4,,
 87,8,,
 87,11,,
-87,23,,
+87,23,"<Guia Tático>
+<PART> Lançando Feitiços <PART>
+Um verdadeiro feiticeiro sabe não apenas como lançar
+feitiços, mas também quando e onde. <PART>
+---
+<PART> <Guia Tático>
+<PART> Lançando Feitiços <PART>
+Normalmente, um personagem vai lançar um feitiço pré-definido para
+agilizar ataques e se integrar bem com
+ios aliados. No entanto, sem tempo para a devida
+concentração espiritual, os alcances e efeitos
+desses feitiços não atingem seu pleno potencial. <PART>
+---
+<PART> <Manual Tático>
+<PART> Lançando Feitiços <PART>
+Para aumentar a força da própria magia, você deve
+ficar parado, abrir o livro de feitiços com <PART> e
+examinar a invocação a ser realizada.
+No entanto, isso impede que você se combine com
+aliados.
+Quanto ao método de ataque a ser usado, você precisará
+de aplicar seu conhecimento em cada situação. <PART>
+---
+<PART> <Manual Tático>
+<PART> Lançando Feitiços <PART>
+Existem Grandes Magias neste mundo que superam
+os feitiços comuns. A Grande Magia pode aniquilar
+vários inimigos de uma vez.
+
+Mas os inimigos também podem usá-la. Quando
+atacado com Grande Magia, fique atento ao estado
+daquele ao lado do personagem alvo.",
 87,419,,
 87,420,,
 87,421,,
@@ -45,7 +74,38 @@ coração estes segredos...",
 87,2906,,
 87,2907,,
 87,2908,,
-87,2910,,
+87,2910,"<Guia Tático>
+<PART> Lançamento de Feitiços <PART>
+Um verdadeiro feiticeiro sabe não apenas como lançar
+feitiços, mas também quando e onde. <PART>
+---
+ <PART> <Guia Tático>
+ <PART> Lançamento de Feitiços <PART>
+Normalmente, um personagem vai lançar um feitiço pré-definido para
+agilizar ataques e se integrar bem com
+ios aliados. No entanto, sem tempo para a devida
+concentração espiritual, os alcances e efeitos
+desses feitiços não atingem seu pleno potencial. <PART>
+---
+ <PART> <Manual Tático>
+ <PART> Lançamento de Feitiços <PART>
+Para aumentar a força da própria magia, você deve
+permanecer parado, abrir o livro de feitiços com <PART>
+e examinar a invocação a ser realizada.
+No entanto, isso impede que você se combine
+com aliados.
+Quanto ao método de ataque a usar, você precisará
+aplicar seu conhecimento em cada situação. <PART>
+---
+ <PART> <Manual Tático>
+ <PART> Lançamento de Feitiços <PART>
+Existe a Grande Magia neste mundo, que supera
+feitiços comuns. A Grande Magia pode aniquilar
+vários inimigos de uma vez.
+
+Mas os inimigos também podem usá-la. Quando
+atacado com Grande Magia, fique de olho no estado
+dos que estão ao lado do personagem alvo.",
 87,1,Sair,not displayed by the event script
 87,2,,
 87,17,,
